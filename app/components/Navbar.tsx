@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaGithub, FaMedium, FaInstagram } from "react-icons/fa";
+import { FaGithub, FaMedium, FaLinkedin } from "react-icons/fa";
 const Navbar = () => {
   return (
     <nav className="bg-slate-600 p-4 sticky top-0 drop-shadow-xl z-10">
@@ -24,6 +24,12 @@ const Navbar = () => {
             href="https://github.com/Eduardo-rico"
           >
             <FaGithub />
+          </Link>
+          <Link
+            className="text-white/90 hover:text-white"
+            href="https://www.linkedin.com/in/eduardo-rico-sotomayor/"
+          >
+            <FaLinkedin />
           </Link>
         </div>
       </div>
