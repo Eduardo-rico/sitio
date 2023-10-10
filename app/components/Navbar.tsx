@@ -15,27 +15,15 @@ const Navbar = () => {
         <div className="flex flex-row justify-center sm:justify-evenly align-middle gap-4 text-white text-4xl lg:text-5xl">
           <Link
             className="text-white/90 hover:text-white"
-            href="https://www.youtube.com/@DaveGrayTeachesCode"
+            href="https://medium.com/@eduardo.rico"
           >
             <FaMedium />
           </Link>
           <Link
             className="text-white/90 hover:text-white"
-            href="https://courses.davegray.codes/"
-          >
-            <FaInstagram />
-          </Link>
-          <Link
-            className="text-white/90 hover:text-white"
-            href="https://github.com/gitdagray"
+            href="https://github.com/Eduardo-rico"
           >
             <FaGithub />
-          </Link>
-          <Link
-            className="text-white/90 hover:text-white"
-            href="https://twitter.com/yesdavidgray"
-          >
-            <FaMedium />
           </Link>
         </div>
       </div>
