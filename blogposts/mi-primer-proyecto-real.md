@@ -3,7 +3,7 @@ title: "Mi primer proyecto real"
 date: "2023-10-09"
 ---
 
-# Mi descubrimiento personal: La programación sí sirve
+# Mi descubrimiento personal: ¡La programación sí sirve para algo!
 
 Hace unos 3 años ya, en medio de la pandemia de COVID-19, estaba encerrado en mi cuarto, en Celaya, con mi mamá y mis dos perritas. Había terminado mi carrera y ya estaba en proceso de titulación, solo unos meses atrás en diciembre de 2019 había presentado mi examen profesional para titularme como químico y me seguía llevando con mis amigos químicos.
 
