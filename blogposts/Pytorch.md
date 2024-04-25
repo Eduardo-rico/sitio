@@ -3,6 +3,8 @@ title: "Fundamentos de PyTorch."
 date: "2024-04-24"
 ---
 
+# Fundamentos de PyTorch
+![Red Neuronal](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*l57B0pjXoO-1H1xZYV7QBA.png)
 ## ¿Por qué usar ML o DeepLearning?
 
 ¿En un problema complejo podemos pensar todas las reglas que satisfacen la solución del mismo?
@@ -61,7 +63,7 @@ La anatomía de una red neuronal está compuesta de 3 elementos:
 2. Hidden layers: Acá la red neuronal aprende los patrones en la data
 3. Output layer: Regresa el resultado de aprender la representación de la data o la predicción de probabilidades
     
-    ![../public/images/rn.png](../public/images/rn.png)
+    ![Red Neuronal](/images/rn.png)
     
 
 Cada layer es una combinación linear y/o no lineal de funciones. El término patterns hace referencia a palabras similares como “embedding”, “weights”, “feature representation”, “feature vectors”.
@@ -101,3 +103,4 @@ En el contexto que nos interesa, los tensores se usan para representar las entra
 
 referencias:
 1. [https://developers.google.com/machine-learning/guides/rules-of-ml?hl=es-419#:~:text=Rule %231%3A Don't,will likely underperform basic heuristics](https://developers.google.com/machine-learning/guides/rules-of-ml?hl=es-419#:~:text=Rule%20%231%3A%20Don't,will%20likely%20underperform%20basic%20heuristics).
+2. [Comprehensive Introduction to Neural Network Architecture](https://towardsdatascience.com/comprehensive-introduction-to-neural-network-architecture-c08c6d8e5d98)
