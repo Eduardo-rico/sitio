@@ -1,6 +1,6 @@
 ---
 title: "Fundamentos de PyTorch."
-date: "2024-04-25"
+date: "2024-04-23"
 ---
 
 # Fundamentos de PyTorch
