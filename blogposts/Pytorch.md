@@ -61,7 +61,7 @@ La anatomía de una red neuronal está compuesta de 3 elementos:
 2. Hidden layers: Acá la red neuronal aprende los patrones en la data
 3. Output layer: Regresa el resultado de aprender la representación de la data o la predicción de probabilidades
     
-    ![Captura de pantalla 2024-04-23 a las 7.34.59 p. m..png](../public/images/rn.png)
+    ![../public/images/rn.png](../public/images/rn.png)
     
 
 Cada layer es una combinación linear y/o no lineal de funciones. El término patterns hace referencia a palabras similares como “embedding”, “weights”, “feature representation”, “feature vectors”.
