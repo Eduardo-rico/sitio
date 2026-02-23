@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 
 import { Navbar } from "@/components/navbar/Navbar";
 import { Footer } from "./components/Footer";
@@ -24,6 +25,16 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster 
+            position="top-center"
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                fontSize: '14px',
+              },
+            }}
+          />
         </Providers>
       </body>
     </html>

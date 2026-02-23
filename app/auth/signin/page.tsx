@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { BookOpen, Mail, ArrowLeft, Loader2, LogOut, LayoutDashboard } from "lucide-react";
 
 // Loading fallback for Suspense
@@ -104,12 +105,15 @@ function SignInForm() {
       });
       
       if (result?.error) {
+        toast.error("Credenciales inválidas. Por favor, inténtalo de nuevo.");
         setError("Credenciales inválidas. Por favor, inténtalo de nuevo.");
       } else if (result?.ok) {
+        toast.success("¡Bienvenido de vuelta!");
         router.push(callbackUrl);
         router.refresh();
       }
     } catch {
+      toast.error("Ocurrió un error al iniciar sesión.");
       setError("Ocurrió un error al iniciar sesión.");
     } finally {
       setIsLoading(false);

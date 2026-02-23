@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { BookOpen, ArrowLeft, Loader2, User, Mail, Lock, CheckCircle } from "lucide-react";
 
 // Loading fallback
@@ -44,11 +45,13 @@ function SignUpForm() {
     setError("");
     
     if (formData.password !== formData.confirmPassword) {
+      toast.error("Las contraseñas no coinciden");
       setError("Las contraseñas no coinciden");
       return;
     }
     
     if (formData.password.length < 8) {
+      toast.error("La contraseña debe tener al menos 8 caracteres");
       setError("La contraseña debe tener al menos 8 caracteres");
       return;
     }
@@ -69,11 +72,14 @@ function SignUpForm() {
       const data = await response.json();
       
       if (!response.ok) {
+        toast.error(data.error || "Error al crear la cuenta");
         setError(data.error || "Error al crear la cuenta");
       } else {
-        router.push(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}&success=Cuenta creada exitosamente. Por favor, inicia sesión.`);
+        toast.success("¡Cuenta creada exitosamente! Por favor, inicia sesión.");
+        router.push(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       }
     } catch {
+      toast.error("Error de conexión. Por favor, inténtalo de nuevo.");
       setError("Error de conexión. Por favor, inténtalo de nuevo.");
     } finally {
       setIsLoading(false);
