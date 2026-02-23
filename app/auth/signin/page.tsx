@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { Suspense, useState, useEffect } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { BookOpen, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { BookOpen, Mail, ArrowLeft, Loader2, LogOut, LayoutDashboard } from "lucide-react";
 
 // Loading fallback for Suspense
 function SignInLoading() {
@@ -20,6 +20,7 @@ function SignInLoading() {
 
 // Main sign in form component
 function SignInForm() {
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +28,63 @@ function SignInForm() {
   
   const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
   const success = searchParams?.get("success");
+
+  // Si ya está logueado, mostrar opciones
+  if (session?.user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex flex-col">
+        {/* Header */}
+        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <Link
+                href="/"
+                className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-xl"
+              >
+                <BookOpen className="w-6 h-6 text-blue-600" />
+                <span>Eduardo Rico</span>
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <LayoutDashboard className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Ya has iniciado sesión
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Estás logueado como <strong>{session.user.email}</strong>
+              </p>
+              
+              <div className="space-y-3">
+                <Link
+                  href="/dashboard"
+                  className="block w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+                >
+                  Ir al Dashboard
+                </Link>
+                
+                <button
+                  onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+                  className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -1,0 +1,72 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Eduardo Rico" [level=1] [ref=e4]:
+        - link "Eduardo Rico" [ref=e5] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e6]:
+        - link [ref=e7] [cursor=pointer]:
+          - /url: https://medium.com/@eduardo.rico
+          - img [ref=e8]
+        - link [ref=e10] [cursor=pointer]:
+          - /url: https://github.com/Eduardo-rico
+          - img [ref=e11]
+        - link [ref=e13] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/eduardo-rico-sotomayor/
+          - img [ref=e14]
+        - link [ref=e16] [cursor=pointer]:
+          - /url: https://mastodon.social/@LaloRico4
+          - img [ref=e17]
+        - generic [ref=e19]: "|"
+        - generic [ref=e20]:
+          - link "Entrar" [ref=e21] [cursor=pointer]:
+            - /url: /auth/signin
+            - img [ref=e22]
+            - generic [ref=e25]: Entrar
+          - link "Registrarse" [ref=e26] [cursor=pointer]:
+            - /url: /auth/signup
+            - img [ref=e27]
+            - generic [ref=e30]: Registrarse
+  - img "Eduardo Rico" [ref=e32]
+  - generic [ref=e34]:
+    - generic [ref=e35]:
+      - heading "Eduardo Rico" [level=1] [ref=e36]
+      - paragraph [ref=e37]: Accede a tu cuenta para continuar
+    - generic [ref=e39]:
+      - banner [ref=e40]:
+        - link "Eduardo Rico" [ref=e43] [cursor=pointer]:
+          - /url: /
+          - img [ref=e44]
+          - generic [ref=e47]: Eduardo Rico
+      - main [ref=e48]:
+        - generic [ref=e49]:
+          - link "Volver al inicio" [ref=e50] [cursor=pointer]:
+            - /url: /
+            - img [ref=e51]
+            - text: Volver al inicio
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - heading "Bienvenido de nuevo" [level=1] [ref=e55]
+              - paragraph [ref=e56]: Inicia sesión para acceder a tu dashboard
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: Correo electrónico
+                - generic [ref=e60]:
+                  - img [ref=e61]
+                  - textbox "Correo electrónico" [ref=e64]:
+                    - /placeholder: tu@email.com
+              - generic [ref=e65]:
+                - generic [ref=e66]: Contraseña
+                - textbox "Contraseña" [ref=e67]:
+                  - /placeholder: ••••••••
+              - button "Iniciar sesión" [ref=e68] [cursor=pointer]
+            - paragraph [ref=e69]:
+              - text: ¿No tienes cuenta?
+              - link "Regístrate gratis" [ref=e70] [cursor=pointer]:
+                - /url: /auth/signup
+    - paragraph [ref=e71]: © 2025 Eduardo Rico. Todos los derechos reservados.
+  - alert [ref=e72]
+```
