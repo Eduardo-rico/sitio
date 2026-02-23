@@ -37,4 +37,31 @@ test.describe('Course Flow', () => {
     await expect(page.getByRole('button', { name: 'Ejecutar' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Verificar' })).toBeVisible();
   });
+
+  test('executes python code in first lesson without pyodide load error', async ({ page }) => {
+    await page.goto('/tutoriales/python-basico');
+    const firstLessonLink = page.locator('a[href^="/tutoriales/python-basico/"]').first();
+    await expect(firstLessonLink).toBeVisible();
+
+    const lessonHref = await firstLessonLink.getAttribute('href');
+    expect(lessonHref).toMatch(/^\/tutoriales\/python-basico\/[^/]+$/);
+    await page.goto(lessonHref!);
+
+    const executeButton = page.getByRole('button', { name: 'Ejecutar' });
+    await expect(executeButton).toBeVisible();
+    await executeButton.click();
+
+    const outputPanel = page.locator('.output-panel');
+    await expect(outputPanel).toContainText(
+      /(Ejecutando|sin producir salida|Salida estándar|Error)/i,
+      {
+        timeout: 45000,
+      }
+    );
+    await expect(outputPanel).not.toContainText('Pyodide no pudo cargarse', { timeout: 45000 });
+    await expect(outputPanel).not.toContainText('Timeout al cargar Pyodide', { timeout: 45000 });
+    await expect(outputPanel).not.toContainText('Ejecuta el código para ver el resultado', {
+      timeout: 45000,
+    });
+  });
 });

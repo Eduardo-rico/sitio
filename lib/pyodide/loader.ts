@@ -11,7 +11,7 @@ const PYODIDE_CDN_URL = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/';
 const DEFAULT_PACKAGES = ['matplotlib'];
 
 // Tiempo máximo de carga en ms
-const LOAD_TIMEOUT = 30000;
+const LOAD_TIMEOUT = 90000;
 
 // Declaración para extender Window
 interface PyodideWindow extends Window {

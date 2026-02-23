@@ -30,7 +30,7 @@ export interface UseCodeExecutionReturn {
   /** Función para ejecutar código */
   executeCode: (code: string) => Promise<ExecutionResult>;
   /** Función para cargar Pyodide manualmente */
-  loadPyodide: () => Promise<void>;
+  loadPyodide: () => Promise<import('pyodide').PyodideInterface>;
   /** Limpiar resultado */
   clearResult: () => void;
 }
@@ -55,7 +55,7 @@ export function useCodeExecution(
   const { timeout = DEFAULT_EXECUTION_TIMEOUT, capturePlots = true } = options;
 
   const { status: pyodideStatus, pyodide, error: pyodideError, load: loadPyodide } = usePyodide({
-    autoLoad: false,
+    autoLoad: true,
   });
 
   const [result, setResult] = useState<ExecutionResult | null>(null);
@@ -66,16 +66,6 @@ export function useCodeExecution(
 
   const executeCode = useCallback(
     async (code: string): Promise<ExecutionResult> => {
-      // Asegurar que Pyodide esté cargado
-      if (!pyodide) {
-        await loadPyodide();
-      }
-
-      const pyodideInstance = pyodide || (await loadPyodide().then(() => pyodide));
-      if (!pyodideInstance) {
-        throw new Error('Pyodide no pudo cargarse');
-      }
-
       setIsExecuting(true);
       const startTime = performance.now();
 
@@ -83,8 +73,15 @@ export function useCodeExecution(
       const stdout: string[] = [];
       const stderr: string[] = [];
       const plots: string[] = [];
+      let pyodideInstance = pyodide;
 
       try {
+        // Asegurar que Pyodide esté cargado
+        pyodideInstance = pyodide ?? (await loadPyodide());
+        if (!pyodideInstance) {
+          throw new Error('Pyodide no pudo cargarse');
+        }
+
         // Crear AbortController para timeout
         abortControllerRef.current = new AbortController();
 
@@ -184,8 +181,8 @@ if _original_show:
         return executionResult;
       } finally {
         // Restaurar handlers sin captura explícita
-        pyodideInstance.setStdout({});
-        pyodideInstance.setStderr({});
+        pyodideInstance?.setStdout({});
+        pyodideInstance?.setStderr({});
         setIsExecuting(false);
         abortControllerRef.current = null;
       }

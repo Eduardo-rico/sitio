@@ -21,7 +21,7 @@ export interface UsePyodideReturn {
   /** Error si la carga falló */
   error: Error | null;
   /** Función para iniciar la carga manualmente */
-  load: () => Promise<void>;
+  load: () => Promise<PyodideInterface>;
 }
 
 export interface UsePyodideOptions {
@@ -45,40 +45,50 @@ export function usePyodide(options: UsePyodideOptions = {}): UsePyodideReturn {
 
   // Usar ref para mantener la instancia actual sin causar re-renders
   const pyodideRef = useRef<PyodideInterface | null>(getPyodideInstance());
+  const loadPromiseRef = useRef<Promise<PyodideInterface> | null>(null);
 
   // Función para cargar Pyodide
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<PyodideInterface> => {
     // Si ya está cargado, no hacer nada
-    if (isPyodideLoaded()) {
+    const cachedInstance = getPyodideInstance();
+    if (cachedInstance) {
       setStatus('ready');
-      pyodideRef.current = getPyodideInstance();
-      return;
+      pyodideRef.current = cachedInstance;
+      return cachedInstance;
     }
 
-    // Si ya está cargando, no iniciar otra carga
-    if (status === 'loading') {
-      return;
+    // Reusar promesa en curso para evitar cargas duplicadas
+    if (loadPromiseRef.current) {
+      return loadPromiseRef.current;
     }
 
     setStatus('loading');
     setError(null);
 
-    try {
-      const instance = await loadPyodideInstance(loaderOptions);
-      pyodideRef.current = instance;
-      setStatus('ready');
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      setStatus('error');
-      console.error('Error cargando Pyodide:', error);
-    }
-  }, [status, loaderOptions]);
+    loadPromiseRef.current = loadPyodideInstance(loaderOptions)
+      .then((instance) => {
+        pyodideRef.current = instance;
+        setStatus('ready');
+        return instance;
+      })
+      .catch((err) => {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        setStatus('error');
+        console.error('Error cargando Pyodide:', error);
+        throw error;
+      })
+      .finally(() => {
+        loadPromiseRef.current = null;
+      });
+
+    return loadPromiseRef.current;
+  }, [loaderOptions]);
 
   // Carga automática al montar
   useEffect(() => {
     if (autoLoad && status === 'idle') {
-      load();
+      void load();
     }
   }, [autoLoad, status, load]);
 

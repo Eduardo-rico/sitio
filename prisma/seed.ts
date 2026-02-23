@@ -778,27 +778,44 @@ async function upsertCourse(courseData: SeedCourse) {
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Admin user
-  const adminEmail = 'admin@example.com';
-  const adminPassword = 'Charalo123';
-  const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-  const adminUser = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {
-      name: 'Admin',
-      role: 'admin',
-      passwordHash: hashedPassword,
+  // Admin users
+  const adminUsersConfig = [
+    {
+      email: 'emrs94@gmail.com',
+      password: 'Charalo4!',
+      name: 'Eduardo Rico',
     },
-    create: {
-      email: adminEmail,
+    {
+      email: 'admin@example.com',
+      password: 'Charalo123',
       name: 'Admin',
-      role: 'admin',
-      passwordHash: hashedPassword,
     },
-  });
+  ] as const;
 
-  console.log(`✅ Admin user ready: ${adminUser.email}`);
+  const seededAdmins: { id: string; email: string }[] = [];
+
+  for (const adminConfig of adminUsersConfig) {
+    const hashedPassword = await bcrypt.hash(adminConfig.password, 10);
+    const adminUser = await prisma.user.upsert({
+      where: { email: adminConfig.email },
+      update: {
+        name: adminConfig.name,
+        role: 'admin',
+        passwordHash: hashedPassword,
+      },
+      create: {
+        email: adminConfig.email,
+        name: adminConfig.name,
+        role: 'admin',
+        passwordHash: hashedPassword,
+      },
+    });
+
+    seededAdmins.push(adminUser);
+    console.log(`✅ Admin user ready: ${adminUser.email}`);
+  }
+
+  const primaryAdmin = seededAdmins[0];
 
   // Hide old legacy course if present
   await prisma.course.updateMany({
@@ -831,7 +848,7 @@ async function main() {
         specificUserIds: [],
         isActive: true,
         dismissible: true,
-        createdBy: adminUser.id,
+        createdBy: primaryAdmin.id,
       },
     });
     console.log('✅ Anuncio inicial creado');
