@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { auth, signOut } from "@/lib/auth";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import {
   LayoutDashboard,
   BookOpen,
@@ -34,6 +35,9 @@ async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Announcement Banner */}
+      <AnnouncementBanner />
+      
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

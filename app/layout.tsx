@@ -1,10 +1,11 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Toaster } from "sonner";
 
 import { Navbar } from "@/components/navbar/Navbar";
 import { Footer } from "./components/Footer";
 import { Providers } from "@/components/Providers";
+import { Toaster } from "@/components/ui/toaster";
+import { AnnouncementModals, AnnouncementToasts } from "@/components/announcement-banner";
 
 export const metadata: Metadata = {
   title: "Eduardo Rico | Aprende a Programar",
@@ -20,21 +21,14 @@ export default function RootLayout({
     <html lang="es" className="scroll-smooth">
       <body className="min-h-screen flex flex-col bg-white dark:bg-slate-900">
         <Providers>
+          <AnnouncementModals />
+          <AnnouncementToasts />
           <Navbar />
           <main className="flex-1 pt-16">
             {children}
           </main>
           <Footer />
-          <Toaster 
-            position="top-center"
-            richColors
-            closeButton
-            toastOptions={{
-              style: {
-                fontSize: '14px',
-              },
-            }}
-          />
+          <Toaster />
         </Providers>
       </body>
     </html>

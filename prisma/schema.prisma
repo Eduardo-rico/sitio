@@ -197,6 +197,38 @@ model Subscription {
   @@map("subscriptions")
 }
 
+// Announcements/Notifications for users
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  message     String    @db.Text
+  type        String    @default("info") // "info", "success", "warning", "error"
+  priority    String    @default("normal") // "normal", "high"
+  displayType String    @default("banner") // "banner", "toast", "modal"
+  audience    String    @default("all") // "all", "new_users", "specific_users"
+  specificUserIds String[] // When audience is "specific_users"
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  isActive    Boolean   @default(true)
+  dismissible Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?   // Admin user ID
+  
+  @@map("announcements")
+}
+
+// Track which users have dismissed announcements
+model AnnouncementDismissal {
+  id              String   @id @default(cuid())
+  userId          String
+  announcementId  String
+  dismissedAt     DateTime @default(now())
+  
+  @@unique([userId, announcementId])
+  @@map("announcement_dismissals")
+}
+
 // Contenido interactivo embebido en posts del blog
 model InteractiveSnippet {
   id          String   @id @default(cuid())

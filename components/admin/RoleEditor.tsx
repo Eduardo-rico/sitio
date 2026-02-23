@@ -14,12 +14,14 @@ interface RoleEditorProps {
   userId: string;
   currentRole: string;
   onRoleUpdate: (userId: string, newRole: string) => Promise<{ success: boolean; error?: string }>;
+  disabled?: boolean;
 }
 
 export default function RoleEditor({ 
   userId, 
   currentRole, 
-  onRoleUpdate 
+  onRoleUpdate,
+  disabled = false,
 }: RoleEditorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -82,12 +84,12 @@ export default function RoleEditor({
     <>
       <div className="relative inline-block">
         <button
-          onClick={() => !isUpdating && setIsOpen(!isOpen)}
-          disabled={isUpdating}
+          onClick={() => !isUpdating && !disabled && setIsOpen(!isOpen)}
+          disabled={isUpdating || disabled}
           className={`
             inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border
             ${getRoleBadgeClasses(currentRole)}
-            ${isUpdating ? "opacity-75 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}
+            ${(isUpdating || disabled) ? "opacity-75 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}
             transition-opacity
           `}
         >

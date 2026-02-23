@@ -9,15 +9,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import AdminStats from "@/components/admin/AdminStats";
-import { 
-  Plus, 
-  Users, 
-  BookOpen, 
-  Code2, 
-  TrendingUp,
+import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
+import {
+  Plus,
+  Users,
+  BookOpen,
+  Code2,
   ArrowRight,
-  Loader2
+  Loader2,
+  LayoutDashboard,
+  Settings,
+  BarChart3,
 } from "lucide-react";
 
 interface AdminStatsData {
@@ -47,15 +49,15 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    if ((session.user as any).role !== "admin") {
+    if ((session.user as { role?: string }).role !== "admin") {
       router.push("/");
       return;
     }
   }, [session, status, router]);
 
-  // Fetch stats from API
+  // Fetch basic stats from API
   useEffect(() => {
-    if (status !== "authenticated" || (session?.user as any)?.role !== "admin") return;
+    if (status !== "authenticated" || (session?.user as { role?: string })?.role !== "admin") return;
 
     async function fetchStats() {
       try {
@@ -93,32 +95,34 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (!stats) return null;
-
   const quickActions = [
     {
       href: "/admin/cursos/nuevo",
       label: "Create Course",
       icon: Plus,
       color: "blue",
+      description: "Add a new course to the platform",
     },
     {
       href: "/admin/lecciones/nueva",
       label: "Create Lesson",
-      icon: Plus,
+      icon: BookOpen,
       color: "green",
+      description: "Add content to existing courses",
     },
     {
       href: "/admin/ejercicios/nuevo",
       label: "Create Exercise",
-      icon: Plus,
+      icon: Code2,
       color: "purple",
+      description: "Add coding challenges for students",
     },
     {
       href: "/admin/users",
       label: "Manage Users",
       icon: Users,
       color: "orange",
+      description: "View and manage user accounts",
     },
   ];
 
@@ -135,135 +139,43 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Overview of your platform
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <LayoutDashboard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Admin Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Manage your platform and view analytics
+              </p>
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+            <Settings className="w-3 h-3 mr-1" />
             Admin
           </span>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <AdminStats stats={stats} />
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Published Courses Status */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Course Status
-            </h2>
-            <Link 
-              href="/admin/cursos"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-            >
-              View all
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    Published Courses
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Visible to students
-                  </p>
-                </div>
-              </div>
-              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {stats.publishedCourses}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    Draft Courses
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Not publicly visible
-                  </p>
-                </div>
-              </div>
-              <span className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {stats.totalCourses - stats.publishedCourses}
-              </span>
-            </div>
-          </div>
+      {/* Analytics Dashboard */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Analytics Overview
+          </h2>
         </div>
-
-        {/* Completion Stats */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Activity Overview
-            </h2>
-            <TrendingUp className="w-5 h-5 text-gray-400" />
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                  <Code2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    Total Submissions
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Code exercises attempted
-                  </p>
-                </div>
-              </div>
-              <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.totalSubmissions.toLocaleString()}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    Completion Rate
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Correct submissions
-                  </p>
-                </div>
-              </div>
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {stats.completionRate}%
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+        <AnalyticsDashboard />
+      </section>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Quick Actions
         </h2>
@@ -272,16 +184,78 @@ export default function AdminDashboardPage() {
             <Link
               key={action.href}
               href={action.href}
-              className={`flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors ${getColorClasses(action.color)}`}
+              className={`group flex flex-col gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-xl transition-all hover:shadow-md ${getColorClasses(action.color)}`}
             >
-              <action.icon className="w-5 h-5" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium">
-                {action.label}
-              </span>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-white/20 transition-colors">
+                  <action.icon className="w-5 h-5" />
+                </div>
+                <span className="text-gray-900 dark:text-gray-100 font-medium">
+                  {action.label}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {action.description}
+              </p>
+              <div className="flex items-center gap-1 text-sm mt-auto">
+                <span>Get started</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </div>
             </Link>
           ))}
         </div>
-      </div>
+      </section>
+
+      {/* Additional Links */}
+      <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Link
+          href="/admin/cursos"
+          className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all"
+        >
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-gray-900 dark:text-gray-100">Manage Courses</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {stats?.publishedCourses || 0} published
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-gray-400" />
+        </Link>
+
+        <Link
+          href="/admin/snippets"
+          className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md transition-all"
+        >
+          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+            <Code2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-gray-900 dark:text-gray-100">Code Snippets</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Interactive examples
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-gray-400" />
+        </Link>
+
+        <Link
+          href="/admin/users"
+          className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-md transition-all"
+        >
+          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+            <Users className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-gray-900 dark:text-gray-100">User Management</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {stats?.totalUsers || 0} total users
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-gray-400" />
+        </Link>
+      </section>
     </div>
   );
 }

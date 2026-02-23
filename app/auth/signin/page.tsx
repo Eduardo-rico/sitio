@@ -5,16 +5,32 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { BookOpen, Mail, ArrowLeft, Loader2, LogOut, LayoutDashboard } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { BookOpen, Mail, ArrowLeft, Loader2, LogOut, LayoutDashboard, Lock } from "lucide-react";
+import { FadeIn } from "@/components/animations/fade-in";
+import { ScaleTransition } from "@/components/animations/page-transition";
+import { transitions, fadeInUp } from "@/lib/animations";
+import { Spinner } from "@/components/loading/spinner";
 
 // Loading fallback for Suspense
 function SignInLoading() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center"
+      >
+        <Spinner size="lg" className="mx-auto" />
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mt-4 text-gray-600 dark:text-gray-400"
+        >
+          Cargando...
+        </motion.p>
+      </motion.div>
     </div>
   );
 }
@@ -26,16 +42,29 @@ function SignInForm() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
   
   const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
   const success = searchParams?.get("success");
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Si ya está logueado, mostrar opciones
   if (session?.user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex flex-col">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex flex-col"
+      >
         {/* Header */}
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+        <motion.header 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <Link
@@ -47,15 +76,25 @@ function SignInForm() {
               </Link>
             </div>
           </div>
-        </header>
+        </motion.header>
 
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
+          <motion.div 
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={transitions.springSoft}
+            className="w-full max-w-md"
+          >
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8 text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ ...transitions.spring, delay: 0.1 }}
+                className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <LayoutDashboard className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
+              </motion.div>
               
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 Ya has iniciado sesión
@@ -65,25 +104,29 @@ function SignInForm() {
               </p>
               
               <div className="space-y-3">
-                <Link
-                  href="/dashboard"
-                  className="block w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
-                >
-                  Ir al Dashboard
-                </Link>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Link
+                    href="/dashboard"
+                    className="block w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+                  >
+                    Ir al Dashboard
+                  </Link>
+                </motion.div>
                 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => signOut({ callbackUrl: "/auth/signin" })}
                   className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
                   Cerrar sesión
-                </button>
+                </motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </main>
-      </div>
+      </motion.div>
     );
   }
 
@@ -120,10 +163,22 @@ function SignInForm() {
     }
   };
 
+  if (!mounted) {
+    return <SignInLoading />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex flex-col">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex flex-col"
+    >
       {/* Header */}
-      <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+      <motion.header 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link
@@ -135,48 +190,96 @@ function SignInForm() {
             </Link>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Back Link */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-8 transition-colors"
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            Volver al inicio
-          </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-8 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Volver al inicio
+            </Link>
+          </motion.div>
 
           {/* Card */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8">
-            <div className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={transitions.springSoft}
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8"
+          >
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-center mb-8"
+            >
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ ...transitions.spring, delay: 0.2 }}
+                className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mx-auto mb-4"
+              >
+                <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </motion.div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 Bienvenido de nuevo
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 Inicia sesión para acceder a tu dashboard
               </p>
-            </div>
+            </motion.div>
 
             {/* Success Message */}
-            {success && (
-              <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm">
-                {success}
-              </div>
-            )}
+            <AnimatePresence>
+              {success && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm"
+                >
+                  {success}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Email/Password Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
+            <motion.form 
+              onSubmit={handleSubmit} 
+              className="space-y-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25 }}
+              >
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -195,56 +298,76 @@ function SignInForm() {
                     placeholder="tu@email.com"
                   />
                 </div>
-              </div>
+              </motion.div>
 
-              <div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <label
                   htmlFor="password"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Contraseña
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  required
-                  disabled={isLoading}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
-                  placeholder="••••••••"
-                />
-              </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </motion.div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Iniciando sesión...
-                  </>
-                ) : (
-                  "Iniciar sesión"
-                )}
-              </button>
-            </form>
+                <motion.button
+                  type="submit"
+                  disabled={isLoading}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Spinner size="sm" color="text-white" />
+                      Iniciando sesión...
+                    </>
+                  ) : (
+                    "Iniciar sesión"
+                  )}
+                </motion.button>
+              </motion.div>
+            </motion.form>
 
             {/* Register Link */}
-            <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400"
+            >
               ¿No tienes cuenta?{" "}
               <Link
                 href="/auth/signup"
-                className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
               >
                 Regístrate gratis
               </Link>
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
       </main>
-    </div>
+    </motion.div>
   );
 }
 

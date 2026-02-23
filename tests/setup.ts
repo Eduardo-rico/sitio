@@ -1,5 +1,12 @@
 // Setup file for Vitest
-import { expect, vi } from 'vitest';
+import { expect, vi, beforeEach, afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
+// Cleanup after each test
+afterEach(() => {
+  cleanup();
+});
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -40,15 +47,33 @@ Object.defineProperty(window, 'ResizeObserver', {
   value: MockResizeObserver,
 });
 
-// Extend expect with custom matchers
-expect.extend({
-  toBeInTheDocument(received) {
-    const pass = received !== null && received !== undefined;
-    return {
-      pass,
-      message: () => pass
-        ? `expected element not to be in the document`
-        : `expected element to be in the document`,
-    };
-  },
+// Mock scrollTo
+window.scrollTo = vi.fn();
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+};
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
+
+// Mock sessionStorage
+const sessionStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+};
+
+Object.defineProperty(window, 'sessionStorage', {
+  value: sessionStorageMock,
 });

@@ -15,7 +15,8 @@ import {
   BarChart3,
   Home,
   Settings,
-  FileText
+  FileText,
+  Megaphone
 } from "lucide-react";
 
 export const metadata = {
@@ -45,7 +46,7 @@ const sidebarNavItems = [
     description: "Overview and stats"
   },
   { 
-    href: "/admin/users", 
+    href: "/admin/usuarios", 
     icon: Users, 
     label: "Users",
     description: "Manage users"
@@ -67,6 +68,12 @@ const sidebarNavItems = [
     icon: Code2, 
     label: "Exercises",
     description: "Manage exercises"
+  },
+  { 
+    href: "/admin/anuncios", 
+    icon: Megaphone, 
+    label: "Anuncios",
+    description: "Manage announcements"
   },
 ];
 

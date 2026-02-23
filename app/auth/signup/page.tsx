@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { BookOpen, ArrowLeft, Loader2, User, Mail, Lock, CheckCircle } from "lucide-react";
 
 // Loading fallback
