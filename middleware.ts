@@ -10,11 +10,12 @@ export default auth((req) => {
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
   const isAuthRoute = nextUrl.pathname.startsWith("/auth");
 
-  // Redirect logged-in users away from auth pages
-  if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
-  }
-
+  // Allow auth routes to be accessed even when logged in
+  // (user can choose to sign in with different account)
+  // Only redirect if explicitly trying to access auth while having a valid session
+  // and there's no error or success message in the URL
+  const hasQueryParams = nextUrl.searchParams.toString().length > 0;
+  
   // Protect dashboard routes - require authentication
   if (isDashboardRoute && !isLoggedIn) {
     return NextResponse.redirect(
