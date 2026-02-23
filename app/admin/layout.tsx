@@ -6,7 +6,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import SessionProvider from "@/components/providers/SessionProvider";
+
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -148,9 +148,7 @@ export default async function AdminLayout({
 
           {/* Main content */}
           <main className="flex-1 min-w-0">
-            <SessionProvider>
-              {children}
-            </SessionProvider>
+            {children}
           </main>
         </div>
       </div>
