@@ -293,7 +293,7 @@ export function ExerciseBuilder({
               value={starterCode}
               onChange={(value) => setValue("starterCode", value)}
               label=""
-              placeholder="# Código que verá el estudiante\ndef main():\n    pass\n\nif __name__ == \"__main__\":\n    main()"
+              placeholder={`# Codigo inicial`}
               height="300px"
             />
           </div>
