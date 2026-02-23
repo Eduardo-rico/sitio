@@ -2,6 +2,9 @@ import { NextRequest } from "next/server"
 import prisma from "@/lib/prisma"
 import { ApiResponse } from "@/types"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 // GET /api/exercises?lessonId=xxx - Listar ejercicios
 export async function GET(request: NextRequest) {
   try {

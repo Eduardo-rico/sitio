@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { PyodideInterface } from 'pyodide';
+import type { PyodideInterface } from 'pyodide';
 import {
   loadPyodideInstance,
   isPyodideLoaded,

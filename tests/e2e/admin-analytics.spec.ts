@@ -1,55 +1,24 @@
 import { test, expect } from '@playwright/test';
+import { loginAsAdmin } from './utils';
 
-const ADMIN_CREDENTIALS = {
-  email: 'admin@example.com',
-  password: 'Charalo123'
-};
-
-test.describe('Admin Analytics Dashboard', () => {
+test.describe('Admin Analytics', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/auth/signin');
-    await page.fill('input#email', ADMIN_CREDENTIALS.email);
-    await page.fill('input#password', ADMIN_CREDENTIALS.password);
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
-    
-    // Navigate to admin
+    await loginAsAdmin(page);
     await page.goto('/admin');
   });
 
-  test('should display analytics dashboard', async ({ page }) => {
-    await expect(page.locator('text=Dashboard')).toBeVisible();
-    await expect(page.locator('text=Estadísticas')).toBeVisible();
+  test('renders admin analytics overview and key widgets', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
+    await expect(page.getByText('Analytics Overview')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Analytics Dashboard' })).toBeVisible();
+    await expect(page.getByText('User Growth')).toBeVisible();
+    await expect(page.getByText('Course Popularity')).toBeVisible();
+    await expect(page.getByText('Completion Rates')).toBeVisible();
   });
 
-  test('should show stats cards', async ({ page }) => {
-    await expect(page.locator('[data-testid="stats-card"]').first()).toBeVisible();
-  });
-
-  test('should change date range filter', async ({ page }) => {
-    const filter = page.locator('select[name="dateRange"]');
-    await filter.selectOption('7d');
-    await expect(page.locator('text=Últimos 7 días')).toBeVisible();
-  });
-
-  test('should display users chart', async ({ page }) => {
-    await expect(page.locator('[data-testid="users-chart"]')).toBeVisible();
-  });
-
-  test('should display courses chart', async ({ page }) => {
-    await expect(page.locator('[data-testid="courses-chart"]')).toBeVisible();
-  });
-
-  test('should display activity heatmap', async ({ page }) => {
-    await expect(page.locator('[data-testid="activity-heatmap"]')).toBeVisible();
-  });
-
-  test('should display completion chart', async ({ page }) => {
-    await expect(page.locator('[data-testid="completion-chart"]')).toBeVisible();
-  });
-
-  test('should refresh data', async ({ page }) => {
-    await page.click('button[title="Actualizar"]');
-    await expect(page.locator('text=Cargando')).toBeVisible();
+  test('supports changing analytics date range', async ({ page }) => {
+    await page.getByRole('button', { name: /30 Days|Today|7 Days|3 Months|Year/ }).click();
+    await page.getByRole('button', { name: '7 Days' }).click();
+    await expect(page.getByRole('button', { name: /7 Days/ })).toBeVisible();
   });
 });

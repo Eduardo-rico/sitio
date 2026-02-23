@@ -1,46 +1,33 @@
 import { test, expect } from '@playwright/test';
-
-const TEST_USER = {
-  email: 'testuser_e2e@example.com',
-  password: 'TestPassword123!',
-  name: 'Test User E2E'
-};
+import { createTestUser, loginUser, logoutFromDashboard, registerUser } from './utils';
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
-    // Login antes de cada test
-    await page.goto('/auth/signin');
-    await page.fill('input#email', TEST_USER.email);
-    await page.fill('input#password', TEST_USER.password);
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
+    const user = createTestUser('dashboard');
+    await registerUser(page, user);
+    await loginUser(page, user);
   });
 
-  test('debería mostrar el dashboard con información del usuario', async ({ page }) => {
-    // Verificar elementos del dashboard
-    await expect(page.locator('text=Dashboard')).toBeVisible();
-    await expect(page.locator(`text=${TEST_USER.name}`)).toBeVisible();
-    
-    // Verificar navegación del sidebar
-    await expect(page.locator('text=Resumen')).toBeVisible();
-    await expect(page.locator('text=Mis Cursos')).toBeVisible();
-    await expect(page.locator('text=Configuración')).toBeVisible();
+  test('shows dashboard main sections and sidebar links', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: /Bienvenido/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tu Progreso' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Resumen' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Mis Cursos' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Configuración' })).toBeVisible();
   });
 
-  test('debería navegar a Mis Cursos', async ({ page }) => {
-    await page.click('text=Mis Cursos');
+  test('navigates to My Courses and Settings from sidebar', async ({ page }) => {
+    await page.getByRole('link', { name: 'Mis Cursos' }).click();
     await expect(page).toHaveURL('/dashboard/cursos');
-    await expect(page.locator('h1, h2').filter({ hasText: /curso/i })).toBeVisible();
-  });
+    await expect(page.getByRole('heading', { name: 'Mis Cursos' })).toBeVisible();
 
-  test('debería navegar a Configuración', async ({ page }) => {
-    await page.click('text=Configuración');
+    await page.getByRole('link', { name: 'Configuración' }).click();
     await expect(page).toHaveURL('/dashboard/configuracion');
-    await expect(page.locator('text=Configuración')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Configuración' })).toBeVisible();
   });
 
-  test('debería poder volver al sitio desde el dashboard', async ({ page }) => {
-    await page.click('text=Volver al sitio');
-    await expect(page).toHaveURL('/');
+  test('allows logout from dashboard header', async ({ page }) => {
+    await logoutFromDashboard(page);
+    await expect(page.getByText('Comenzar a Aprender')).toBeVisible();
   });
 });

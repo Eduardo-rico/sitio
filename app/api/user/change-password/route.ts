@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth"
 import { hashPassword, verifyPassword } from "@/lib/password"
 import { ApiResponse } from "@/types"
 
+export const runtime = "nodejs"
+
 interface ChangePasswordBody {
   currentPassword: string
   newPassword: string
@@ -52,27 +54,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Note: The current User model doesn't have a password field
-    // This endpoint assumes you have added a password field to the User model
-    // or are using a separate credentials table
-    // For now, we return an error indicating the feature is not fully configured
-    
-    // If you have a password field, uncomment the following:
-    /*
     // Verify current password
     const userWithPassword = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, password: true },
+      select: { id: true, passwordHash: true },
     })
 
-    if (!userWithPassword?.password) {
+    if (!userWithPassword?.passwordHash) {
       return Response.json(
         { success: false, error: "User has no password set" } satisfies ApiResponse,
         { status: 400 }
       )
     }
 
-    const isValidPassword = await verifyPassword(currentPassword, userWithPassword.password)
+    const isValidPassword = await verifyPassword(currentPassword, userWithPassword.passwordHash)
 
     if (!isValidPassword) {
       return Response.json(
@@ -85,16 +80,12 @@ export async function POST(request: NextRequest) {
     const hashedNewPassword = await hashPassword(newPassword)
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { password: hashedNewPassword },
+      data: { passwordHash: hashedNewPassword },
     })
-    */
 
     return Response.json(
-      { 
-        success: false, 
-        error: "Password change requires a password field in the User model. Please update your Prisma schema." 
-      } satisfies ApiResponse,
-      { status: 501 }
+      { success: true, data: { message: "Password updated successfully" } } satisfies ApiResponse,
+      { status: 200 }
     )
 
   } catch (error) {

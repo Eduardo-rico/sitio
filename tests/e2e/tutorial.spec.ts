@@ -1,32 +1,23 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Tutorial Python', () => {
-  test('página de tutoriales se carga correctamente', async ({ page }) => {
+test.describe('Tutorial Pages', () => {
+  test('catalog page loads with interactive Python messaging', async ({ page }) => {
     await page.goto('/tutoriales');
-    
-    // Verificar que el título está presente
-    await expect(page.getByText('Tutoriales Interactivos de Python')).toBeVisible();
-    
-    // Verificar que hay contenido
+
+    await expect(page.getByRole('heading', { name: 'Tutoriales Interactivos de Python' })).toBeVisible();
     await expect(page.getByText('Aprende Python ejecutando código')).toBeVisible();
   });
 
-  test('navegación a curso específico', async ({ page }) => {
+  test('navigates to a specific published course', async ({ page }) => {
     await page.goto('/tutoriales');
-    
-    // Buscar y hacer clic en un curso si existe
-    const courseLink = page.getByText('Python desde Cero');
-    
-    if (await courseLink.isVisible().catch(() => false)) {
-      await courseLink.click();
-      await expect(page.url()).toContain('/tutoriales/python-desde-cero');
-    }
+    await page.getByText(/Python Basico/i).first().click();
+
+    await expect(page).toHaveURL(/\/tutoriales\/python-basico/);
+    await expect(page.getByRole('heading', { name: /Python Basico/i })).toBeVisible();
   });
 
-  test('página de admin requiere autenticación', async ({ page }) => {
+  test('admin page requires authentication', async ({ page }) => {
     await page.goto('/admin');
-    
-    // Debería redirigir a login o mostrar error
-    await expect(page.url()).not.toContain('/admin/dashboard');
+    await expect(page).toHaveURL(/\/auth\/signin\?callbackUrl=%2Fadmin|\/auth\/signin\?callbackUrl=\/admin/);
   });
 });

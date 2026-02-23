@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { ApiResponse } from "@/types"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 // GET /api/lessons?courseSlug=xxx - Listar lecciones públicas
 export async function GET(request: NextRequest) {
   try {

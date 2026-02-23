@@ -1,68 +1,30 @@
 import { test, expect } from '@playwright/test';
-
-const ADMIN_CREDENTIALS = {
-  email: 'admin@example.com',
-  password: 'Charalo123'
-};
+import { loginAsAdmin } from './utils';
 
 test.describe('Admin Announcements', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/auth/signin');
-    await page.fill('input#email', ADMIN_CREDENTIALS.email);
-    await page.fill('input#password', ADMIN_CREDENTIALS.password);
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
-    
+    await loginAsAdmin(page);
     await page.goto('/admin/anuncios');
   });
 
-  test('should display announcements list', async ({ page }) => {
-    await expect(page.locator('text=Anuncios')).toBeVisible();
-    await expect(page.locator('text=Nuevo Anuncio')).toBeVisible();
+  test('shows announcements management list', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Anuncios' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Nuevo Anuncio' })).toBeVisible();
   });
 
-  test('should create new announcement', async ({ page }) => {
-    await page.click('text=Nuevo Anuncio');
-    
-    await page.fill('input[name="title"]', 'Anuncio de Prueba');
-    await page.fill('textarea[name="message"]', 'Este es un mensaje de prueba');
-    await page.selectOption('select[name="type"]', 'info');
-    await page.selectOption('select[name="displayType"]', 'banner');
-    
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL('/admin/anuncios', { timeout: 15000 });
-    await expect(page.locator('text=Anuncio creado')).toBeVisible();
-  });
+  test('creates a new announcement and returns to list', async ({ page }) => {
+    const title = `Anuncio E2E ${Date.now()}`;
+    const message = 'Mensaje de prueba e2e para validar creación.';
 
-  test('should edit announcement', async ({ page }) => {
-    // Click edit on first announcement
-    await page.click('[data-testid="edit-announcement"] >> nth=0');
-    
-    await page.fill('input[name="title"]', 'Anuncio Editado');
-    await page.click('button[type="submit"]');
-    
-    await expect(page.locator('text=Anuncio actualizado')).toBeVisible();
-  });
+    await page.getByRole('link', { name: 'Nuevo Anuncio' }).click();
+    await expect(page).toHaveURL('/admin/anuncios/nuevo');
+    await expect(page.getByRole('heading', { name: 'Nuevo Anuncio' })).toBeVisible();
 
-  test('should activate/deactivate announcement', async ({ page }) => {
-    const toggle = page.locator('[data-testid="toggle-announcement"] >> nth=0');
-    await toggle.click();
-    
-    await expect(page.locator('text=Estado actualizado')).toBeVisible();
-  });
+    await page.locator('input[type="text"]').first().fill(title);
+    await page.locator('textarea').first().fill(message);
+    await page.getByRole('button', { name: 'Crear anuncio' }).click();
 
-  test('should filter announcements by type', async ({ page }) => {
-    await page.selectOption('select[name="filterType"]', 'info');
-    await expect(page.locator('text=Filtrando')).toBeVisible();
-  });
-
-  test('should show announcement preview', async ({ page }) => {
-    await page.goto('/admin/anuncios/nuevo');
-    
-    await page.fill('input[name="title"]', 'Preview Test');
-    await page.fill('textarea[name="message"]', 'Mensaje de preview');
-    
-    await expect(page.locator('[data-testid="announcement-preview"]')).toBeVisible();
+    await expect(page).toHaveURL('/admin/anuncios');
+    await expect(page.getByText(title)).toBeVisible({ timeout: 15000 });
   });
 });

@@ -1,8 +1,11 @@
+import { normalizeAuthUrlEnv } from "./normalize-auth-url-env"
 import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "./prisma"
 import Credentials from "next-auth/providers/credentials"
 import authConfig from "./auth.config"
+
+normalizeAuthUrlEnv()
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   ...authConfig,

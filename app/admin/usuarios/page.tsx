@@ -157,7 +157,7 @@ export default function AdminUsuariosPage() {
     if (status === "authenticated") {
       fetchUsers(pagination.page);
     }
-  }, [sortField, sortDirection]);
+  }, [sortField, sortDirection, status, fetchUsers, pagination.page]);
 
   // Handle role update
   const handleRoleUpdate = async (userId: string, newRole: string) => {

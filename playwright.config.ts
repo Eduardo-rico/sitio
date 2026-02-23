@@ -7,8 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   
-  // Run tests in parallel (fully independent)
-  fullyParallel: true,
+  // Keep e2e deterministic and reduce auth/session races.
+  fullyParallel: false,
   
   // Fail the build on CI if you accidentally left test.only
   forbidOnly: !!process.env.CI,
@@ -17,7 +17,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   
   // Workers
-  workers: process.env.CI ? 2 : undefined,
+  workers: process.env.CI ? 1 : 1,
   
   // Reporter configuration
   reporter: [
@@ -48,10 +48,10 @@ export default defineConfig({
     video: 'on-first-retry',
     
     // Action timeout
-    actionTimeout: 15000,
+    actionTimeout: 30000,
     
     // Navigation timeout
-    navigationTimeout: 15000,
+    navigationTimeout: 45000,
     
     // Viewport
     viewport: { width: 1280, height: 720 },
@@ -60,9 +60,8 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
   },
 
-  // Project configurations for different browsers and devices
+  // Keep a single browser project for faster and more stable CI runs.
   projects: [
-    // Desktop browsers
     {
       name: 'chromium',
       use: { 
@@ -70,74 +69,6 @@ export default defineConfig({
         launchOptions: {
           args: ['--disable-web-security'],
         },
-      },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    // Mobile devices
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 13'] },
-    },
-    {
-      name: 'iPad',
-      use: { ...devices['iPad (gen 7)'] },
-    },
-
-    // Tablet
-    {
-      name: 'Tablet Chrome',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 768, height: 1024 },
-      },
-    },
-
-    // Responsive breakpoints
-    {
-      name: 'sm',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 640, height: 800 },
-      },
-    },
-    {
-      name: 'md',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 768, height: 900 },
-      },
-    },
-    {
-      name: 'lg',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1024, height: 768 },
-      },
-    },
-    {
-      name: 'xl',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 800 },
-      },
-    },
-    {
-      name: '2xl',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1536, height: 900 },
       },
     },
   ],

@@ -5,7 +5,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { Terminal, AlertCircle, CheckCircle, Clock, Image } from 'lucide-react';
+import { Terminal, AlertCircle, CheckCircle, Clock, Image as ImageIcon } from 'lucide-react';
 import { ExecutionResult } from './useCodeExecution';
 
 export interface OutputPanelProps {
@@ -133,7 +133,7 @@ export function OutputPanel({
             {result.plots.length > 0 && (
               <div className="output-section">
                 <div className="flex items-center gap-1 mb-2 text-xs text-gray-500 dark:text-gray-500">
-                  <Image className="w-3 h-3" />
+                  <ImageIcon className="w-3 h-3" />
                   <span>Gráficos ({result.plots.length})</span>
                 </div>
                 <div className="space-y-2">
@@ -142,6 +142,7 @@ export function OutputPanel({
                       key={index}
                       className="bg-white dark:bg-gray-950 p-2 rounded border border-gray-200 dark:border-gray-800"
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={`data:image/png;base64,${plot}`}
                         alt={`Plot ${index + 1}`}

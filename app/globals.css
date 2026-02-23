@@ -14,6 +14,8 @@
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   
   /* Respect reduced motion preference */
@@ -28,6 +30,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   
   /* Selection color */

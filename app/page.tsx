@@ -176,7 +176,7 @@ function PythonCourseSection() {
   ];
 
   return (
-    <section className="py-20 px-6 bg-white dark:bg-gray-950">
+    <section className="py-20 px-6 bg-white dark:bg-gray-950 overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
@@ -212,10 +212,10 @@ function PythonCourseSection() {
             
             <div className="flex flex-col sm:flex-row gap-4">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Link
-                  href="/tutoriales/python"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                >
+              <Link
+                href="/tutoriales/python-basico"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+              >
                   <Terminal className="w-5 h-5" />
                   Ir al Curso
                   <ArrowRight className="w-4 h-4" />

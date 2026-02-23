@@ -101,6 +101,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
           )}
         >
           {showImage && (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={src}
               alt={alt || name || "Avatar"}

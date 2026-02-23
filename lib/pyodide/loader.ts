@@ -2,7 +2,7 @@
  * Pyodide Loader - Funciones auxiliares para carga y configuración de Pyodide
  */
 
-import { loadPyodide, PyodideInterface } from 'pyodide';
+import type { PyodideInterface } from 'pyodide';
 
 // URL del CDN de Pyodide
 const PYODIDE_CDN_URL = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/';
@@ -37,6 +37,10 @@ export interface PyodideLoaderOptions {
 export async function loadPyodideInstance(
   options: PyodideLoaderOptions = {}
 ): Promise<PyodideInterface> {
+  if (typeof window === 'undefined') {
+    throw new Error('Pyodide solo se puede cargar en el navegador');
+  }
+
   const {
     packages = DEFAULT_PACKAGES,
     indexURL = PYODIDE_CDN_URL,
@@ -51,6 +55,8 @@ export async function loadPyodideInstance(
   }
 
   // Crear una promesa con timeout
+  const { loadPyodide } = await import('pyodide');
+
   const loadPromise = loadPyodide({
     indexURL,
     packages,
@@ -103,6 +109,7 @@ plt.show = show_plot
  * Verifica si Pyodide ya está cargado
  */
 export function isPyodideLoaded(): boolean {
+  if (typeof window === 'undefined') return false;
   const win = window as PyodideWindow;
   return !!win.__pyodideInstance;
 }
@@ -111,6 +118,7 @@ export function isPyodideLoaded(): boolean {
  * Obtiene la instancia de Pyodide si está cargada
  */
 export function getPyodideInstance(): PyodideInterface | null {
+  if (typeof window === 'undefined') return null;
   const win = window as PyodideWindow;
   return win.__pyodideInstance || null;
 }
@@ -119,6 +127,7 @@ export function getPyodideInstance(): PyodideInterface | null {
  * Limpia la instancia de Pyodide cacheada
  */
 export function clearPyodideCache(): void {
+  if (typeof window === 'undefined') return;
   const win = window as PyodideWindow;
   delete win.__pyodideInstance;
 }

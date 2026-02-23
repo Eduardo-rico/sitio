@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
 import { ApiResponse } from "@/types"
 
+export const runtime = "nodejs"
+
 interface RegisterBody {
   email: string
   password: string
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase(),
         name,
         role: "user",
+        passwordHash: hashedPassword,
       },
       select: {
         id: true,
@@ -70,10 +73,6 @@ export async function POST(request: NextRequest) {
         createdAt: true,
       },
     })
-
-    // Note: Password is not stored in the User model as per current schema
-    // If you need to store credentials, you'll need to add a password field to the schema
-    // or use a separate Credentials model
 
     return Response.json(
       { 
