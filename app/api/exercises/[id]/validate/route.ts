@@ -9,6 +9,13 @@ const validateSchema = z.object({
   exerciseId: z.string(),
 })
 
+function normalizeTestCases(raw: unknown): Array<{ expected?: string; pattern?: string }> {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw as Array<{ expected?: string; pattern?: string }>
+  if (typeof raw === "object") return [raw as { expected?: string; pattern?: string }]
+  return []
+}
+
 // POST /api/exercises/[id]/validate - Validar solución de usuario
 export async function POST(
   request: NextRequest,
@@ -55,9 +62,11 @@ export async function POST(
 
       case "contains":
         // Check if code contains expected output or specific patterns
-        const testCases = exercise.testCases as Array<{ expected: string; input?: string }> | null
-        if (testCases && testCases.length > 0) {
-          isCorrect = testCases.every(tc => code.includes(tc.expected))
+        const testCases = normalizeTestCases(exercise.testCases)
+        if (testCases.length > 0) {
+          isCorrect = testCases.every((tc) =>
+            typeof tc.expected === "string" ? code.includes(tc.expected) : true
+          )
           if (!isCorrect) {
             feedback = "Tu código no contiene todos los elementos requeridos."
           }
@@ -68,9 +77,11 @@ export async function POST(
 
       case "regex":
         // Validate with regex patterns
-        const patterns = exercise.testCases as Array<{ pattern: string }> | null
-        if (patterns) {
-          isCorrect = patterns.every(p => new RegExp(p.pattern, "i").test(code))
+        const patterns = normalizeTestCases(exercise.testCases)
+        if (patterns.length > 0) {
+          isCorrect = patterns.every((p) =>
+            typeof p.pattern === "string" ? new RegExp(p.pattern, "i").test(code) : true
+          )
           if (!isCorrect) {
             feedback = "Tu código no cumple con el patrón requerido."
           }

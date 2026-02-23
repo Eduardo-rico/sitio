@@ -15,34 +15,46 @@ interface Course {
   slug: string;
   title: string;
   description: string | null;
-  estimatedMinutes: number | null;
   lessonsCount: number;
+  progressPercentage?: number;
+  lessons?: Array<{
+    estimatedMinutes: number;
+  }>;
 }
-
-// Mock data since this is now a client component
-const mockCourses: Course[] = [
-  {
-    id: "1",
-    slug: "python",
-    title: "Python desde Cero",
-    description: "Aprende Python desde lo básico hasta conceptos intermedios con ejercicios prácticos.",
-    estimatedMinutes: 15,
-    lessonsCount: 10,
-  },
-];
 
 export default function TutorialsPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call
-    const timer = setTimeout(() => {
-      setCourses(mockCourses);
-      setIsLoading(false);
-    }, 800);
+    let mounted = true;
 
-    return () => clearTimeout(timer);
+    const loadCourses = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/courses");
+        const payload = await response.json();
+
+        if (!response.ok || !payload?.success) {
+          throw new Error(payload?.error || "No se pudieron cargar los cursos");
+        }
+
+        if (!mounted) return;
+        setCourses(payload.data);
+      } catch (error) {
+        console.error("Error cargando cursos:", error);
+        if (!mounted) return;
+        setCourses([]);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    loadCourses();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -110,6 +122,16 @@ export default function TutorialsPage() {
 }
 
 function CourseCard({ course }: { course: Course }) {
+  const estimatedMinutes =
+    course.lessons && course.lessons.length > 0
+      ? Math.round(
+          course.lessons.reduce((acc, lesson) => acc + lesson.estimatedMinutes, 0) /
+            course.lessons.length
+        )
+      : 10;
+
+  const courseEmoji = course.title.toLowerCase().includes("intermedio") ? "🚀" : "🐍";
+
   return (
     <motion.div
       whileHover={{ y: -8, scale: 1.01 }}
@@ -127,7 +149,7 @@ function CourseCard({ course }: { course: Course }) {
               transition={{ duration: 0.5 }}
               className="text-4xl"
             >
-              🐍
+              {courseEmoji}
             </motion.span>
             <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
               {course.lessonsCount} lecciones
@@ -154,7 +176,7 @@ function CourseCard({ course }: { course: Course }) {
         <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
           <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
             <Clock className="w-4 h-4 mr-1" />
-            {course.estimatedMinutes || 10} min por lección
+            {estimatedMinutes} min por lección
           </div>
         </div>
       </Link>

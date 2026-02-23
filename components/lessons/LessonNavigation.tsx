@@ -5,12 +5,47 @@ import { Exercise } from '@prisma/client';
 import { PythonEditor } from '@/components/python-editor/PythonEditor';
 import { useCodeExecution } from '@/components/python-editor/useCodeExecution';
 import { OutputPanel } from '@/components/python-editor/OutputPanel';
-import { Play, RotateCcw, CheckCircle, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Play,
+  RotateCcw,
+  CheckCircle,
+  Lightbulb,
+  ChevronDown,
+  ChevronUp,
+  XCircle,
+  ListChecks,
+} from 'lucide-react';
 
 interface LessonNavigationProps {
   exercises: Exercise[];
   courseSlug: string;
   lessonSlug: string;
+}
+
+type ValidationType = 'exact' | 'contains' | 'regex' | 'custom';
+
+interface TestCaseDefinition {
+  description?: string;
+  expected?: string;
+  pattern?: string;
+}
+
+interface TestResult {
+  description: string;
+  passed: boolean;
+  expected: string;
+  actual: string;
+}
+
+function normalizeTestCases(rawTestCases: unknown): TestCaseDefinition[] {
+  if (!rawTestCases) return [];
+  if (Array.isArray(rawTestCases)) {
+    return rawTestCases.filter((tc) => typeof tc === 'object' && tc !== null) as TestCaseDefinition[];
+  }
+  if (typeof rawTestCases === 'object') {
+    return [rawTestCases as TestCaseDefinition];
+  }
+  return [];
 }
 
 export function LessonNavigation({ exercises }: LessonNavigationProps) {
@@ -19,6 +54,7 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
   const [showSolution, setShowSolution] = useState(false);
   const [code, setCode] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
 
   const { executeCode, result, isExecuting } = useCodeExecution({
     timeout: 10000,
@@ -31,6 +67,7 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
     if (activeExercise) {
       setCode(activeExercise.starterCode || '# Escribe tu código aquí\n');
       setIsCorrect(null);
+      setTestResults([]);
       setShowSolution(false);
     }
   }, [activeExercise]);
@@ -44,33 +81,72 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
     const executionResult = await executeCode(code);
     
     if (activeExercise && executionResult) {
-      // Simple validation based on exercise type
-      const { stdout } = executionResult;
-      let correct = false;
+      const stdout = executionResult.stdout || '';
+      const validationType = (activeExercise.validationType || 'custom') as ValidationType;
+      const normalized = normalizeTestCases(activeExercise.testCases);
 
-      const testCases = activeExercise.testCases as any;
-
-      switch (activeExercise.validationType) {
-        case 'exact':
-          correct = stdout.trim() === testCases?.expected?.trim();
-          break;
-        case 'contains':
-          correct = stdout.includes(testCases?.expected);
-          break;
-        case 'regex':
-          try {
-            const regex = new RegExp(testCases?.pattern || '');
-            correct = regex.test(stdout);
-          } catch {
-            correct = false;
-          }
-          break;
-        default:
-          // For exercises without validation, just check if code ran successfully
-          correct = !executionResult.error;
+      if (executionResult.error) {
+        setTestResults([
+          {
+            description: 'El código debe ejecutarse sin errores',
+            passed: false,
+            expected: 'Sin excepciones',
+            actual: executionResult.error,
+          },
+        ]);
+        setIsCorrect(false);
+        return;
       }
 
-      setIsCorrect(correct);
+      const fallbackResults: TestResult[] = [
+        {
+          description: 'El código se ejecutó correctamente',
+          passed: true,
+          expected: 'Ejecución exitosa',
+          actual: 'OK',
+        },
+      ];
+
+      if (normalized.length === 0) {
+        setTestResults(fallbackResults);
+        setIsCorrect(true);
+        return;
+      }
+
+      const results: TestResult[] = normalized.map((test, index) => {
+        if (validationType === 'regex') {
+          const pattern = test.pattern || '';
+          let passed = false;
+          try {
+            passed = new RegExp(pattern, 'm').test(stdout);
+          } catch {
+            passed = false;
+          }
+          return {
+            description: test.description || `Test ${index + 1}`,
+            passed,
+            expected: `Regex: ${pattern || '(vacío)'}`,
+            actual: stdout.trim() || '(sin salida)',
+          };
+        }
+
+        const expected = test.expected || '';
+        const actual = stdout.trim();
+        const passed =
+          validationType === 'exact'
+            ? actual === expected.trim()
+            : actual.includes(expected);
+
+        return {
+          description: test.description || `Test ${index + 1}`,
+          passed,
+          expected,
+          actual: actual || '(sin salida)',
+        };
+      });
+
+      setTestResults(results);
+      setIsCorrect(results.every((result) => result.passed));
     }
   }, [executeCode, code, activeExercise]);
 
@@ -78,6 +154,7 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
     if (activeExercise) {
       setCode(activeExercise.starterCode || '# Escribe tu código aquí\n');
       setIsCorrect(null);
+      setTestResults([]);
     }
   };
 
@@ -235,6 +312,38 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
 
         {/* Output */}
         <div className="p-4">
+          {testResults.length > 0 && (
+            <div className="mb-4 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                <ListChecks className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  Resultado de tests ({testResults.filter((r) => r.passed).length}/{testResults.length})
+                </span>
+              </div>
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {testResults.map((testResult, index) => (
+                  <div key={index} className="p-3 text-sm">
+                    <div className="flex items-start gap-2 mb-1">
+                      {testResult.passed ? (
+                        <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5" />
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">{testResult.description}</p>
+                        {!testResult.passed && (
+                          <>
+                            <p className="text-gray-500 dark:text-gray-400">Esperado: {testResult.expected}</p>
+                            <p className="text-gray-500 dark:text-gray-400">Actual: {testResult.actual}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <OutputPanel result={result} isExecuting={isExecuting} />
         </div>
       </div>
