@@ -46,10 +46,7 @@ export function TextSkeleton({
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
-          className="h-4 w-full"
-          style={{
-            width: i === lines - 1 ? lastLineWidth : "100%",
-          }}
+          className={`h-4 ${i === lines - 1 ? "" : "w-full"}`}
         />
       ))}
     </div>
@@ -79,9 +76,7 @@ export function CardSkeleton({
           <Skeleton
             key={i}
             className="h-4 w-full"
-            style={{
-              width: i === lines - 1 ? "60%" : "100%",
-            }}
+
           />
         ))}
       </div>
@@ -127,7 +122,7 @@ export function ListSkeleton({
         <div
           key={i}
           className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
-          style={{ height: itemHeight }}
+
         >
           <AvatarSkeleton size="sm" />
           <div className="flex-1 space-y-2">

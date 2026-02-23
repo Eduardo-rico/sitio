@@ -49,8 +49,9 @@ export function PullToRefresh({
         !isRefreshing
       ) {
         const touchY = e.touches[0].clientY;
-        const startY = (e.target as HTMLElement).dataset.touchStart
-          ? parseInt((e.target as HTMLElement).dataset.touchStart, 10)
+        const touchStartValue = (e.target as HTMLElement).dataset.touchStart;
+        const startY = touchStartValue
+          ? parseInt(touchStartValue, 10)
           : touchY;
 
         const pullDistance = Math.max(0, (touchY - startY) * 0.5);

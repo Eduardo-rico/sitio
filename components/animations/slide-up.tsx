@@ -28,7 +28,7 @@ export function SlideUp({
       initial={{ opacity: 0, y: distance }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once, amount }}
-      transition={{ duration, delay, ease: transitions.ease.ease }}
+      transition={{ duration, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}
@@ -51,7 +51,7 @@ export function SlideInLeft({
       initial={{ opacity: 0, x: -distance }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once, amount }}
-      transition={{ duration, delay, ease: transitions.ease.ease }}
+      transition={{ duration, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}
@@ -74,7 +74,7 @@ export function SlideInRight({
       initial={{ opacity: 0, x: distance }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once, amount }}
-      transition={{ duration, delay, ease: transitions.ease.ease }}
+      transition={{ duration, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}

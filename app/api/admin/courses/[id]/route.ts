@@ -16,7 +16,7 @@ const courseSchema = z.object({
   description: z.string().max(500).optional(),
   order: z.number().min(0),
   isPublished: z.boolean(),
-  imageUrl: z.string().url().optional().or(z.literal("")),
+
 });
 
 // Check admin access
@@ -149,7 +149,6 @@ export async function PUT(
         description: data.description || null,
         order: data.order,
         isPublished: data.isPublished,
-        imageUrl: data.imageUrl || null,
       },
     });
 

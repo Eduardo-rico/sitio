@@ -38,7 +38,7 @@ export function FadeIn({
         transition: {
           duration,
           delay,
-          ease: transitions.ease.ease,
+          ease: [0.25, 0.1, 0.25, 1],
         },
       },
     };
@@ -68,7 +68,7 @@ export function FadeInSimple({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration, delay, ease: transitions.ease.ease }}
+      transition={{ duration, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}

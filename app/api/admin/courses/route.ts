@@ -16,7 +16,7 @@ const courseSchema = z.object({
   description: z.string().max(500).optional(),
   order: z.number().min(0),
   isPublished: z.boolean(),
-  imageUrl: z.string().url().optional().or(z.literal("")),
+
 });
 
 // GET /api/admin/courses - List all courses with stats (admin only)
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         description: course.description,
         order: course.order,
         isPublished: course.isPublished,
-        imageUrl: course.imageUrl,
+
         lessonsCount: course._count.lessons,
         enrolledUsers: enrolledUsers.size,
         createdAt: course.createdAt,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         description: data.description || null,
         order: data.order,
         isPublished: data.isPublished,
-        imageUrl: data.imageUrl || null,
+
       },
     });
 

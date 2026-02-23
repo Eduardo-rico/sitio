@@ -45,7 +45,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     // Handle change
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       onCheckedChange?.(e.target.checked);
-      props.onChange?.(e);
+      (props as React.InputHTMLAttributes<HTMLInputElement>).onChange?.(e);
     };
 
     // Forward ref

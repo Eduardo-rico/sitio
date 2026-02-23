@@ -90,7 +90,7 @@ export function AnnouncementBanner({ className }: AnnouncementBannerProps) {
 
   // Handle dismissal
   const handleDismiss = useCallback(async (announcementId: string) => {
-    setDismissedIds((prev) => new Set([...prev, announcementId]));
+    setDismissedIds((prev) => new Set(Array.from(prev).concat(announcementId)));
     
     // Call API to persist dismissal if user is logged in
     if (session?.user) {

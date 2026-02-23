@@ -5,6 +5,7 @@
 
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { Clock, Eye, EyeOff, BookOpen, CheckCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -94,7 +95,7 @@ export function ContentPreview({
                 {children}
               </p>
             ),
-            code({ node, inline, className, children, ...props }) {
+            code({ node, inline, className, children, ...props }: { node?: any; inline?: boolean; className?: string; children?: React.ReactNode }) {
               const match = /language-(\w+)/.exec(className || "");
               const language = match ? match[1] : "text";
 

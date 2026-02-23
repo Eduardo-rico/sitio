@@ -413,7 +413,7 @@ export default function UserDetailModal({
                             <div>
                               <p className="text-sm text-gray-500 dark:text-gray-400">Last Active</p>
                               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {formatRelativeTime(user.lastActive)}
+                                {formatRelativeTime(user.lastActive || null)}
                               </p>
                             </div>
                           </div>

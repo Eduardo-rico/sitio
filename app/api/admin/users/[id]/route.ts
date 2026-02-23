@@ -111,7 +111,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       : 0
 
     // Generate recent activities
-    const activities = []
+    const activities: Array<{
+      id: string;
+      type: string;
+      description: string;
+      timestamp: string;
+      metadata: Record<string, unknown>;
+    }> = []
     
     // Add progress activities
     progressWithCourses.slice(0, 10).forEach(p => {

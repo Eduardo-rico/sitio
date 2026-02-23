@@ -369,7 +369,7 @@ export default function UserTable({
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
                           <Clock className="w-3.5 h-3.5" />
-                          {formatRelativeTime(user.lastActive)}
+                          {formatRelativeTime(user.lastActive || null)}
                         </div>
                       </td>
 
@@ -578,7 +578,7 @@ export default function UserTable({
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Last Active</p>
                         <p className="text-sm text-gray-700 dark:text-gray-300">
-                          {formatRelativeTime(user.lastActive)}
+                          {formatRelativeTime(user.lastActive || null)}
                         </p>
                       </div>
                     </div>
