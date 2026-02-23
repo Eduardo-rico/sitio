@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User (gestionado por NextAuth)
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  role          String    @default("user") // "user", "admin"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relaciones
+  progress      Progress[]
+  codeSubmissions CodeSubmission[]
+  subscriptions Subscription[]
+  accounts      Account[]
+  sessions      Session[]
+  
+  @@map("users")
+}
+
+// NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Cursos/Categorías de tutoriales
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relaciones
+  lessons     Lesson[]
+  
+  @@map("courses")
+}
+
+// Lecciones individuales
+model Lesson {
+  id          String   @id @default(cuid())
+  courseId    String
+  slug        String   @unique
+  title       String
+  content     String   // Markdown/HTML con bloques interactivos
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  estimatedMinutes Int @default(10)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relaciones
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  exercises   Exercise[]
+  progress    Progress[]
+  
+  @@map("lessons")
+}
+
+// Ejercicios dentro de cada lección
+model Exercise {
+  id              String   @id @default(cuid())
+  lessonId        String
+  order           Int      @default(0)
+  title           String
+  instructions    String   // Markdown con enunciado
+  starterCode     String   // Código inicial en el editor
+  solutionCode    String   // Código solución (para validación)
+  testCases       Json?    // Casos de prueba: [{input: "...", expected: "..."}]
+  validationType  String   @default("exact") // "exact", "contains", "regex", "custom"
+  hints           String[] // Array de pistas progresivas
+  isPublished     Boolean  @default(false)
+  
+  // Relaciones
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  submissions     CodeSubmission[]
+  
+  @@map("exercises")
+}
+
+// Progreso del usuario en lecciones
+model Progress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  status      String    // "not_started", "in_progress", "completed"
+  completedAt DateTime?
+  lastAccessedAt DateTime @default(now())
+  
+  // Relaciones
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, lessonId])
+  @@map("progress")
+}
+
+// Envíos de código de los usuarios
+model CodeSubmission {
+  id          String   @id @default(cuid())
+  userId      String
+  exerciseId  String
+  code        String   // Código enviado
+  output      String?  // Salida de la ejecución
+  isCorrect   Boolean?
+  error       String?  // Error si lo hubo
+  attempts    Int      @default(1)
+  createdAt   DateTime @default(now())
+  
+  // Relaciones
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise    Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  
+  @@map("code_submissions")
+}
+
+// Preparación para monetización (suscripciones)
+model Subscription {
+  id              String    @id @default(cuid())
+  userId          String
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  status          String    // "active", "canceled", "past_due", etc.
+  plan            String    // "free", "premium", "pro"
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relaciones
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("subscriptions")
+}
+
+// Contenido interactivo embebido en posts del blog
+model InteractiveSnippet {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  code        String
+  description String?
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  @@map("interactive_snippets")
+}

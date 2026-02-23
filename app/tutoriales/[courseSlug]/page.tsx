@@ -1,0 +1,193 @@
+/**
+ * Página de curso específico - Muestra todas las lecciones del curso
+ */
+
+import { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import { CheckCircle, Circle, Play, Clock, BookOpen } from 'lucide-react';
+
+interface CoursePageProps {
+  params: {
+    courseSlug: string;
+  };
+}
+
+async function getCourseWithLessons(courseSlug: string) {
+  try {
+    const course = await prisma.course.findUnique({
+      where: { 
+        slug: courseSlug,
+        isPublished: true 
+      },
+      include: {
+        lessons: {
+          where: { isPublished: true },
+          orderBy: { order: 'asc' },
+          include: {
+            exercises: {
+              where: { isPublished: true },
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
+      },
+    });
+    return course;
+  } catch (error) {
+    console.error('Error fetching course:', error);
+    return null;
+  }
+}
+
+export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
+  const course = await getCourseWithLessons(params.courseSlug);
+  
+  if (!course) {
+    return {
+      title: 'Curso no encontrado',
+    };
+  }
+
+  return {
+    title: `${course.title} | Tutoriales Python`,
+    description: course.description || `Aprende ${course.title} con ejercicios interactivos`,
+  };
+}
+
+export default async function CoursePage({ params }: CoursePageProps) {
+  const course = await getCourseWithLessons(params.courseSlug);
+
+  if (!course) {
+    notFound();
+  }
+
+  const totalLessons = course.lessons.length;
+  const totalExercises = course.lessons.reduce(
+    (acc, lesson) => acc + lesson.exercises.length, 
+    0
+  );
+  const totalMinutes = course.lessons.reduce(
+    (acc, lesson) => acc + lesson.estimatedMinutes, 
+    0
+  );
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-8">
+      {/* Breadcrumb */}
+      <nav className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        <Link href="/tutoriales" className="hover:text-blue-600 dark:hover:text-blue-400">
+          Tutoriales
+        </Link>
+        <span className="mx-2">/</span>
+        <span className="text-gray-900 dark:text-gray-100">{course.title}</span>
+      </nav>
+
+      {/* Header del curso */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8">
+        <div className="flex items-start gap-6">
+          <div className="text-6xl">🐍</div>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              {course.title}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
+              {course.description || 'Curso práctico con ejercicios interactivos.'}
+            </p>
+            
+            <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                <span>{totalLessons} lecciones</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Play className="w-4 h-4" />
+                <span>{totalExercises} ejercicios</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{totalMinutes} minutos</span>
+              </div>
+            </div>
+          </div>
+          
+          {course.lessons.length > 0 && (
+            <Link
+              href={`/tutoriales/${course.slug}/${course.lessons[0].slug}`}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <Play className="w-5 h-5" />
+              Comenzar
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Lista de lecciones */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Contenido del curso
+        </h2>
+        
+        {course.lessons.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <p className="text-gray-600 dark:text-gray-400">
+              Este curso aún no tiene lecciones publicadas.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {course.lessons.map((lesson, index) => (
+              <Link
+                key={lesson.id}
+                href={`/tutoriales/${course.slug}/${lesson.slug}`}
+                className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-all group"
+              >
+                {/* Número de lección */}
+                <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {index + 1}
+                </div>
+                
+                {/* Info de la lección */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {lesson.title}
+                  </h3>
+                  <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {lesson.estimatedMinutes} min
+                    </span>
+                    {lesson.exercises.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Play className="w-3 h-3" />
+                        {lesson.exercises.length} ejercicios
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Estado (placeholder para futuro tracking) */}
+                <Circle className="w-5 h-5 text-gray-300 dark:text-gray-600" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Botón de navegación */}
+      <div className="mt-8 flex justify-between">
+        <Link
+          href="/tutoriales"
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Volver a tutoriales
+        </Link>
+      </div>
+    </main>
+  );
+}
