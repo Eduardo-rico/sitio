@@ -60,18 +60,7 @@ async function DashboardLayout({
                     {session.user.email}
                   </p>
                 </div>
-                <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold overflow-hidden">
-                  {session.user.image ? (
-                    <Image
-                      src={session.user.image}
-                      alt={session.user.name || "Avatar"}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <User className="w-5 h-5" />
-                  )}
-                </div>
+                <Avatar name={session.user.name} image={session.user.image} />
               </div>
 
               {/* Sign Out Button */}
@@ -145,6 +134,53 @@ function NavLink({
         {children}
       </span>
     </Link>
+  );
+}
+
+// Avatar Component with initials
+function Avatar({ name, image }: { name?: string | null; image?: string | null }) {
+  // Generate initials from name
+  const initials = name
+    ? name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+
+  // Consistent gradient based on name
+  const gradients = [
+    "from-blue-500 to-indigo-600",
+    "from-purple-500 to-pink-600",
+    "from-green-500 to-teal-600",
+    "from-orange-500 to-red-600",
+    "from-cyan-500 to-blue-600",
+  ];
+  const gradientIndex = name
+    ? name.charCodeAt(0) % gradients.length
+    : 0;
+  const gradient = gradients[gradientIndex];
+
+  if (image) {
+    return (
+      <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white dark:ring-gray-700 shadow-md">
+        <Image
+          src={image}
+          alt={name || "Avatar"}
+          fill
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`w-10 h-10 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-white dark:ring-gray-700`}
+    >
+      {initials}
+    </div>
   );
 }
 

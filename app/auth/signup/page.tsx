@@ -1,64 +1,263 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import { BookOpen, ArrowLeft } from "lucide-react";
-import SignUpForm from "@/components/auth/SignUpForm";
+import { useRouter } from "next/navigation";
+import { BookOpen, ArrowLeft, Loader2, User, Mail, Lock, CheckCircle } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-  const handleSuccess = () => {
-    // Redirect to sign in page with success message
-    router.push("/auth/signin?success=Account created successfully! Please sign in.");
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+    
+    if (formData.password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setError(data.error || "Error al crear la cuenta");
+      } else {
+        // Success - redirect to signin
+        router.push("/auth/signin?success=Cuenta creada exitosamente. Por favor, inicia sesión.");
+      }
+    } catch {
+      setError("Error de conexión. Por favor, inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12 dark:bg-slate-900">
-      <div className="w-full max-w-md">
-        {/* Back Link */}
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to home
-        </Link>
-
-        {/* Logo/Header */}
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-              <BookOpen className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900 dark:text-white">
-              EduPlatform
-            </span>
-          </Link>
-          <h1 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">
-            Create an account
-          </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Start your learning journey today
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex flex-col">
+      {/* Header */}
+      <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-xl"
+            >
+              <BookOpen className="w-6 h-6 text-blue-600" />
+              <span>Eduardo Rico</span>
+            </Link>
+          </div>
         </div>
+      </header>
 
-        {/* Card */}
-        <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-slate-800">
-          <SignUpForm onSuccess={handleSuccess} />
-        </div>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
-          Already have an account?{" "}
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Back Link */}
           <Link
-            href="/auth/signin"
-            className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-8 transition-colors"
           >
-            Sign in
+            <ArrowLeft className="w-4 h-4" />
+            Volver al inicio
           </Link>
-        </p>
-      </div>
+
+          {/* Card */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Crea tu cuenta gratis
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Comienza tu viaje de aprendizaje hoy
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Features */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Gratuito</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Sin tarjeta</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Progreso guardado</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Certificado</span>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Nombre completo
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
+                    placeholder="Tu nombre"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Correo electrónico
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
+                    placeholder="tu@email.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    minLength={8}
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
+                    placeholder="Mínimo 8 caracteres"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Confirmar contraseña
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    required
+                    minLength={8}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
+                    placeholder="Repite tu contraseña"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creando cuenta...
+                  </>
+                ) : (
+                  "Crear cuenta gratis"
+                )}
+              </button>
+            </form>
+
+            {/* Sign In Link */}
+            <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+              ¿Ya tienes cuenta?{" "}
+              <Link
+                href="/auth/signin"
+                className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                Inicia sesión
+              </Link>
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
   FaMedium,
   FaLinkedin,
   FaMastodon,
-  FaUser,
+
 } from "react-icons/fa";
 import { LayoutDashboard, LogOut, LogIn, UserPlus, Shield } from "lucide-react";
 import Image from "next/image";
@@ -95,21 +95,13 @@ export function Navbar() {
 
               {/* User Avatar/Name */}
               <div className="flex items-center gap-2 text-sm">
-                {session.user?.image ? (
-                  <Image
-                    src={session.user.image}
-                    alt={session.user.name || "User"}
-                    width={32}
-                    height={32}
-                    className="rounded-full border-2 border-white/50"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-slate-400 flex items-center justify-center">
-                    <FaUser className="w-4 h-4 text-slate-600" />
-                  </div>
-                )}
+                <Avatar 
+                  name={session.user?.name} 
+                  image={session.user?.image}
+                  size="sm"
+                />
                 <span className="hidden md:inline font-medium">
-                  {session.user?.name || session.user?.email}
+                  {session.user?.name?.split(" ")[0] || session.user?.email?.split("@")[0]}
                 </span>
               </div>
 
@@ -135,7 +127,7 @@ export function Navbar() {
 
               {/* Sign Up Link */}
               <Link
-                href="/auth/register"
+                href="/auth/signup"
                 className="flex items-center gap-1 text-white bg-blue-500/80 hover:bg-blue-500 text-sm font-medium px-3 py-1.5 rounded transition-colors"
               >
                 <UserPlus className="w-4 h-4" />
@@ -146,5 +138,66 @@ export function Navbar() {
         </div>
       </div>
     </nav>
+  );
+}
+
+// Avatar Component with initials
+function Avatar({ 
+  name, 
+  image,
+  size = "md"
+}: { 
+  name?: string | null; 
+  image?: string | null;
+  size?: "sm" | "md" | "lg";
+}) {
+  const sizeClasses = {
+    sm: "w-8 h-8 text-xs",
+    md: "w-10 h-10 text-sm",
+    lg: "w-12 h-12 text-base",
+  };
+
+  // Generate initials from name
+  const initials = name
+    ? name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+
+  // Consistent gradient based on name
+  const gradients = [
+    "from-blue-500 to-indigo-600",
+    "from-purple-500 to-pink-600",
+    "from-green-500 to-teal-600",
+    "from-orange-500 to-red-600",
+    "from-cyan-500 to-blue-600",
+  ];
+  const gradientIndex = name
+    ? name.charCodeAt(0) % gradients.length
+    : 0;
+  const gradient = gradients[gradientIndex];
+
+  if (image) {
+    return (
+      <div className={`relative ${sizeClasses[size]} rounded-full overflow-hidden ring-2 ring-white/50 shadow-sm`}>
+        <Image
+          src={image}
+          alt={name || "Avatar"}
+          fill
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white/50`}
+    >
+      {initials}
+    </div>
   );
 }
