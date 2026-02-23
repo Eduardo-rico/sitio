@@ -2,6 +2,9 @@
  * Crear nuevo curso
  */
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';

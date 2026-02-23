@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, ArrowLeft, Loader2, User, Mail, Lock, CheckCircle } from "lucide-react";
 
-export default function SignUpPage() {
+// Loading fallback
+function SignUpLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main sign up form
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -27,7 +43,6 @@ export default function SignUpPage() {
     e.preventDefault();
     setError("");
     
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError("Las contraseñas no coinciden");
       return;
@@ -56,8 +71,7 @@ export default function SignUpPage() {
       if (!response.ok) {
         setError(data.error || "Error al crear la cuenta");
       } else {
-        // Success - redirect to signin
-        router.push("/auth/signin?success=Cuenta creada exitosamente. Por favor, inicia sesión.");
+        router.push(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}&success=Cuenta creada exitosamente. Por favor, inicia sesión.`);
       }
     } catch {
       setError("Error de conexión. Por favor, inténtalo de nuevo.");
@@ -259,5 +273,14 @@ export default function SignUpPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Page with Suspense
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<SignUpLoading />}>
+      <SignUpForm />
+    </Suspense>
   );
 }

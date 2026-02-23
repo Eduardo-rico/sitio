@@ -7,6 +7,10 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { Course } from '@prisma/client';
 
+// Force dynamic to avoid build-time DB errors
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: 'Tutoriales de Python | Eduardo Rico',
   description: 'Aprende Python desde cero con tutoriales interactivos. Ejecuta código directamente en tu navegador.',

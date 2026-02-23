@@ -1,4 +1,10 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { redirect } from "next/navigation";
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { auth } from "@/lib/auth";
 import { UserSettings } from "@/components/dashboard/UserSettings";
 import prisma from "@/lib/prisma";

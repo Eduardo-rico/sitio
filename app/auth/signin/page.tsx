@@ -1,19 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { BookOpen, Github, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { useState } from "react";
 
-export default function SignInPage() {
+// Loading fallback for Suspense
+function SignInLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main sign in form component
+function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const success = searchParams.get("success");
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+  const success = searchParams?.get("success");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -214,5 +228,14 @@ export default function SignInPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Page component with Suspense
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInForm />
+    </Suspense>
   );
 }
