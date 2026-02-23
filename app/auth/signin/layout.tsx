@@ -29,11 +29,17 @@ export default function AuthLayout({
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
-          &copy; {new Date().getFullYear()} Eduardo Rico. Todos los derechos
-          reservados.
-        </p>
+        <Footer />
       </div>
     </div>
+  );
+}
+
+// Separate client component for the date to avoid hydration mismatch
+function Footer() {
+  return (
+    <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+      &copy; 2025 Eduardo Rico. Todos los derechos reservados.
+    </p>
   );
 }

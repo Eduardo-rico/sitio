@@ -26,29 +26,30 @@ interface RecentActivityProps {
 }
 
 // Mock data for demonstration when no activity is provided
+// Using static dates to avoid hydration mismatch
 const mockActivity: ActivityItem[] = [
   {
     id: "1",
     type: "lesson",
-    title: "Introducción a React",
-    courseTitle: "React Fundamentals",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+    title: "Introducción a Python",
+    courseTitle: "Python desde Cero",
+    timestamp: "2024-02-20T10:00:00.000Z",
     status: "completed",
   },
   {
     id: "2",
     type: "exercise",
-    title: "Componente de Contador",
-    courseTitle: "React Fundamentals",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+    title: "Variables y Tipos de Datos",
+    courseTitle: "Python desde Cero",
+    timestamp: "2024-02-20T09:30:00.000Z",
     status: "completed",
   },
   {
     id: "3",
     type: "lesson",
-    title: "Estado y Props",
-    courseTitle: "React Fundamentals",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+    title: "Estructuras de Control",
+    courseTitle: "Python desde Cero",
+    timestamp: "2024-02-19T15:00:00.000Z",
     status: "in_progress",
   },
 ];

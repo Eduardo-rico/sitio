@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 
 const authConfig = {
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
