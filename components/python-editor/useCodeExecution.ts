@@ -84,10 +84,6 @@ export function useCodeExecution(
       const stderr: string[] = [];
       const plots: string[] = [];
 
-      // Configurar captura de stdout/stderr
-      const originalStdout = pyodideInstance.setStdout;
-      const originalStderr = pyodideInstance.setStderr;
-
       try {
         // Crear AbortController para timeout
         abortControllerRef.current = new AbortController();
@@ -187,13 +183,9 @@ if _original_show:
         setResult(executionResult);
         return executionResult;
       } finally {
-        // Restaurar stdout/stderr originales
-        if (originalStdout) {
-          pyodideInstance.setStdout(originalStdout);
-        }
-        if (originalStderr) {
-          pyodideInstance.setStderr(originalStderr);
-        }
+        // Restaurar handlers sin captura explícita
+        pyodideInstance.setStdout({});
+        pyodideInstance.setStderr({});
         setIsExecuting(false);
         abortControllerRef.current = null;
       }

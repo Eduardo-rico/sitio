@@ -116,7 +116,7 @@ function StatCard({
 }
 
 export default function AdminStats({ stats }: AdminStatsProps) {
-  const statCards = [
+  const statCards: StatCardProps[] = [
     {
       label: "Total Users",
       value: stats.totalUsers,
@@ -147,7 +147,7 @@ export default function AdminStats({ stats }: AdminStatsProps) {
       value: stats.exercisesCompletedToday,
       icon: Code2,
       color: "orange" as const,
-      trend: stats.exercisesCompletedToday > 0 ? "up" : "neutral" as const,
+      trend: stats.exercisesCompletedToday > 0 ? "up" : "neutral",
       trendValue: "Today's exercises",
       description: "Correct submissions",
     },

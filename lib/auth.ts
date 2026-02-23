@@ -4,7 +4,6 @@ import prisma from "./prisma"
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
-import { verifyPassword } from "./password"
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
@@ -41,6 +40,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }
 
         // Verify password
+        const { verifyPassword } = await import("./password")
         const isValid = await verifyPassword(password, user.passwordHash)
 
         if (!isValid) {

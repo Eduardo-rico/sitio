@@ -18,12 +18,10 @@ interface ProgressStats {
 }
 
 interface CourseProgress {
-  course: {
-    id: string;
-    slug: string;
-    title: string;
-    description: string | null;
-  };
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
   lessonsCompleted: number;
   totalLessons: number;
   progressPercentage: number;

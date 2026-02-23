@@ -89,7 +89,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const { course, lesson } = data;
 
   // Encontrar índice de la lección actual para navegación
-  const currentIndex = course.lessons.findIndex(l => l.slug === lessonSlug);
+  const currentIndex = course.lessons.findIndex((l) => l.slug === params.lessonSlug);
   const prevLesson = currentIndex > 0 ? course.lessons[currentIndex - 1] : null;
   const nextLesson = currentIndex < course.lessons.length - 1 ? course.lessons[currentIndex + 1] : null;
   const progress = ((currentIndex + 1) / course.lessons.length) * 100;

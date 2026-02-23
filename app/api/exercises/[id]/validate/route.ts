@@ -149,7 +149,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json(
-        { success: false, error: "Datos inválidos: " + error.errors[0].message } satisfies ApiResponse,
+        { success: false, error: "Datos inválidos: " + error.issues[0].message } satisfies ApiResponse,
         { status: 400 }
       )
     }

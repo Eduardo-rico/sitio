@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       prisma.course.count(),
       prisma.lesson.count(),
       prisma.exercise.count(),
-      prisma.codeSubmissions.count({
+      prisma.codeSubmission.count({
         where: {
           isCorrect: true,
           createdAt: {
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       publishedLessons,
       publishedExercises,
     ] = await Promise.all([
-      prisma.codeSubmissions.count(),
+      prisma.codeSubmission.count(),
       prisma.progress.count(),
       prisma.course.count({ where: { isPublished: true } }),
       prisma.lesson.count({ where: { isPublished: true } }),
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate completion rate
     const completionRate = totalSubmissions > 0 
-      ? Math.round((await prisma.codeSubmissions.count({ where: { isCorrect: true } }) / totalSubmissions) * 100)
+      ? Math.round((await prisma.codeSubmission.count({ where: { isCorrect: true } }) / totalSubmissions) * 100)
       : 0
 
     return Response.json({
