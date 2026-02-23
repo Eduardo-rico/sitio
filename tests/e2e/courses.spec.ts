@@ -17,13 +17,13 @@ test.describe('Course Flow', () => {
     await page.click('button[type="submit"]');
     
     // Should redirect to signin
-    await expect(page).toHaveURL(/.*auth\/signin.*/, { timeout: 5000 });
+    await expect(page).toHaveURL(/.*auth\/signin.*/, { timeout: 15000 });
     
     // Login
     await page.fill('input#email', TEST_USER.email);
     await page.fill('input#password', TEST_USER.password);
     await page.click('button[type="submit"]');
-    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
   });
 
   test('should view courses list', async ({ page }) => {

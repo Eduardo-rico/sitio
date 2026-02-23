@@ -76,6 +76,29 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Comp = asChild ? Slot : "button";
     const isDisabled = disabled || loading;
+    const content = asChild ? (
+      children
+    ) : (
+      <>
+        {loading && (
+          <Loader2
+            className="h-4 w-4 animate-spin"
+            aria-hidden="true"
+          />
+        )}
+        {!loading && leftIcon && (
+          <span className="flex-shrink-0" aria-hidden="true">
+            {leftIcon}
+          </span>
+        )}
+        <span className="flex-1 truncate">{children}</span>
+        {!loading && rightIcon && (
+          <span className="flex-shrink-0" aria-hidden="true">
+            {rightIcon}
+          </span>
+        )}
+      </>
+    );
 
     return (
       <Comp
@@ -94,28 +117,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         ref={ref}
-        disabled={isDisabled}
+        disabled={asChild ? undefined : isDisabled}
         aria-disabled={isDisabled}
         aria-busy={loading}
         {...props}
       >
-        {loading && (
-          <Loader2
-            className="h-4 w-4 animate-spin"
-            aria-hidden="true"
-          />
-        )}
-        {!loading && leftIcon && (
-          <span className="flex-shrink-0" aria-hidden="true">
-            {leftIcon}
-          </span>
-        )}
-        <span className="flex-1 truncate">{children}</span>
-        {!loading && rightIcon && (
-          <span className="flex-shrink-0" aria-hidden="true">
-            {rightIcon}
-          </span>
-        )}
+        {content}
       </Comp>
     );
   }

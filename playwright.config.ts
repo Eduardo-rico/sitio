@@ -144,7 +144,7 @@ export default defineConfig({
 
   // Web server configuration for local development testing
   webServer: {
-    command: 'npm run dev',
+    command: 'pnpm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
@@ -155,7 +155,7 @@ export default defineConfig({
   // Output directory for test artifacts
   outputDir: './test-results/',
 
-  // Global setup/teardown (optional)
-  // globalSetup: './tests/e2e/global-setup.ts',
+  // Global setup/teardown
+  globalSetup: './tests/e2e/global-setup.ts',
   // globalTeardown: './tests/e2e/global-teardown.ts',
 });

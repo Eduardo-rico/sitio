@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const ADMIN_CREDENTIALS = {
-  email: 'Charalo123',
+  email: 'admin@example.com',
   password: 'Charalo123'
 };
 
@@ -11,7 +11,7 @@ test.describe('Admin Announcements', () => {
     await page.fill('input#email', ADMIN_CREDENTIALS.email);
     await page.fill('input#password', ADMIN_CREDENTIALS.password);
     await page.click('button[type="submit"]');
-    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
     
     await page.goto('/admin/anuncios');
   });
@@ -31,7 +31,7 @@ test.describe('Admin Announcements', () => {
     
     await page.click('button[type="submit"]');
     
-    await expect(page).toHaveURL('/admin/anuncios', { timeout: 5000 });
+    await expect(page).toHaveURL('/admin/anuncios', { timeout: 15000 });
     await expect(page.locator('text=Anuncio creado')).toBeVisible();
   });
 

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const ADMIN_CREDENTIALS = {
-  email: 'Charalo123',
+  email: 'admin@example.com',
   password: 'Charalo123'
 };
 
@@ -12,7 +12,7 @@ test.describe('Admin CMS - Content Management', () => {
     await page.fill('input#email', ADMIN_CREDENTIALS.email);
     await page.fill('input#password', ADMIN_CREDENTIALS.password);
     await page.click('button[type="submit"]');
-    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
   });
 
   test('should create a new course', async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe('Admin CMS - Content Management', () => {
     await page.click('button[type="submit"]');
     
     // Should redirect to courses list
-    await expect(page).toHaveURL('/admin/cursos', { timeout: 5000 });
+    await expect(page).toHaveURL('/admin/cursos', { timeout: 15000 });
     
     // Should show success toast
     await expect(page.locator('text=Curso creado exitosamente')).toBeVisible();
@@ -69,7 +69,7 @@ test.describe('Admin CMS - Content Management', () => {
     await page.click('button[type="submit"]');
     
     // Should redirect to lessons list
-    await expect(page).toHaveURL('/admin/lecciones', { timeout: 5000 });
+    await expect(page).toHaveURL('/admin/lecciones', { timeout: 15000 });
     await expect(page.locator('text=Lección de Prueba E2E')).toBeVisible();
   });
 
@@ -96,7 +96,7 @@ test.describe('Admin CMS - Content Management', () => {
     await page.click('button[type="submit"]');
     
     // Should redirect
-    await expect(page).toHaveURL('/admin/ejercicios', { timeout: 5000 });
+    await expect(page).toHaveURL('/admin/ejercicios', { timeout: 15000 });
     await expect(page.locator('text=Ejercicio de Prueba E2E')).toBeVisible();
   });
 

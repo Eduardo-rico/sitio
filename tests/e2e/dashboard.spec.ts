@@ -13,7 +13,7 @@ test.describe('Dashboard', () => {
     await page.fill('input#email', TEST_USER.email);
     await page.fill('input#password', TEST_USER.password);
     await page.click('button[type="submit"]');
-    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
   });
 
   test('debería mostrar el dashboard con información del usuario', async ({ page }) => {

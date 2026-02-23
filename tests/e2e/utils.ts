@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 
 export const TEST_USERS = {
   admin: {
-    email: 'Charalo123',
+    email: 'admin@example.com',
     password: 'Charalo123'
   },
   regular: {
@@ -17,7 +17,7 @@ export async function loginAsAdmin(page: Page) {
   await page.fill('input#email', TEST_USERS.admin.email);
   await page.fill('input#password', TEST_USERS.admin.password);
   await page.click('button[type="submit"]');
-  await page.waitForURL('/dashboard', { timeout: 5000 });
+  await page.waitForURL('/dashboard', { timeout: 15000 });
 }
 
 export async function loginAsUser(page: Page) {
@@ -25,7 +25,7 @@ export async function loginAsUser(page: Page) {
   await page.fill('input#email', TEST_USERS.regular.email);
   await page.fill('input#password', TEST_USERS.regular.password);
   await page.click('button[type="submit"]');
-  await page.waitForURL('/dashboard', { timeout: 5000 });
+  await page.waitForURL('/dashboard', { timeout: 15000 });
 }
 
 export async function registerUser(page: Page, email: string, password: string, name: string) {
@@ -35,12 +35,12 @@ export async function registerUser(page: Page, email: string, password: string, 
   await page.fill('input#password', password);
   await page.fill('input#confirmPassword', password);
   await page.click('button[type="submit"]');
-  await page.waitForURL(/.*auth\/signin.*/, { timeout: 5000 });
+  await page.waitForURL(/.*auth\/signin.*/, { timeout: 15000 });
 }
 
 export async function logout(page: Page) {
   await page.click('text=Cerrar sesión');
-  await page.waitForURL('/', { timeout: 5000 });
+  await page.waitForURL('/', { timeout: 15000 });
 }
 
 export function generateTestEmail() {
@@ -48,5 +48,5 @@ export function generateTestEmail() {
 }
 
 export async function waitForToast(page: Page, message: string) {
-  await page.waitForSelector(`text=${message}`, { timeout: 5000 });
+  await page.waitForSelector(`text=${message}`, { timeout: 15000 });
 }

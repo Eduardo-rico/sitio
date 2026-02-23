@@ -12,13 +12,17 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Create admin user
-  const adminEmail = 'Charalo123';
+  const adminEmail = 'admin@example.com';
   const adminPassword = 'Charalo123';
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: {
+      name: 'Admin',
+      role: 'admin',
+      passwordHash: hashedPassword,
+    },
     create: {
       email: adminEmail,
       name: 'Admin',
@@ -346,6 +350,30 @@ print(total)  # 15
 
       console.log(`  ✅ Ejercicio: ${exerciseData.title}`);
     }
+  }
+
+  // Seed at least one active announcement for admin/e2e flows
+  const existingAnnouncement = await prisma.announcement.findFirst({
+    where: { title: 'Anuncio inicial' },
+    select: { id: true },
+  });
+
+  if (!existingAnnouncement) {
+    await prisma.announcement.create({
+      data: {
+        title: 'Anuncio inicial',
+        message: 'Este es un anuncio de prueba inicial para validar el panel de administración.',
+        type: 'info',
+        priority: 'normal',
+        displayType: 'banner',
+        audience: 'all',
+        specificUserIds: [],
+        isActive: true,
+        dismissible: true,
+        createdBy: adminUser.id,
+      },
+    });
+    console.log('✅ Anuncio inicial creado');
   }
 
   console.log('\n✨ Seed completed!');
