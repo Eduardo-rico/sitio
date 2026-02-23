@@ -2,12 +2,12 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 import { Navbar } from "@/components/navbar/Navbar";
-import MyProfilePic from "./components/MyProfilePic";
+import { Footer } from "./components/Footer";
 import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
-  title: "El blog de Eduardo Rico",
-  description: "Eduardo Rico es un desarrollador web y data scientist",
+  title: "Eduardo Rico | Aprende a Programar",
+  description: "Plataforma educativa gratuita para aprender Python, ciencia de datos e inteligencia artificial con ejercicios interactivos.",
 };
 
 export default function RootLayout({
@@ -16,12 +16,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="dark:bg-slate-800">
+    <html lang="es" className="scroll-smooth">
+      <body className="min-h-screen flex flex-col bg-white dark:bg-slate-900">
         <Providers>
           <Navbar />
-          <MyProfilePic />
-          {children}
+          <main className="flex-1 pt-16">
+            {children}
+          </main>
+          <Footer />
         </Providers>
       </body>
     </html>
