@@ -3,6 +3,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "./prisma"
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
+import Credentials from "next-auth/providers/credentials"
+import { verifyPassword } from "./password"
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
@@ -14,6 +16,46 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     GitHub({
       clientId: process.env.GITHUB_ID || "",
       clientSecret: process.env.GITHUB_SECRET || "",
+    }),
+    Credentials({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        const email = credentials.email as string
+        const password = credentials.password as string
+
+        // Find user by email
+        const user = await prisma.user.findUnique({
+          where: { email },
+        })
+
+        if (!user || !user.passwordHash) {
+          return null
+        }
+
+        // Verify password
+        const isValid = await verifyPassword(password, user.passwordHash)
+
+        if (!isValid) {
+          return null
+        }
+
+        // Return user object (without passwordHash)
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          role: user.role,
+        }
+      },
     }),
   ],
   callbacks: {
