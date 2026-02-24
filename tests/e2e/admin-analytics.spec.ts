@@ -11,6 +11,7 @@ test.describe('Admin Analytics', () => {
     await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
     await expect(page.getByText('Analytics Overview')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Analytics Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Monitoreo en vivo de cursos' })).toBeVisible();
     await expect(page.getByText('User Growth')).toBeVisible();
     await expect(page.getByText('Course Popularity')).toBeVisible();
     await expect(page.getByText('Completion Rates')).toBeVisible();

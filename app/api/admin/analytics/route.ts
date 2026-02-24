@@ -6,12 +6,31 @@ import { ApiResponse } from "@/types";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+}
+
+function toDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function toDisplayDate(dateKey: string) {
+  const date = new Date(`${dateKey}T00:00:00.000Z`);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 // GET /api/admin/analytics - Get detailed analytics data (admin only)
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is admin
     if (session?.user?.role !== "admin") {
       return Response.json(
         { success: false, error: "Forbidden: Admin access required" } satisfies ApiResponse,
@@ -19,7 +38,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse query parameters
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get("startDate");
     const endDateParam = searchParams.get("endDate");
@@ -27,262 +45,265 @@ export async function GET(request: NextRequest) {
     const endDate = endDateParam ? new Date(endDateParam) : new Date();
     const startDate = startDateParam
       ? new Date(startDateParam)
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days ago
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    // Get today's date for "today" stats
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const rangeMs = Math.max(24 * 60 * 60 * 1000, endDate.getTime() - startDate.getTime());
+    const previousEnd = new Date(startDate.getTime());
+    const previousStart = new Date(startDate.getTime() - rangeMs);
 
-    // Get yesterday's date for comparison
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-    const endOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate() + 1);
+    const now = new Date();
+    const todayStart = startOfDay(now);
+    const tomorrowStart = endOfDay(now);
+    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
 
-    // Get week start for weekly stats
-    const weekStart = new Date(today);
+    const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    weekStart.setHours(0, 0, 0, 0);
+    const previousWeekStart = new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Get previous week start
-    const prevWeekStart = new Date(weekStart);
-    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
-    const prevWeekEnd = new Date(weekStart);
-
-    // Fetch all stats in parallel
     const [
-      // Current period stats
       totalUsers,
-      activeUsersToday,
-      coursesCompletedThisWeek,
-      exercisesSolvedToday,
-
-      // Previous period stats for comparison
       previousTotalUsers,
-      previousActiveUsers,
+      activeUsersTodayRaw,
+      previousActiveUsersRaw,
+      coursesCompletedThisWeek,
       previousCoursesCompleted,
+      exercisesSolvedToday,
       previousExercisesSolved,
-
-      // Time series data
-      usersOverTime,
-      courseData,
-      submissionsOverTime,
-      progressData,
+      usersCreatedInRange,
+      activeEventsInRange,
+      publishedCourses,
+      enrollmentEvents,
+      completedProgressInRange,
+      activityEventsInRange,
+      completionStatsRaw,
     ] = await Promise.all([
-      // Current stats
       prisma.user.count({
         where: { createdAt: { lte: endDate } },
       }),
       prisma.user.count({
+        where: { createdAt: { lt: startDate } },
+      }),
+      prisma.learningEvent.findMany({
         where: {
-          codeSubmissions: {
-            some: {
-              createdAt: { gte: startOfDay, lt: endOfDay },
-            },
-          },
+          createdAt: { gte: todayStart, lt: tomorrowStart },
+          userId: { not: null },
+        },
+        distinct: ["userId"],
+        select: { userId: true },
+      }),
+      prisma.learningEvent.findMany({
+        where: {
+          createdAt: { gte: yesterdayStart, lt: todayStart },
+          userId: { not: null },
+        },
+        distinct: ["userId"],
+        select: { userId: true },
+      }),
+      prisma.progress.count({
+        where: {
+          status: "completed",
+          completedAt: { gte: weekStart, lt: tomorrowStart },
         },
       }),
       prisma.progress.count({
         where: {
           status: "completed",
-          completedAt: { gte: weekStart, lte: endDate },
+          completedAt: { gte: previousWeekStart, lt: weekStart },
         },
       }),
       prisma.codeSubmission.count({
         where: {
           isCorrect: true,
-          createdAt: { gte: startOfDay, lt: endOfDay },
-        },
-      }),
-
-      // Previous period stats (for trends)
-      prisma.user.count({
-        where: { createdAt: { lte: new Date(startDate.getTime() - (endDate.getTime() - startDate.getTime())) } },
-      }),
-      prisma.user.count({
-        where: {
-          codeSubmissions: {
-            some: {
-              createdAt: { gte: startOfYesterday, lt: startOfDay },
-            },
-          },
-        },
-      }),
-      prisma.progress.count({
-        where: {
-          status: "completed",
-          completedAt: { gte: prevWeekStart, lt: prevWeekEnd },
+          createdAt: { gte: todayStart, lt: tomorrowStart },
         },
       }),
       prisma.codeSubmission.count({
         where: {
           isCorrect: true,
-          createdAt: { gte: startOfYesterday, lt: startOfDay },
+          createdAt: { gte: yesterdayStart, lt: todayStart },
         },
       }),
-
-      // Users over time
       prisma.user.findMany({
-        where: { createdAt: { gte: startDate, lte: endDate } },
-        select: { createdAt: true },
-        orderBy: { createdAt: "asc" },
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        select: {
+          createdAt: true,
+        },
       }),
-
-      // Course data
+      prisma.learningEvent.findMany({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+          userId: { not: null },
+        },
+        select: {
+          userId: true,
+          createdAt: true,
+        },
+      }),
       prisma.course.findMany({
-        where: { isPublished: true },
+        where: {
+          isPublished: true,
+        },
         select: {
           id: true,
+          slug: true,
           title: true,
-          lessons: {
+        },
+      }),
+      prisma.learningEvent.findMany({
+        where: {
+          eventType: "course_enrolled",
+          createdAt: { gte: startDate, lte: endDate },
+          courseSlug: { not: null },
+        },
+        select: {
+          courseSlug: true,
+          userId: true,
+          id: true,
+        },
+      }),
+      prisma.progress.findMany({
+        where: {
+          status: "completed",
+          completedAt: { gte: startDate, lte: endDate },
+        },
+        select: {
+          lesson: {
             select: {
-              progress: {
-                where: { status: "completed" },
-                select: { id: true },
+              course: {
+                select: {
+                  slug: true,
+                },
               },
             },
           },
-          _count: {
-            select: {
-              lessons: true,
-            },
-          },
         },
       }),
-
-      // Submissions over time
-      prisma.codeSubmission.findMany({
-        where: { createdAt: { gte: startDate, lte: endDate } },
-        select: { createdAt: true, isCorrect: true },
-        orderBy: { createdAt: "asc" },
+      prisma.learningEvent.findMany({
+        where: {
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        select: {
+          createdAt: true,
+        },
       }),
-
-      // Progress data for completion stats
       prisma.progress.groupBy({
         by: ["status"],
-        _count: { status: true },
+        _count: {
+          status: true,
+        },
       }),
     ]);
 
-    // Process users over time data
-    const usersByDate = new Map<string, { newUsers: number; activeUsers: number }>();
-    
-    // Initialize dates
-    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    for (let i = 0; i <= days && i <= 30; i++) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      usersByDate.set(dateStr, { newUsers: 0, activeUsers: 0 });
+    const activeUsersToday = activeUsersTodayRaw.length;
+    const previousActiveUsers = previousActiveUsersRaw.length;
+
+    const usersByDate = new Map<string, { newUsers: number; activeSet: Set<string> }>();
+    const rangeStartDay = startOfDay(startDate);
+    const rangeEndDay = startOfDay(endDate);
+
+    for (
+      let cursor = new Date(rangeStartDay);
+      cursor <= rangeEndDay;
+      cursor.setDate(cursor.getDate() + 1)
+    ) {
+      usersByDate.set(toDateKey(cursor), { newUsers: 0, activeSet: new Set<string>() });
     }
 
-    // Count new users per day
-    usersOverTime.forEach((user) => {
-      const dateStr = new Date(user.createdAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-      const existing = usersByDate.get(dateStr);
-      if (existing) {
-        existing.newUsers++;
-      }
-    });
+    for (const user of usersCreatedInRange) {
+      const key = toDateKey(new Date(user.createdAt));
+      const bucket = usersByDate.get(key);
+      if (bucket) bucket.newUsers += 1;
+    }
 
-    // Count active users per day (users who made submissions)
-    submissionsOverTime.forEach((sub) => {
-      const dateStr = new Date(sub.createdAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-      const existing = usersByDate.get(dateStr);
-      if (existing) {
-        existing.activeUsers += Math.floor(Math.random() * 3) + 1; // Approximate
-      }
-    });
+    for (const event of activeEventsInRange) {
+      if (!event.userId) continue;
+      const key = toDateKey(new Date(event.createdAt));
+      const bucket = usersByDate.get(key);
+      if (bucket) bucket.activeSet.add(event.userId);
+    }
 
-    const usersOverTimeData = Array.from(usersByDate.entries()).map(([date, data]) => ({
-      date,
-      newUsers: data.newUsers,
-      activeUsers: data.activeUsers || Math.floor(data.newUsers * 0.5) + 1,
+    const usersOverTime = Array.from(usersByDate.entries()).map(([dateKey, value]) => ({
+      date: toDisplayDate(dateKey),
+      newUsers: value.newUsers,
+      activeUsers: value.activeSet.size,
     }));
 
-    // Process course popularity data
-    const coursePopularityData = courseData.map((course) => {
-      const completions = course.lessons.reduce(
-        (sum, lesson) => sum + lesson.progress.length,
-        0
-      );
-      // Estimate enrollments as completions + some factor
-      const enrollments = Math.floor(completions * (1.5 + Math.random()));
+    const enrollmentMap = new Map<string, { users: Set<string>; anonymousCount: number }>();
+    for (const event of enrollmentEvents) {
+      const slug = event.courseSlug ?? "";
+      if (!slug) continue;
+      if (!enrollmentMap.has(slug)) {
+        enrollmentMap.set(slug, { users: new Set<string>(), anonymousCount: 0 });
+      }
+      const entry = enrollmentMap.get(slug)!;
+      if (event.userId) {
+        entry.users.add(event.userId);
+      } else {
+        entry.anonymousCount += 1;
+      }
+    }
 
-      return {
-        courseId: course.id,
-        courseName: course.title,
-        enrollments,
-        completions,
-      };
-    });
+    const completionMap = new Map<string, number>();
+    for (const progress of completedProgressInRange) {
+      const slug = progress.lesson.course.slug;
+      completionMap.set(slug, (completionMap.get(slug) || 0) + 1);
+    }
 
-    // Process activity heatmap data (by day of week and hour)
-    const heatmapData: { day: string; hour: number; value: number }[] = [];
-    const dayHourCounts = new Map<string, number>();
+    const coursePopularity = publishedCourses
+      .map((course) => {
+        const enrollment = enrollmentMap.get(course.slug);
+        return {
+          courseId: course.id,
+          courseName: course.title,
+          enrollments: enrollment ? enrollment.users.size + enrollment.anonymousCount : 0,
+          completions: completionMap.get(course.slug) || 0,
+        };
+      })
+      .sort((a, b) => b.enrollments - a.enrollments);
 
-    submissionsOverTime.forEach((sub) => {
-      const date = new Date(sub.createdAt);
-      const day = date.getDay().toString();
-      const hour = date.getHours();
-      const key = `${day}-${hour}`;
-      dayHourCounts.set(key, (dayHourCounts.get(key) || 0) + 1);
-    });
+    const activityMap = new Map<string, number>();
+    for (const event of activityEventsInRange) {
+      const date = new Date(event.createdAt);
+      const key = `${date.getDay()}-${date.getHours()}`;
+      activityMap.set(key, (activityMap.get(key) || 0) + 1);
+    }
 
-    // Fill in all day/hour combinations
+    const activityHeatmap: Array<{ day: string; hour: number; value: number }> = [];
     for (let day = 0; day < 7; day++) {
       for (let hour = 0; hour < 24; hour++) {
         const key = `${day}-${hour}`;
-        heatmapData.push({
+        activityHeatmap.push({
           day: day.toString(),
           hour,
-          value: dayHourCounts.get(key) || 0,
+          value: activityMap.get(key) || 0,
         });
       }
     }
 
-    // Process completion stats
     const completionStats = {
-      completed: progressData.find((p) => p.status === "completed")?._count.status || 0,
-      inProgress: progressData.find((p) => p.status === "in_progress")?._count.status || 0,
-      notStarted: progressData.find((p) => p.status === "not_started")?._count.status || 0,
+      completed: completionStatsRaw.find((item) => item.status === "completed")?._count.status || 0,
+      inProgress: completionStatsRaw.find((item) => item.status === "in_progress")?._count.status || 0,
+      notStarted: completionStatsRaw.find((item) => item.status === "not_started")?._count.status || 0,
     };
-
-    // Ensure we have some data for display (fallback for empty data)
-    if (completionStats.completed === 0 && completionStats.inProgress === 0 && completionStats.notStarted === 0) {
-      // Add sample data if empty
-      completionStats.completed = Math.floor(Math.random() * 100) + 50;
-      completionStats.inProgress = Math.floor(Math.random() * 80) + 30;
-      completionStats.notStarted = Math.floor(Math.random() * 200) + 100;
-    }
 
     return Response.json({
       success: true,
       data: {
         stats: {
           totalUsers,
-          previousTotalUsers: Math.max(1, previousTotalUsers),
+          previousTotalUsers,
           activeUsersToday,
-          previousActiveUsers: Math.max(1, previousActiveUsers),
+          previousActiveUsers,
           coursesCompletedThisWeek,
-          previousCoursesCompleted: Math.max(1, previousCoursesCompleted),
+          previousCoursesCompleted,
           exercisesSolvedToday,
-          previousExercisesSolved: Math.max(1, previousExercisesSolved),
+          previousExercisesSolved,
         },
-        usersOverTime: usersOverTimeData,
-        coursePopularity: coursePopularityData.length > 0 ? coursePopularityData : [
-          { courseId: "1", courseName: "Python Basics", enrollments: 150, completions: 89 },
-          { courseId: "2", courseName: "Data Science", enrollments: 120, completions: 65 },
-          { courseId: "3", courseName: "Web Development", enrollments: 95, completions: 45 },
-        ],
-        activityHeatmap: heatmapData,
+        usersOverTime,
+        coursePopularity,
+        activityHeatmap,
         completionStats,
       },
     } satisfies ApiResponse<{
@@ -301,7 +322,6 @@ export async function GET(request: NextRequest) {
       activityHeatmap: { day: string; hour: number; value: number }[];
       completionStats: { completed: number; inProgress: number; notStarted: number };
     }>);
-
   } catch (error) {
     console.error("Error fetching analytics:", error);
     return Response.json(

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
+import { LiveCourseMonitor } from "@/components/admin/live-course-monitor";
 import {
   Plus,
   Users,
@@ -173,6 +174,9 @@ export default function AdminDashboardPage() {
         </div>
         <AnalyticsDashboard />
       </section>
+
+      {/* Live Course Monitoring */}
+      <LiveCourseMonitor />
 
       {/* Quick Actions */}
       <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">

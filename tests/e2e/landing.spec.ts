@@ -12,9 +12,16 @@ test.describe('Landing Page', () => {
 
   test('course CTA navigates to the published Python path', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Ir al Curso' }).click();
+    const courseCta = page.getByRole('link', { name: 'Ir al Curso' });
+    await expect(courseCta).toBeVisible();
+    await courseCta.scrollIntoViewIfNeeded();
 
-    await expect(page).toHaveURL(/\/tutoriales\/python-basico/);
+    await Promise.all([
+      page.waitForURL(/\/tutoriales\/python-basico/, { timeout: 30_000 }),
+      courseCta.click(),
+    ]);
+
+    await expect(page).toHaveURL(/\/tutoriales\/python-basico/, { timeout: 30_000 });
     await expect(page.getByRole('heading', { name: /Python Basico/i })).toBeVisible();
   });
 

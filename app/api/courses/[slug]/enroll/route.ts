@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import prisma from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import { trackLearningEvent } from "@/lib/learning-events"
 import { ApiResponse } from "@/types"
 
 export const dynamic = "force-dynamic"
@@ -77,6 +78,17 @@ export async function POST(
         status: "in_progress",
         lastAccessedAt: new Date(),
       },
+    })
+
+    await trackLearningEvent({
+      eventType: "course_enrolled",
+      userId,
+      userEmail: session?.user?.email ?? undefined,
+      courseId: course.id,
+      courseSlug: course.slug,
+      lessonId: firstLesson.id,
+      lessonSlug: firstLesson.slug,
+      source: "api",
     })
 
     const response = {

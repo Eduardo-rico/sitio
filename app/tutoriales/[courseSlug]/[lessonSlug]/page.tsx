@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { trackLearningEvent } from '@/lib/learning-events';
 import { getSiteUrl } from '@/lib/site-url';
 import { LessonContent } from '@/components/lessons/LessonContent';
 import { LessonNavigation } from '@/components/lessons/LessonNavigation';
@@ -123,6 +124,17 @@ export default async function LessonPage({ params }: LessonPageProps) {
           status: "in_progress",
           lastAccessedAt: new Date(),
         },
+      });
+
+      await trackLearningEvent({
+        eventType: "lesson_viewed",
+        userId: session.user.id,
+        userEmail: session.user.email ?? undefined,
+        courseId: course.id,
+        courseSlug: course.slug,
+        lessonId: lesson.id,
+        lessonSlug: lesson.slug,
+        source: "server",
       });
     } catch (error) {
       console.error("Error updating lesson access progress:", error);

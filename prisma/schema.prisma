@@ -241,3 +241,26 @@ model InteractiveSnippet {
   
   @@map("interactive_snippets")
 }
+
+// Eventos de aprendizaje para analytics detallado y monitoreo en tiempo casi real
+model LearningEvent {
+  id            String   @id @default(cuid())
+  eventType     String
+  userId        String?
+  userEmail     String?
+  courseId      String?
+  courseSlug    String?
+  lessonId      String?
+  lessonSlug    String?
+  exerciseId    String?
+  exerciseTitle String?
+  source        String   @default("web")
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([eventType, createdAt])
+  @@index([userId, createdAt])
+  @@index([courseSlug, createdAt])
+  @@map("learning_events")
+}

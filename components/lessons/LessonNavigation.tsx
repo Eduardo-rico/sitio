@@ -56,7 +56,7 @@ function normalizeTestCases(rawTestCases: unknown): TestCaseDefinition[] {
   return [];
 }
 
-export function LessonNavigation({ exercises }: LessonNavigationProps) {
+export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNavigationProps) {
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
   const [showHints, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
@@ -69,12 +69,48 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   const shownFeedbackForExercise = useRef<Set<string>>(new Set());
+  const shownHintsEventForExercise = useRef<Set<string>>(new Set());
+  const shownSolutionEventForExercise = useRef<Set<string>>(new Set());
 
   const { executeCode, result, isExecuting } = useCodeExecution({
     timeout: 10000,
   });
 
   const activeExercise = exercises[activeExerciseIndex];
+
+  const trackClientEvent = useCallback(
+    async (
+      eventType:
+        | "exercise_code_run"
+        | "hint_opened"
+        | "solution_opened",
+      metadata?: Record<string, unknown>
+    ) => {
+      if (!activeExercise) return;
+
+      try {
+        await fetch("/api/learning-events/track", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventType,
+            courseSlug,
+            lessonSlug,
+            exerciseId: activeExercise.id,
+            exerciseTitle: activeExercise.title,
+            source: "client",
+            metadata,
+          }),
+          keepalive: true,
+        });
+      } catch {
+        // Silencioso para no afectar UX.
+      }
+    },
+    [activeExercise, courseSlug, lessonSlug]
+  );
 
   const persistValidation = useCallback(
     async (
@@ -117,8 +153,14 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
 
   const handleExecute = useCallback(async () => {
     setIsCorrect(null);
-    await executeCode(code);
-  }, [executeCode, code]);
+    const executionResult = await executeCode(code);
+    if (activeExercise) {
+      await trackClientEvent("exercise_code_run", {
+        codeLength: code.length,
+        hasError: !!executionResult.error,
+      });
+    }
+  }, [executeCode, code, activeExercise, trackClientEvent]);
 
   const maybeShowFeedbackModal = useCallback((exerciseId: string, passed: boolean) => {
     if (!passed) return;
@@ -271,6 +313,30 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
     }
   };
 
+  const handleToggleHints = async () => {
+    const nextShowHints = !showHints;
+    setShowHints(nextShowHints);
+
+    if (nextShowHints && activeExercise && !shownHintsEventForExercise.current.has(activeExercise.id)) {
+      shownHintsEventForExercise.current.add(activeExercise.id);
+      await trackClientEvent("hint_opened");
+    }
+  };
+
+  const handleToggleSolution = async () => {
+    const nextShowSolution = !showSolution;
+    setShowSolution(nextShowSolution);
+
+    if (
+      nextShowSolution &&
+      activeExercise &&
+      !shownSolutionEventForExercise.current.has(activeExercise.id)
+    ) {
+      shownSolutionEventForExercise.current.add(activeExercise.id);
+      await trackClientEvent("solution_opened");
+    }
+  };
+
   if (exercises.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -383,7 +449,7 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
 
               {activeExercise?.hints && (activeExercise.hints as string[]).length > 0 && (
                 <button
-                  onClick={() => setShowHints(!showHints)}
+                  onClick={handleToggleHints}
                   className="flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 px-4 py-2 rounded-lg font-medium transition-colors ml-auto"
                 >
                   <Lightbulb className="w-4 h-4" />
@@ -409,7 +475,7 @@ export function LessonNavigation({ exercises }: LessonNavigationProps) {
           {/* Solución (colapsable) */}
           <div className="border-b border-gray-200 dark:border-gray-700">
             <button
-              onClick={() => setShowSolution(!showSolution)}
+              onClick={handleToggleSolution}
               className="w-full px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between"
             >
               <span>Ver solución</span>

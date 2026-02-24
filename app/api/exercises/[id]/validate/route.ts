@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import prisma from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import { trackLearningEvent } from "@/lib/learning-events"
 import {
   parseSubmissionOutput,
   serializeSubmissionOutput,
@@ -42,6 +43,20 @@ export async function POST(
       where: {
         id,
         isPublished: true,
+      },
+      include: {
+        lesson: {
+          select: {
+            id: true,
+            slug: true,
+            courseId: true,
+            course: {
+              select: {
+                slug: true,
+              },
+            },
+          },
+        },
       },
     })
 
@@ -177,6 +192,26 @@ export async function POST(
         })
       }
     }
+
+    await trackLearningEvent({
+      eventType: "exercise_validated",
+      userId: userId ?? undefined,
+      userEmail: session?.user?.email ?? undefined,
+      courseId: exercise.lesson.courseId,
+      courseSlug: exercise.lesson.course.slug,
+      lessonId: exercise.lesson.id,
+      lessonSlug: exercise.lesson.slug,
+      exerciseId: exercise.id,
+      exerciseTitle: exercise.title,
+      source: "api",
+      metadata: {
+        isCorrect,
+        hasRuntimeError: !!runtimeError,
+        outputLength: output.length,
+        codeLength: code.length,
+        validationType: exercise.validationType,
+      },
+    })
 
     const response = {
       isCorrect,

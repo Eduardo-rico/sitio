@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import prisma from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import { trackLearningEvent } from "@/lib/learning-events"
 import { ApiResponse } from "@/types"
 
 // GET /api/lessons/[id] - Obtener lección específica con ejercicios
@@ -77,6 +78,17 @@ export async function GET(
           lessonId: lesson.id,
           status: "in_progress",
         },
+      })
+
+      await trackLearningEvent({
+        eventType: "lesson_viewed",
+        userId,
+        userEmail: session?.user?.email ?? undefined,
+        courseId: lesson.course.id,
+        courseSlug: lesson.course.slug,
+        lessonId: lesson.id,
+        lessonSlug: lesson.slug,
+        source: "api",
       })
     }
 

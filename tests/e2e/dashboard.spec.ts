@@ -17,12 +17,26 @@ test.describe('Dashboard', () => {
   });
 
   test('navigates to My Courses and Settings from sidebar', async ({ page }) => {
-    await page.getByRole('link', { name: 'Mis Cursos' }).click();
-    await expect(page).toHaveURL('/dashboard/cursos');
+    const myCoursesLink = page.getByRole('link', { name: 'Mis Cursos' });
+    await expect(myCoursesLink).toBeVisible();
+
+    await Promise.all([
+      page.waitForURL('**/dashboard/cursos', { timeout: 30_000 }),
+      myCoursesLink.click(),
+    ]);
+
+    await expect(page).toHaveURL('/dashboard/cursos', { timeout: 30_000 });
     await expect(page.getByRole('heading', { name: 'Mis Cursos' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Configuración' }).click();
-    await expect(page).toHaveURL('/dashboard/configuracion');
+    const settingsLink = page.getByRole('link', { name: 'Configuración' });
+    await expect(settingsLink).toBeVisible();
+
+    await Promise.all([
+      page.waitForURL('**/dashboard/configuracion', { timeout: 30_000 }),
+      settingsLink.click(),
+    ]);
+
+    await expect(page).toHaveURL('/dashboard/configuracion', { timeout: 30_000 });
     await expect(page.getByRole('heading', { name: 'Configuración' })).toBeVisible();
   });
 

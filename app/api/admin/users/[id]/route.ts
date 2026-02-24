@@ -104,6 +104,21 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     })
 
+    const learningEvents = await prisma.learningEvent.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        eventType: true,
+        createdAt: true,
+        courseSlug: true,
+        lessonSlug: true,
+        exerciseTitle: true,
+        metadata: true,
+      },
+    })
+
     // Calculate stats
     const correctSubmissions = submissions.filter(s => s.isCorrect).length
     const averageScore = submissions.length > 0 
@@ -118,30 +133,63 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       timestamp: string;
       metadata: Record<string, unknown>;
     }> = []
-    
-    // Add progress activities
-    progressWithCourses.slice(0, 10).forEach(p => {
+
+    const labelByEventType: Record<string, string> = {
+      course_enrolled: "Inició un curso",
+      lesson_viewed: "Vio una lección",
+      exercise_code_run: "Ejecutó código",
+      exercise_validated: "Verificó un ejercicio",
+      exercise_feedback_submitted: "Envió feedback",
+      hint_opened: "Abrió una pista",
+      solution_opened: "Vio una solución",
+    }
+
+    learningEvents.forEach((event) => {
+      const metadata =
+        event.metadata && typeof event.metadata === "object" && !Array.isArray(event.metadata)
+          ? (event.metadata as Record<string, unknown>)
+          : {}
+
       activities.push({
-        id: `progress-${p.id}`,
-        type: p.status === "completed" ? "lesson_viewed" : "lesson_viewed",
-        description: p.status === "completed" 
-          ? `Completed lesson "${p.lesson.title}"` 
-          : `Viewed lesson "${p.lesson.title}"`,
-        timestamp: p.lastAccessedAt.toISOString(),
-        metadata: { lessonId: p.lessonId, courseId: p.lesson.courseId },
+        id: `event-${event.id}`,
+        type: event.eventType,
+        description:
+          labelByEventType[event.eventType] ||
+          `Evento: ${event.eventType}`,
+        timestamp: event.createdAt.toISOString(),
+        metadata: {
+          ...metadata,
+          courseSlug: event.courseSlug,
+          lessonSlug: event.lessonSlug,
+          exerciseTitle: event.exerciseTitle,
+        },
       })
     })
 
-    // Add submission activities
-    submissions.slice(0, 10).forEach(s => {
-      activities.push({
-        id: `submission-${s.createdAt.toISOString()}`,
-        type: "exercise_completed",
-        description: s.isCorrect ? "Completed an exercise correctly" : "Attempted an exercise",
-        timestamp: s.createdAt.toISOString(),
-        metadata: { correct: s.isCorrect },
+    if (activities.length === 0) {
+      // Fallback con progreso/envíos para usuarios antiguos sin eventos.
+      progressWithCourses.slice(0, 10).forEach(p => {
+        activities.push({
+          id: `progress-${p.id}`,
+          type: "lesson_viewed",
+          description: p.status === "completed"
+            ? `Completó la lección "${p.lesson.title}"`
+            : `Vio la lección "${p.lesson.title}"`,
+          timestamp: p.lastAccessedAt.toISOString(),
+          metadata: { lessonId: p.lessonId, courseId: p.lesson.courseId },
+        })
       })
-    })
+
+      submissions.slice(0, 10).forEach(s => {
+        activities.push({
+          id: `submission-${s.createdAt.toISOString()}`,
+          type: "exercise_completed",
+          description: s.isCorrect ? "Completó un ejercicio correctamente" : "Intentó un ejercicio",
+          timestamp: s.createdAt.toISOString(),
+          metadata: { correct: s.isCorrect },
+        })
+      })
+    }
 
     // Sort activities by timestamp
     activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -168,7 +216,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         totalCoursesEnrolled: courses.length,
         coursesCompleted: courses.filter(c => c.progress === 100).length,
         certificatesEarned: courses.filter(c => c.progress === 100).length, // Same as completed for now
-        totalLessonsViewed: progressWithCourses.length,
+        totalLessonsViewed:
+          learningEvents.filter((event) => event.eventType === "lesson_viewed").length ||
+          progressWithCourses.length,
         exercisesAttempted: submissions.length,
         exercisesCorrect: correctSubmissions,
         averageScore,
