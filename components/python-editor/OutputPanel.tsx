@@ -5,7 +5,8 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { Terminal, AlertCircle, CheckCircle, Clock, Image as ImageIcon } from 'lucide-react';
+import { Terminal, AlertCircle, Clock, Image as ImageIcon } from 'lucide-react';
+import { SuccessCheck } from '@/components/animations/success-check';
 import { ExecutionResult } from './useCodeExecution';
 
 export interface OutputPanelProps {
@@ -94,7 +95,7 @@ export function OutputPanel({
             {result.stdout && (
               <div className="output-section">
                 <div className="flex items-center gap-1 mb-1 text-xs text-gray-500 dark:text-gray-500">
-                  <CheckCircle className="w-3 h-3" />
+                  <SuccessCheck className="w-4 h-4 text-green-500" />
                   <span>Salida estándar</span>
                 </div>
                 <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-950 p-3 rounded border border-gray-200 dark:border-gray-800">

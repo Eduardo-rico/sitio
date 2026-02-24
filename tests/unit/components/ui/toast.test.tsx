@@ -4,30 +4,24 @@ import { Toast as ToastType, resetToastState, toast, useToastState, useToast } f
 import React from 'react';
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({
-      children,
-      layout,
-      variants,
-      initial,
-      animate,
-      exit,
-      transition,
-      ...props
-    }: { children: React.ReactNode } & Record<string, unknown>) => {
-      void layout;
-      void variants;
-      void initial;
-      void animate;
-      void exit;
-      void transition;
+vi.mock('framer-motion', () => {
+  const createMockComponent = (Tag: any) => {
+    return ({ children, layout, variants, initial, animate, exit, transition, ...props }: any) => {
+      return <Tag {...props}>{children}</Tag>;
+    };
+  };
 
-      return <div {...(props as React.HTMLAttributes<HTMLDivElement>)}>{children}</div>;
+  return {
+    motion: {
+      div: createMockComponent('div'),
+      svg: createMockComponent('svg'),
+      circle: createMockComponent('circle'),
+      path: createMockComponent('path'),
+      span: createMockComponent('span'),
     },
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
 
 // Import Toast after mocking framer-motion
 import { Toast } from '@/components/ui/toast';

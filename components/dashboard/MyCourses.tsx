@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   BookOpen,
   ChevronRight,
@@ -94,27 +95,28 @@ function CourseCard({ course }: { course: Course }) {
   }
 
   return (
-    <div className="group">
+    <motion.div
+      whileHover={{ scale: 1.01, x: 4 }}
+      className="group p-4 -mx-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+    >
       <div className="flex items-start gap-4">
         {/* Course Icon/Thumbnail */}
         <div
-          className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-            isCompleted
-              ? "bg-green-100 dark:bg-green-900/30"
-              : isStarted
+          className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${isCompleted
+            ? "bg-green-100 dark:bg-green-900/30"
+            : isStarted
               ? "bg-blue-100 dark:bg-blue-900/30"
               : "bg-gray-100 dark:bg-gray-700"
-          }`}
+            }`}
         >
           {isCompleted ? (
             <Award className="w-6 h-6 text-green-600 dark:text-green-400" />
           ) : (
             <BookOpen
-              className={`w-6 h-6 ${
-                isStarted
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-gray-400"
-              }`}
+              className={`w-6 h-6 ${isStarted
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-gray-400"
+                }`}
             />
           )}
         </div>
@@ -150,11 +152,10 @@ function CourseCard({ course }: { course: Course }) {
           <div className="mt-2">
             <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${
-                  isCompleted
-                    ? "bg-green-500"
-                    : "bg-gradient-to-r from-blue-500 to-indigo-500"
-                }`}
+                className={`h-full rounded-full transition-all ${isCompleted
+                  ? "bg-green-500"
+                  : "bg-gradient-to-r from-blue-500 to-indigo-500"
+                  }`}
                 style={{ width: `${course.progressPercentage}%` }}
               />
             </div>
@@ -170,16 +171,24 @@ function CourseCard({ course }: { course: Course }) {
           <ButtonIcon className="w-4 h-4" />
         </Link>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="text-center py-8">
-      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-center py-8"
+    >
+      <motion.div
+        animate={{ rotateY: 360 }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"
+      >
         <BookOpen className="w-8 h-8 text-gray-400" />
-      </div>
+      </motion.div>
       <h4 className="font-medium text-gray-900 dark:text-white mb-2">
         No has comenzado ningún curso
       </h4>
@@ -193,6 +202,6 @@ function EmptyState() {
         <Play className="w-4 h-4" />
         Explorar Cursos
       </Link>
-    </div>
+    </motion.div>
   );
 }

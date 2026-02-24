@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { transitions } from "@/lib/animations";
+import { AnimatedLogo } from "@/components/animations/animated-logo";
 
 interface PageLoaderProps {
   isLoading: boolean;
@@ -25,7 +26,7 @@ export function PageLoader({
   // Minimum display time to prevent flash
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    
+
     if (isLoading) {
       setShowLoader(true);
       setCanHide(false);
@@ -53,17 +54,16 @@ export function PageLoader({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`${
-              fullScreen
+            className={`${fullScreen
                 ? "fixed inset-0 z-50"
                 : "absolute inset-0 z-10"
-            } flex items-center justify-center bg-white dark:bg-gray-950 ${className}`}
+              } flex items-center justify-center bg-white dark:bg-gray-950 ${className}`}
           >
             {children || <DefaultLoader />}
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {!showLoader && !isLoading && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -85,34 +85,33 @@ function DefaultLoader() {
       <div className="relative">
         <motion.div
           animate={{
-            scale: [1, 1.1, 1],
-            rotate: [0, 5, -5, 0],
+            scale: [1, 1.05, 1],
           }}
           transition={{
             duration: 2,
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"
+          className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl z-10 relative"
         >
-          <span className="text-2xl font-bold text-white">E</span>
+          <AnimatedLogo className="w-10 h-10 text-white" strokeWidth={2.5} />
         </motion.div>
-        
+
         {/* Pulse rings */}
         <motion.div
           animate={{
-            scale: [1, 1.5, 1.5],
-            opacity: [0.5, 0, 0],
+            scale: [1, 1.5, 1.8],
+            opacity: [0.5, 0.2, 0],
           }}
           transition={{
             duration: 2,
             repeat: Infinity,
             ease: "easeOut",
           }}
-          className="absolute inset-0 bg-blue-500 rounded-2xl"
+          className="absolute inset-0 bg-blue-500 rounded-3xl z-0"
         />
       </div>
-      
+
       {/* Loading text */}
       <motion.div
         animate={{ opacity: [0.5, 1, 0.5] }}

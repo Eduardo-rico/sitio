@@ -7,6 +7,8 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { StaggerContainer, StaggerItem } from "@/components/animations/stagger-container";
 
 interface ProgressStats {
   coursesStarted: number;
@@ -65,30 +67,32 @@ export function ProgressOverview({ data }: ProgressOverviewProps) {
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" staggerDelay={0.05}>
         {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                  {stat.label}
-                </p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stat.value}
-                </p>
+          <StaggerItem key={stat.label}>
+            <motion.div
+              whileHover={{ y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-shadow h-full"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    {stat.label}
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {stat.value}
+                  </p>
+                </div>
+                <div
+                  className={`p-3 rounded-xl ${stat.bgColor}`}
+                >
+                  <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                </div>
               </div>
-              <div
-                className={`p-3 rounded-xl ${stat.bgColor}`}
-              >
-                <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerContainer>
 
       {/* Overall Progress Card */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -118,8 +122,8 @@ export function ProgressOverview({ data }: ProgressOverviewProps) {
               {overallPercentage === 100
                 ? "¡Excelente trabajo! 🎉"
                 : overallPercentage >= 50
-                ? "¡Vas por buen camino! 💪"
-                : "¡Sigue aprendiendo! 📚"}
+                  ? "¡Vas por buen camino! 💪"
+                  : "¡Sigue aprendiendo! 📚"}
             </span>
           </div>
           <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">

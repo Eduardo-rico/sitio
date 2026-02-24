@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   BookOpen,
   Code,
@@ -96,16 +97,18 @@ function ActivityRow({ item }: { item: ActivityItem }) {
   const timestamp = formatTimestamp(item.timestamp);
 
   return (
-    <div className="flex items-start gap-3 group">
+    <motion.div
+      whileHover={{ x: 4 }}
+      className="flex items-start gap-3 group p-2 -mx-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+    >
       {/* Icon */}
       <div
-        className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
-          isLesson
+        className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isLesson
             ? isCompleted
               ? "bg-green-50 dark:bg-green-900/20"
               : "bg-blue-50 dark:bg-blue-900/20"
             : "bg-purple-50 dark:bg-purple-900/20"
-        }`}
+          }`}
       >
         {isLesson ? (
           isCompleted ? (
@@ -133,11 +136,10 @@ function ActivityRow({ item }: { item: ActivityItem }) {
             {timestamp}
           </span>
           <span
-            className={`text-xs px-2 py-0.5 rounded-full ${
-              isCompleted
+            className={`text-xs px-2 py-0.5 rounded-full ${isCompleted
                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                 : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-            }`}
+              }`}
           >
             {isCompleted ? "Completado" : "En progreso"}
           </span>
@@ -145,24 +147,32 @@ function ActivityRow({ item }: { item: ActivityItem }) {
       </div>
 
       {/* Arrow */}
-      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-    </div>
+      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity self-center" />
+    </motion.div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="text-center py-8">
-      <div className="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center py-8"
+    >
+      <motion.div
+        animate={{ rotate: -360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3"
+      >
         <RotateCcw className="w-6 h-6 text-gray-400" />
-      </div>
+      </motion.div>
       <h4 className="font-medium text-gray-900 dark:text-white mb-1">
         Sin actividad reciente
       </h4>
       <p className="text-sm text-gray-600 dark:text-gray-400">
         Tu actividad aparecerá aquí cuando comiences a aprender
       </p>
-    </div>
+    </motion.div>
   );
 }
 

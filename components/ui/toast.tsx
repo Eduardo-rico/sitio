@@ -2,13 +2,13 @@
 
 import { useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  Info, 
-  X 
+import {
+  XCircle,
+  AlertTriangle,
+  Info,
+  X
 } from "lucide-react";
+import { SuccessCheck } from "@/components/animations/success-check";
 import { Toast as ToastType, ToastVariant } from "@/hooks/use-toast";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,7 +26,7 @@ const variantConfig: Record<ToastVariant, {
   progressBg: string;
 }> = {
   success: {
-    icon: CheckCircle2,
+    icon: SuccessCheck,
     bg: "bg-white dark:bg-slate-800",
     border: "border-emerald-200 dark:border-emerald-800",
     iconColor: "text-emerald-500",
@@ -57,15 +57,15 @@ const variantConfig: Record<ToastVariant, {
 
 // Animation variants for Framer Motion
 const toastVariants = {
-  initial: { 
-    opacity: 0, 
-    y: -20, 
+  initial: {
+    opacity: 0,
+    y: -20,
     scale: 0.95,
     filter: "blur(4px)",
   },
-  animate: { 
-    opacity: 1, 
-    y: 0, 
+  animate: {
+    opacity: 1,
+    y: 0,
     scale: 1,
     filter: "blur(0px)",
     transition: {
@@ -73,9 +73,9 @@ const toastVariants = {
       ease: [0.16, 1, 0.3, 1], // ease-out-expo
     },
   },
-  exit: { 
-    opacity: 0, 
-    y: -10, 
+  exit: {
+    opacity: 0,
+    y: -10,
     scale: 0.95,
     filter: "blur(4px)",
     transition: {
@@ -108,7 +108,7 @@ export function Toast({ toast, onRemove, index }: ToastProps) {
       initial="initial"
       animate="animate"
       exit="exit"
-      style={{ 
+      style={{
         zIndex: 50 - index,
       }}
       className={`
@@ -126,7 +126,7 @@ export function Toast({ toast, onRemove, index }: ToastProps) {
       <div className="flex items-start gap-3 p-4 pr-10">
         {/* Icon */}
         <div className="flex-shrink-0 mt-0.5">
-          <Icon className={`w-5 h-5 ${config.iconColor}`} strokeWidth={2} />
+          <Icon className={`w-5 h-5 flex items-center justify-center ${config.iconColor}`} strokeWidth={2} />
         </div>
 
         {/* Message */}
