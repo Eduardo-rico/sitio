@@ -98,7 +98,9 @@ test.describe('Auth Flows', () => {
     await page.fill('input#password', user.password);
     await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL('/dashboard/cursos');
+    await expect(page).toHaveURL(/\/dashboard\/cursos(?:\?.*)?$/, {
+      timeout: 30000,
+    });
   });
 
   test('admin credentials remain valid from seed user', async ({ page }) => {

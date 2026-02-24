@@ -10,7 +10,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getSiteUrl } from '@/lib/site-url';
-import { CheckCircle, Circle, Play, Clock, BookOpen } from 'lucide-react';
+import { CourseStartButton } from '@/components/lessons/CourseStartButton';
+import { Circle, Play, Clock, BookOpen } from 'lucide-react';
 
 interface CoursePageProps {
   params: {
@@ -150,13 +151,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
           </div>
           
           {course.lessons.length > 0 && (
-            <Link
-              href={`/tutoriales/${course.slug}/${course.lessons[0].slug}`}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
-            >
-              <Play className="w-5 h-5" />
-              Comenzar
-            </Link>
+            <CourseStartButton
+              courseSlug={course.slug}
+              firstLessonSlug={course.lessons[0].slug}
+            />
           )}
         </div>
       </div>

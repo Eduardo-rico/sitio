@@ -22,7 +22,20 @@ test.describe('Course Flow', () => {
 
     await expect(page).toHaveURL(/\/tutoriales\/[^/]+$/);
     await expect(page.getByRole('heading', { level: 2, name: 'Contenido del curso' })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Comenzar/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Comenzar/i })).toBeVisible();
+  });
+
+  test('enrolls user when starting a course and shows it in dashboard', async ({ page }) => {
+    await page.goto('/tutoriales/python-basico');
+    await page.getByRole('button', { name: /Comenzar/i }).click();
+
+    await expect(page).toHaveURL(/\/tutoriales\/python-basico\/[^/]+$/, {
+      timeout: 45000,
+    });
+
+    await page.goto('/dashboard/cursos');
+    await expect(page).toHaveURL(/\/dashboard\/cursos/);
+    await expect(page.getByText(/Python Basico|Python Básico/i)).toBeVisible();
   });
 
   test('opens first lesson and validates exercise panel', async ({ page }) => {

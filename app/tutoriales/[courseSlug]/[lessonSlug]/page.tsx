@@ -9,6 +9,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import { getSiteUrl } from '@/lib/site-url';
 import { LessonContent } from '@/components/lessons/LessonContent';
 import { LessonNavigation } from '@/components/lessons/LessonNavigation';
@@ -102,6 +103,31 @@ export default async function LessonPage({ params }: LessonPageProps) {
   }
 
   const { course, lesson } = data;
+  const session = await auth();
+
+  if (session?.user?.id) {
+    try {
+      await prisma.progress.upsert({
+        where: {
+          userId_lessonId: {
+            userId: session.user.id,
+            lessonId: lesson.id,
+          },
+        },
+        update: {
+          lastAccessedAt: new Date(),
+        },
+        create: {
+          userId: session.user.id,
+          lessonId: lesson.id,
+          status: "in_progress",
+          lastAccessedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error("Error updating lesson access progress:", error);
+    }
+  }
 
   // Encontrar índice de la lección actual para navegación
   const currentIndex = course.lessons.findIndex((l) => l.slug === params.lessonSlug);

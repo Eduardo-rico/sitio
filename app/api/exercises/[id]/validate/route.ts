@@ -2,11 +2,18 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import prisma from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import {
+  parseSubmissionOutput,
+  serializeSubmissionOutput,
+} from "@/lib/exercise-submission-output"
 import { ApiResponse } from "@/types"
 
 const validateSchema = z.object({
   code: z.string(),
-  exerciseId: z.string(),
+  exerciseId: z.string().optional(),
+  output: z.string().optional(),
+  runtimeError: z.string().optional(),
+  isCorrect: z.boolean().optional(),
 })
 
 function normalizeTestCases(raw: unknown): Array<{ expected?: string; pattern?: string }> {
@@ -27,7 +34,8 @@ export async function POST(
     const userId = session?.user?.id
 
     const body = await request.json()
-    const { code, exerciseId } = validateSchema.parse(body)
+    const { code, output: rawOutput, runtimeError, isCorrect: clientIsCorrect } =
+      validateSchema.parse(body)
 
     // Get exercise with solution
     const exercise = await prisma.exercise.findFirst({
@@ -47,76 +55,98 @@ export async function POST(
     // Validate code based on validation type
     let isCorrect = false
     let feedback = ""
-    let output = ""
+    const output = rawOutput ?? ""
 
-    switch (exercise.validationType) {
-      case "exact":
-        // Normalize whitespace and compare
-        const normalizedCode = code.trim().replace(/\s+/g, " ")
-        const normalizedSolution = exercise.solutionCode.trim().replace(/\s+/g, " ")
-        isCorrect = normalizedCode === normalizedSolution
-        if (!isCorrect) {
-          feedback = "El código no coincide exactamente con la solución esperada."
-        }
-        break
-
-      case "contains":
-        // Check if code contains expected output or specific patterns
-        const testCases = normalizeTestCases(exercise.testCases)
-        if (testCases.length > 0) {
-          isCorrect = testCases.every((tc) =>
-            typeof tc.expected === "string" ? code.includes(tc.expected) : true
-          )
+    if (typeof clientIsCorrect === "boolean") {
+      isCorrect = clientIsCorrect
+      if (!isCorrect) {
+        feedback = runtimeError
+          ? `Tu código tiene un error: ${runtimeError}`
+          : "Tu solución no pasó todos los tests."
+      }
+    } else {
+      switch (exercise.validationType) {
+        case "exact":
+          // Normalize whitespace and compare
+          const normalizedCode = code.trim().replace(/\s+/g, " ")
+          const normalizedSolution = exercise.solutionCode.trim().replace(/\s+/g, " ")
+          isCorrect = normalizedCode === normalizedSolution
           if (!isCorrect) {
-            feedback = "Tu código no contiene todos los elementos requeridos."
+            feedback = "El código no coincide exactamente con la solución esperada."
           }
-        } else {
+          break
+
+        case "contains":
+          // Check if code contains expected output or specific patterns
+          const testCases = normalizeTestCases(exercise.testCases)
+          if (testCases.length > 0) {
+            isCorrect = testCases.every((tc) =>
+              typeof tc.expected === "string" ? code.includes(tc.expected) : true
+            )
+            if (!isCorrect) {
+              feedback = "Tu código no contiene todos los elementos requeridos."
+            }
+          } else {
+            isCorrect = code.trim() === exercise.solutionCode.trim()
+          }
+          break
+
+        case "regex":
+          // Validate with regex patterns
+          const patterns = normalizeTestCases(exercise.testCases)
+          if (patterns.length > 0) {
+            isCorrect = patterns.every((p) =>
+              typeof p.pattern === "string" ? new RegExp(p.pattern, "i").test(code) : true
+            )
+            if (!isCorrect) {
+              feedback = "Tu código no cumple con el patrón requerido."
+            }
+          }
+          break
+
+        case "custom":
+          // For custom validation, we'll mark it as correct for now
+          // The actual validation should be done client-side with Pyodide
+          // and this endpoint just records the result
+          isCorrect = true
+          break
+
+        default:
           isCorrect = code.trim() === exercise.solutionCode.trim()
-        }
-        break
-
-      case "regex":
-        // Validate with regex patterns
-        const patterns = normalizeTestCases(exercise.testCases)
-        if (patterns.length > 0) {
-          isCorrect = patterns.every((p) =>
-            typeof p.pattern === "string" ? new RegExp(p.pattern, "i").test(code) : true
-          )
-          if (!isCorrect) {
-            feedback = "Tu código no cumple con el patrón requerido."
-          }
-        }
-        break
-
-      case "custom":
-        // For custom validation, we'll mark it as correct for now
-        // The actual validation should be done client-side with Pyodide
-        // and this endpoint just records the result
-        isCorrect = true
-        break
-
-      default:
-        isCorrect = code.trim() === exercise.solutionCode.trim()
+      }
     }
 
     // Save submission if user is logged in
     if (userId) {
+      const submissionId = `${userId}_${id}`
+      const existingSubmission = await prisma.codeSubmission.findUnique({
+        where: { id: submissionId },
+        select: { output: true },
+      })
+      const previousPayload = parseSubmissionOutput(existingSubmission?.output)
+      const serializedOutput = serializeSubmissionOutput({
+        stdout: output,
+        feedback: previousPayload.feedback,
+      })
+
       await prisma.codeSubmission.upsert({
         where: {
-          id: `${userId}_${exerciseId}`,
+          id: submissionId,
         },
         update: {
           code,
-          output,
+          output: serializedOutput,
+          error: runtimeError ?? null,
           isCorrect,
           attempts: { increment: 1 },
         },
         create: {
-          id: `${userId}_${exerciseId}`,
+          id: submissionId,
           userId,
           exerciseId: id,
           code,
-          output,
+          output: serializedOutput,
+          error: runtimeError ?? null,
           isCorrect,
           attempts: 1,
         },
@@ -135,12 +165,14 @@ export async function POST(
           update: {
             status: "completed",
             completedAt: new Date(),
+            lastAccessedAt: new Date(),
           },
           create: {
             userId,
             lessonId,
             status: "completed",
             completedAt: new Date(),
+            lastAccessedAt: new Date(),
           },
         })
       }
