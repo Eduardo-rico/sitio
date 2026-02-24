@@ -5,7 +5,7 @@
 import type { PyodideInterface } from 'pyodide';
 
 // URL del CDN de Pyodide
-const PYODIDE_CDN_URL = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/';
+const PYODIDE_CDN_URL = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/';
 
 // Paquetes pre-cargados por defecto
 const DEFAULT_PACKAGES = ['matplotlib'];
@@ -16,6 +16,8 @@ const LOAD_TIMEOUT = 90000;
 // Declaración para extender Window
 interface PyodideWindow extends Window {
   __pyodideInstance?: PyodideInterface;
+  __pyodideScriptPromise?: Promise<void>;
+  loadPyodide?: (options?: { indexURL?: string }) => Promise<PyodideInterface>;
 }
 
 /**
@@ -54,12 +56,16 @@ export async function loadPyodideInstance(
     return win.__pyodideInstance;
   }
 
-  // Crear una promesa con timeout
-  const { loadPyodide } = await import('pyodide');
+  // Cargar script browser de Pyodide desde CDN
+  await ensurePyodideScript(indexURL);
+  const loadPyodide = win.loadPyodide;
+
+  if (!loadPyodide) {
+    throw new Error('No se pudo inicializar loadPyodide desde el CDN');
+  }
 
   const loadPromise = loadPyodide({
     indexURL,
-    packages,
   });
 
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -71,13 +77,60 @@ export async function loadPyodideInstance(
   // Race entre carga y timeout
   const pyodide = await Promise.race([loadPromise, timeoutPromise]);
 
-  // Configurar matplotlib para mostrar imágenes
+  // Cargar paquetes requeridos y configurar matplotlib
+  if (packages.length > 0) {
+    await pyodide.loadPackage(packages);
+  }
   await configureMatplotlib(pyodide);
 
   // Cachear instancia
   win.__pyodideInstance = pyodide;
 
   return pyodide;
+}
+
+/**
+ * Carga pyodide.js en el navegador y expone window.loadPyodide
+ */
+async function ensurePyodideScript(indexURL: string): Promise<void> {
+  if (typeof window === 'undefined') {
+    throw new Error('Pyodide solo se puede cargar en el navegador');
+  }
+
+  const win = window as PyodideWindow;
+  if (typeof win.loadPyodide === 'function') return;
+
+  if (!win.__pyodideScriptPromise) {
+    win.__pyodideScriptPromise = new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector<HTMLScriptElement>('script[data-pyodide-loader="true"]');
+      if (existing) {
+        if (typeof win.loadPyodide === 'function') {
+          resolve();
+          return;
+        }
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Error cargando pyodide.js')), {
+          once: true,
+        });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = `${indexURL}pyodide.js`;
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.dataset.pyodideLoader = 'true';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(`No se pudo cargar ${script.src}`));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      // Permitir reintentos si falla la carga
+      delete win.__pyodideScriptPromise;
+      throw error;
+    });
+  }
+
+  await win.__pyodideScriptPromise;
 }
 
 /**
