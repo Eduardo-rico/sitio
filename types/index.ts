@@ -38,6 +38,25 @@ export type ApiResponse<T = unknown> =
 
 // Validation types
 export type ValidationType = "exact" | "contains" | "regex" | "custom"
+export type CourseLanguage =
+  | "python"
+  | "clojure"
+  | "javascript"
+  | "typescript"
+  | "sql"
+  | "go"
+  | "rust"
+  | "bash"
+
+export type RuntimeType =
+  | "browser_pyodide"
+  | "browser_clojure"
+  | "browser_javascript"
+  | "browser_typescript"
+  | "browser_sql"
+  | "browser_go"
+  | "browser_rust"
+  | "browser_bash"
 
 export interface TestCase {
   input?: string

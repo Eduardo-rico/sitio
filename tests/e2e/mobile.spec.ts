@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { createTestUser, loginUser, registerUser } from './utils';
 
 test.describe('Mobile UX', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,10 +16,14 @@ test.describe('Mobile UX', () => {
     await expect(mobileMenu.getByRole('link', { name: 'Cursos', exact: true })).toBeVisible();
 
     await mobileMenu.getByRole('link', { name: 'Cursos', exact: true }).click();
-    await expect(page).toHaveURL('/tutoriales');
+    await expect(page).toHaveURL(/\/auth\/signin\?callbackUrl=%2Ftutoriales/);
   });
 
   test('tutorial cards render correctly on mobile', async ({ page }) => {
+    const user = createTestUser('mobile-course-list');
+    await registerUser(page, user);
+    await loginUser(page, user);
+
     await page.goto('/tutoriales');
 
     const firstCourse = page.locator('main a[href^="/tutoriales/"]').first();

@@ -8,6 +8,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ApiResponse } from "@/types";
 import { z } from "zod";
+import { COURSE_LANGUAGES, RUNTIME_TYPES } from "@/lib/course-runtime";
 
 // Validation schema
 const courseSchema = z.object({
@@ -16,7 +17,8 @@ const courseSchema = z.object({
   description: z.string().max(500).optional(),
   order: z.number().min(0),
   isPublished: z.boolean(),
-
+  language: z.enum(COURSE_LANGUAGES),
+  runtimeType: z.enum(RUNTIME_TYPES),
 });
 
 // Check admin access
@@ -147,6 +149,8 @@ export async function PUT(
         title: data.title,
         slug: data.slug,
         description: data.description || null,
+        language: data.language,
+        runtimeType: data.runtimeType,
         order: data.order,
         isPublished: data.isPublished,
       },

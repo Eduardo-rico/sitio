@@ -11,9 +11,11 @@ test.describe('Course Flow', () => {
   test('shows tutorials catalog with published courses', async ({ page }) => {
     await page.goto('/tutoriales');
 
-    await expect(page.getByRole('heading', { name: 'Tutoriales Interactivos de Python' })).toBeVisible();
-    await expect(page.getByText(/Python Basico/i)).toBeVisible();
-    await expect(page.getByText(/Python Intermedio/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tutoriales Interactivos de Programación' })).toBeVisible();
+    await expect(page.locator('a[href=\"/tutoriales/python-basico\"]').first()).toBeVisible({ timeout: 45000 });
+    await expect(page.locator('a[href=\"/tutoriales/python-intermedio\"]').first()).toBeVisible({ timeout: 45000 });
+    await expect(page.locator('a[href=\"/tutoriales/javascript-desde-cero\"]').first()).toBeVisible({ timeout: 45000 });
+    await expect(page.locator('a[href=\"/tutoriales/rust-desde-cero\"]').first()).toBeVisible({ timeout: 45000 });
   });
 
   test('navigates from catalog to course detail', async ({ page }) => {

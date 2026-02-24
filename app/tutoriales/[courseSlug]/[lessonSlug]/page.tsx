@@ -12,6 +12,11 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { trackLearningEvent } from '@/lib/learning-events';
 import { getSiteUrl } from '@/lib/site-url';
+import {
+  getDefaultRuntimeForLanguage,
+  isCourseLanguage,
+  isRuntimeType,
+} from '@/lib/course-runtime';
 import { LessonContent } from '@/components/lessons/LessonContent';
 import { LessonNavigation } from '@/components/lessons/LessonNavigation';
 import { ArrowLeft, ArrowRight, BookOpen, Clock } from 'lucide-react';
@@ -104,6 +109,10 @@ export default async function LessonPage({ params }: LessonPageProps) {
   }
 
   const { course, lesson } = data;
+  const courseLanguage = isCourseLanguage(course.language) ? course.language : "python";
+  const runtimeType = isRuntimeType(course.runtimeType)
+    ? course.runtimeType
+    : getDefaultRuntimeForLanguage(courseLanguage);
   const session = await auth();
 
   if (session?.user?.id) {
@@ -268,6 +277,8 @@ export default async function LessonPage({ params }: LessonPageProps) {
               exercises={lesson.exercises}
               courseSlug={course.slug}
               lessonSlug={lesson.slug}
+              language={courseLanguage}
+              runtimeType={runtimeType}
             />
           </div>
         </div>

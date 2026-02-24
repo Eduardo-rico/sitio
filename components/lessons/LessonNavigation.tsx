@@ -8,6 +8,11 @@ import { OutputPanel } from '@/components/python-editor/OutputPanel';
 import { Modal } from '@/components/ui/modal';
 import { toast } from '@/hooks/use-toast';
 import {
+  LANGUAGE_LABELS,
+  getDefaultStarterCode,
+  type CourseLanguage,
+} from '@/lib/course-runtime';
+import {
   Play,
   RotateCcw,
   CheckCircle,
@@ -23,6 +28,8 @@ interface LessonNavigationProps {
   exercises: Exercise[];
   courseSlug: string;
   lessonSlug: string;
+  language: CourseLanguage;
+  runtimeType: string;
 }
 
 type ValidationType = 'exact' | 'contains' | 'regex' | 'custom';
@@ -56,7 +63,12 @@ function normalizeTestCases(rawTestCases: unknown): TestCaseDefinition[] {
   return [];
 }
 
-export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNavigationProps) {
+export function LessonNavigation({
+  exercises,
+  courseSlug,
+  lessonSlug,
+  language,
+}: LessonNavigationProps) {
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
   const [showHints, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
@@ -73,6 +85,7 @@ export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNa
   const shownSolutionEventForExercise = useRef<Set<string>>(new Set());
 
   const { executeCode, result, isExecuting } = useCodeExecution({
+    language,
     timeout: 10000,
   });
 
@@ -141,7 +154,7 @@ export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNa
   // Initialize code when exercise changes
   useEffect(() => {
     if (activeExercise) {
-      setCode(activeExercise.starterCode || '# Escribe tu código aquí\n');
+      setCode(activeExercise.starterCode || getDefaultStarterCode(language));
       setIsCorrect(null);
       setTestResults([]);
       setShowSolution(false);
@@ -149,7 +162,7 @@ export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNa
       setFeedbackRating(0);
       setFeedbackComment('');
     }
-  }, [activeExercise]);
+  }, [activeExercise, language]);
 
   const handleExecute = useCallback(async () => {
     setIsCorrect(null);
@@ -307,7 +320,7 @@ export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNa
 
   const handleReset = () => {
     if (activeExercise) {
-      setCode(activeExercise.starterCode || '# Escribe tu código aquí\n');
+      setCode(activeExercise.starterCode || getDefaultStarterCode(language));
       setIsCorrect(null);
       setTestResults([]);
     }
@@ -341,12 +354,14 @@ export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNa
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Editor de Python
+          Editor de {LANGUAGE_LABELS[language]}
         </h3>
         <PythonEditor
           value={code}
           onChange={setCode}
           height="300px"
+          language={language}
+          placeholder={`# Escribe tu código ${LANGUAGE_LABELS[language]} aquí...`}
         />
         <div className="mt-4 flex gap-2">
           <button
@@ -415,6 +430,8 @@ export function LessonNavigation({ exercises, courseSlug, lessonSlug }: LessonNa
               value={code}
               onChange={setCode}
               height="250px"
+              language={language}
+              placeholder={`# Escribe tu código ${LANGUAGE_LABELS[language]} aquí...`}
             />
           </div>
 

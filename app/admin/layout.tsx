@@ -6,6 +6,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { IssueReportFab } from "@/components/feedback/IssueReportFab";
 
 import { 
   LayoutDashboard, 
@@ -16,7 +17,8 @@ import {
   Home,
   Settings,
   FileText,
-  Megaphone
+  Megaphone,
+  MessageSquareWarning
 } from "lucide-react";
 
 export const metadata = {
@@ -74,6 +76,12 @@ const sidebarNavItems = [
     icon: Megaphone, 
     label: "Anuncios",
     description: "Manage announcements"
+  },
+  {
+    href: "/admin/tickets",
+    icon: MessageSquareWarning,
+    label: "Tickets",
+    description: "Track issue reports"
   },
 ];
 
@@ -159,6 +167,7 @@ export default async function AdminLayout({
           </main>
         </div>
       </div>
+      <IssueReportFab sourceArea="admin" />
     </div>
   );
 }

@@ -16,11 +16,13 @@ import {
   AlertCircle
 } from "lucide-react";
 import { ExerciseBuilder, ExerciseFormData } from "@/components/admin/exercise-builder";
+import { isCourseLanguage } from "@/lib/course-runtime";
 
 interface Course {
   id: string;
   title: string;
   slug: string;
+  language: string;
 }
 
 interface Lesson {
@@ -196,6 +198,7 @@ export default function EditExercisePage() {
 
       {/* Exercise Builder */}
       <ExerciseBuilder
+        language={isCourseLanguage(exercise.lesson.course.language) ? exercise.lesson.course.language : "python"}
         defaultValues={{
           title: exercise.title,
           instructions: exercise.instructions,

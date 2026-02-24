@@ -20,8 +20,17 @@ import {
   EyeOff,
   Save,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Code2,
+  Cpu
 } from "lucide-react";
+import {
+  COURSE_LANGUAGES,
+  LANGUAGE_LABELS,
+  RUNTIME_TYPES,
+  RUNTIME_LABELS,
+  getDefaultRuntimeForLanguage,
+} from "@/lib/course-runtime";
 
 // Validation schema
 const courseSchema = z.object({
@@ -31,6 +40,8 @@ const courseSchema = z.object({
     .max(100, "Máximo 100 caracteres")
     .regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
   description: z.string().max(500, "Máximo 500 caracteres").optional(),
+  language: z.enum(COURSE_LANGUAGES),
+  runtimeType: z.enum(RUNTIME_TYPES),
   order: z.number().min(0, "El orden debe ser positivo"),
   isPublished: z.boolean().default(false),
   imageUrl: z.string().url("URL inválida").optional().or(z.literal("")),
@@ -74,6 +85,8 @@ export function CourseForm({
       title: "",
       slug: "",
       description: "",
+      language: "python",
+      runtimeType: "browser_pyodide",
       order: 0,
       isPublished: false,
       imageUrl: "",
@@ -84,6 +97,7 @@ export function CourseForm({
   const title = watch("title");
   const slug = watch("slug");
   const description = watch("description");
+  const language = watch("language");
   const isPublished = watch("isPublished");
 
   // Auto-generate slug when title changes (only in create mode and if slug is empty)
@@ -92,6 +106,11 @@ export function CourseForm({
       setValue("slug", generateSlug(title), { shouldValidate: true });
     }
   }, [title, mode, slug, setValue]);
+
+  useEffect(() => {
+    const fallbackRuntime = getDefaultRuntimeForLanguage(language);
+    setValue("runtimeType", fallbackRuntime, { shouldValidate: true });
+  }, [language, setValue]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -194,6 +213,68 @@ export function CourseForm({
                   {description?.length || 0}/500
                 </span>
               </div>
+            </div>
+
+            {/* Language */}
+            <div>
+              <label
+                htmlFor="language"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                <Code2 className="w-4 h-4 inline mr-1" />
+                Lenguaje del curso *
+              </label>
+              <select
+                id="language"
+                {...register("language")}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {COURSE_LANGUAGES.map((languageOption) => (
+                  <option key={languageOption} value={languageOption}>
+                    {LANGUAGE_LABELS[languageOption]}
+                  </option>
+                ))}
+              </select>
+              {errors.language && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-sm text-red-600 dark:text-red-400"
+                >
+                  {errors.language.message}
+                </motion.p>
+              )}
+            </div>
+
+            {/* Runtime */}
+            <div>
+              <label
+                htmlFor="runtimeType"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                <Cpu className="w-4 h-4 inline mr-1" />
+                Entorno del intérprete/compilador *
+              </label>
+              <select
+                id="runtimeType"
+                {...register("runtimeType")}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {RUNTIME_TYPES.map((runtimeOption) => (
+                  <option key={runtimeOption} value={runtimeOption}>
+                    {RUNTIME_LABELS[runtimeOption]}
+                  </option>
+                ))}
+              </select>
+              {errors.runtimeType && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-sm text-red-600 dark:text-red-400"
+                >
+                  {errors.runtimeType.message}
+                </motion.p>
+              )}
             </div>
 
             {/* Order */}

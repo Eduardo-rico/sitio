@@ -6,11 +6,17 @@ import { ApiResponse } from "@/types"
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-// GET /api/courses - Listar cursos públicos
+// GET /api/courses - Listar cursos (requiere sesión)
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     const userId = session?.user?.id
+    if (!userId) {
+      return Response.json(
+        { success: false, error: "Debes iniciar sesión para ver cursos" } satisfies ApiResponse,
+        { status: 401 }
+      )
+    }
 
     const courses = await prisma.course.findMany({
       where: {
@@ -27,10 +33,10 @@ export async function GET(request: NextRequest) {
             slug: true,
             order: true,
             estimatedMinutes: true,
-            progress: userId ? {
+            progress: {
               where: { userId },
               select: { status: true, completedAt: true },
-            } : false,
+            },
           },
         },
       },
@@ -48,6 +54,8 @@ export async function GET(request: NextRequest) {
         slug: course.slug,
         title: course.title,
         description: course.description,
+        language: course.language,
+        runtimeType: course.runtimeType,
         order: course.order,
         lessonsCount: totalLessons,
         completedLessons,

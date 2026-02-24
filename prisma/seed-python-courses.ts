@@ -33,6 +33,8 @@ type SeedCourse = {
   description: string;
   order: number;
   isPublished: boolean;
+  language?: string;
+  runtimeType?: string;
   lessons: SeedLesson[];
 };
 
@@ -43,6 +45,8 @@ const pythonBasico = {
   description: 'Aprende Python desde lo más básico. Variables, tipos de datos, estructuras de control, funciones y más. Con ejercicios interactivos y práctica en tiempo real.',
   order: 1,
   isPublished: true,
+  language: 'python',
+  runtimeType: 'browser_pyodide',
   lessons: [
     {
       slug: 'introduccion-python',
@@ -924,6 +928,8 @@ const pythonIntermedio = {
   description: 'Lleva tus habilidades de Python al siguiente nivel. Aprende estructuras de datos avanzadas, comprensiones, manejo de errores, programación funcional, clases y más.',
   order: 2,
   isPublished: true,
+  language: 'python',
+  runtimeType: 'browser_pyodide',
   lessons: [
     {
       slug: 'diccionarios',
@@ -2039,6 +2045,8 @@ async function createCourse(courseData: SeedCourse) {
       slug: courseData.slug,
       title: courseData.title,
       description: courseData.description,
+      language: courseData.language ?? 'python',
+      runtimeType: courseData.runtimeType ?? 'browser_pyodide',
       order: courseData.order,
       isPublished: courseData.isPublished,
     },

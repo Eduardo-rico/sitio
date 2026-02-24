@@ -45,6 +45,8 @@ interface SeedCourse {
   title: string;
   description: string;
   order: number;
+  language?: string;
+  runtimeType?: string;
   lessons: SeedLesson[];
 }
 
@@ -55,6 +57,8 @@ const PYTHON_COURSES: SeedCourse[] = [
     description:
       'Empieza desde cero con Python y resuelve retos interactivos estilo DataCamp con consola y tests.',
     order: 1,
+    language: 'python',
+    runtimeType: 'browser_pyodide',
     lessons: [
       {
         slug: 'basico-hola-variables',
@@ -387,6 +391,8 @@ Vas a trabajar con colecciones:
     description:
       'Sube de nivel con comprehensions, manejo de errores, parsing y mini proyectos con tests.',
     order: 2,
+    language: 'python',
+    runtimeType: 'browser_pyodide',
     lessons: [
       {
         slug: 'intermedio-comprehensions',
@@ -702,12 +708,323 @@ Haras un cierre tipo DataCamp: combinar logica, estructuras y salida limpia.
   },
 ];
 
+const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
+  {
+    slug: "clojure-desde-cero",
+    title: "Clojure desde Cero",
+    description: "Curso base de Clojure con enfoque funcional y REPL en navegador.",
+    order: 3,
+    language: "clojure",
+    runtimeType: "browser_clojure",
+    lessons: [
+      {
+        slug: "clojure-intro-repl",
+        title: "Introducción al REPL de Clojure",
+        order: 1,
+        estimatedMinutes: 18,
+        content: `
+# Clojure desde Cero
+
+Este curso está listo para que cargues contenido y ejercicios.
+Sugerencia: inicia con expresiones, colecciones y funciones puras.
+        `,
+        exercises: [
+          {
+            id: "clj-l1-e1",
+            order: 1,
+            title: "Primer output en Clojure",
+            instructions:
+              "Ejecuta el código y asegúrate de imprimir exactamente `Hola Clojure`.",
+            starterCode: '(println "Hola Clojure")\n',
+            solutionCode: '(println "Hola Clojure")\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Salida esperada",
+                expected: "Hola Clojure",
+              },
+            ],
+            hints: [
+              "Usa println para imprimir en consola",
+              "Respeta mayúsculas y espacios",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "javascript-desde-cero",
+    title: "JavaScript desde Cero",
+    description: "Fundamentos de JavaScript moderno con práctica interactiva.",
+    order: 4,
+    language: "javascript",
+    runtimeType: "browser_javascript",
+    lessons: [
+      {
+        slug: "javascript-intro",
+        title: "Introducción a JavaScript",
+        order: 1,
+        estimatedMinutes: 15,
+        content: `
+# JavaScript desde Cero
+
+Curso base creado. Puedes agregar retos de variables, funciones y objetos.
+        `,
+        exercises: [
+          {
+            id: "js-l1-e1",
+            order: 1,
+            title: "Primer output en JavaScript",
+            instructions:
+              "Ejecuta el código y muestra exactamente `Hola JavaScript` con `console.log`.",
+            starterCode: 'console.log("Hola JavaScript");\n',
+            solutionCode: 'console.log("Hola JavaScript");\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Salida esperada",
+                expected: "Hola JavaScript",
+              },
+            ],
+            hints: [
+              "Usa console.log(...)",
+              "Evita texto adicional en la salida",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "typescript-desde-cero",
+    title: "TypeScript desde Cero",
+    description: "TypeScript con tipado estático para apps frontend/backend.",
+    order: 5,
+    language: "typescript",
+    runtimeType: "browser_typescript",
+    lessons: [
+      {
+        slug: "typescript-intro",
+        title: "Introducción a TypeScript",
+        order: 1,
+        estimatedMinutes: 15,
+        content: `
+# TypeScript desde Cero
+
+Curso base creado. Recomendado: tipos primitivos, funciones y interfaces.
+        `,
+        exercises: [
+          {
+            id: "ts-l1-e1",
+            order: 1,
+            title: "Primer output en TypeScript",
+            instructions:
+              "Usa una variable tipada y muestra `Hola TypeScript` en consola.",
+            starterCode:
+              'const language: string = "TypeScript";\nconsole.log(`Hola ${language}`);\n',
+            solutionCode:
+              'const language: string = "TypeScript";\nconsole.log(`Hola ${language}`);\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Salida esperada",
+                expected: "Hola TypeScript",
+              },
+            ],
+            hints: [
+              "Declara la variable con tipo string",
+              "Puedes usar template literals",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "sql-desde-cero",
+    title: "SQL desde Cero",
+    description: "Consultas SQL prácticas para análisis y producto.",
+    order: 6,
+    language: "sql",
+    runtimeType: "browser_sql",
+    lessons: [
+      {
+        slug: "sql-intro-select",
+        title: "Introducción a SELECT",
+        order: 1,
+        estimatedMinutes: 15,
+        content: `
+# SQL desde Cero
+
+Curso base creado. Recomendado: SELECT, WHERE, ORDER BY y agregaciones.
+        `,
+        exercises: [
+          {
+            id: "sql-l1-e1",
+            order: 1,
+            title: "Primer SELECT",
+            instructions:
+              "Ejecuta un SELECT que retorne el texto `Hola SQL`.",
+            starterCode: "SELECT 'Hola SQL' AS message;\n",
+            solutionCode: "SELECT 'Hola SQL' AS message;\n",
+            validationType: "contains",
+            testCases: [
+              {
+                description: "La salida incluye el mensaje esperado",
+                expected: "Hola SQL",
+              },
+            ],
+            hints: [
+              "Usa un SELECT literal",
+              "Puedes asignar alias con AS message",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "go-desde-cero",
+    title: "Go desde Cero",
+    description: "Fundamentos de Go para backend y herramientas CLI.",
+    order: 7,
+    language: "go",
+    runtimeType: "browser_go",
+    lessons: [
+      {
+        slug: "go-intro-main",
+        title: "Introducción a Go",
+        order: 1,
+        estimatedMinutes: 15,
+        content: `
+# Go desde Cero
+
+Curso base creado. Agrega ejercicios de funciones, slices y structs.
+        `,
+        exercises: [
+          {
+            id: "go-l1-e1",
+            order: 1,
+            title: "Primer output en Go",
+            instructions:
+              "Imprime `Hola Go` dentro de `main` usando `fmt.Println`.",
+            starterCode:
+              'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hola Go")\n}\n',
+            solutionCode:
+              'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hola Go")\n}\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Salida esperada",
+                expected: "Hola Go",
+              },
+            ],
+            hints: [
+              "Importa el paquete fmt",
+              "Imprime dentro de func main()",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "rust-desde-cero",
+    title: "Rust desde Cero",
+    description: "Rust para programación segura y de alto rendimiento.",
+    order: 8,
+    language: "rust",
+    runtimeType: "browser_rust",
+    lessons: [
+      {
+        slug: "rust-intro-main",
+        title: "Introducción a Rust",
+        order: 1,
+        estimatedMinutes: 15,
+        content: `
+# Rust desde Cero
+
+Curso base creado. Recomendado: ownership, borrowing y pattern matching.
+        `,
+        exercises: [
+          {
+            id: "rust-l1-e1",
+            order: 1,
+            title: "Primer output en Rust",
+            instructions:
+              "Imprime exactamente `Hola Rust` usando `println!`.",
+            starterCode: 'fn main() {\n    println!("Hola Rust");\n}\n',
+            solutionCode: 'fn main() {\n    println!("Hola Rust");\n}\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Salida esperada",
+                expected: "Hola Rust",
+              },
+            ],
+            hints: [
+              "Recuerda el macro println!",
+              "Incluye punto y coma al final de la línea",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "bash-desde-cero",
+    title: "Bash desde Cero",
+    description: "Automatización y scripting en Bash desde fundamentos.",
+    order: 9,
+    language: "bash",
+    runtimeType: "browser_bash",
+    lessons: [
+      {
+        slug: "bash-intro-cli",
+        title: "Introducción a Bash",
+        order: 1,
+        estimatedMinutes: 15,
+        content: `
+# Bash desde Cero
+
+Curso base creado. Recomendado: variables, pipes, redirecciones y scripts.
+        `,
+        exercises: [
+          {
+            id: "bash-l1-e1",
+            order: 1,
+            title: "Primer output en Bash",
+            instructions:
+              "Imprime exactamente `Hola Bash` usando `echo`.",
+            starterCode: 'echo "Hola Bash"\n',
+            solutionCode: 'echo "Hola Bash"\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Salida esperada",
+                expected: "Hola Bash",
+              },
+            ],
+            hints: [
+              "Usa echo para mostrar texto",
+              "No agregues comandos extra",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
 async function upsertCourse(courseData: SeedCourse) {
   const course = await prisma.course.upsert({
     where: { slug: courseData.slug },
     update: {
       title: courseData.title,
       description: courseData.description,
+      language: courseData.language ?? "python",
+      runtimeType: courseData.runtimeType ?? "browser_pyodide",
       order: courseData.order,
       isPublished: true,
     },
@@ -715,6 +1032,8 @@ async function upsertCourse(courseData: SeedCourse) {
       slug: courseData.slug,
       title: courseData.title,
       description: courseData.description,
+      language: courseData.language ?? "python",
+      runtimeType: courseData.runtimeType ?? "browser_pyodide",
       order: courseData.order,
       isPublished: true,
     },
@@ -823,8 +1142,9 @@ async function main() {
     data: { isPublished: false },
   });
 
-  // Upsert new Python paths
-  for (const courseData of PYTHON_COURSES) {
+  // Upsert learning paths
+  const allCourses = [...PYTHON_COURSES, ...LANGUAGE_FOUNDATION_COURSES];
+  for (const courseData of allCourses) {
     await upsertCourse(courseData);
     console.log(`✅ Curso listo: ${courseData.title}`);
   }

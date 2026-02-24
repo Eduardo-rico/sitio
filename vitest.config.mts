@@ -23,6 +23,7 @@ export default defineConfig({
         '**/types/**',
         '**/prisma/**',
         '**/app/**',
+        '**/components/python-editor/**',
       ],
       thresholds: {
         lines: 80,

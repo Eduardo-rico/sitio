@@ -8,6 +8,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ApiResponse } from "@/types";
 import { z } from "zod";
+import { COURSE_LANGUAGES, RUNTIME_TYPES } from "@/lib/course-runtime";
 
 // Validation schema
 const courseSchema = z.object({
@@ -16,7 +17,8 @@ const courseSchema = z.object({
   description: z.string().max(500).optional(),
   order: z.number().min(0),
   isPublished: z.boolean(),
-
+  language: z.enum(COURSE_LANGUAGES),
+  runtimeType: z.enum(RUNTIME_TYPES),
 });
 
 // GET /api/admin/courses - List all courses with stats (admin only)
@@ -65,6 +67,8 @@ export async function GET(request: NextRequest) {
         slug: course.slug,
         title: course.title,
         description: course.description,
+        language: course.language,
+        runtimeType: course.runtimeType,
         order: course.order,
         isPublished: course.isPublished,
 
@@ -134,9 +138,10 @@ export async function POST(request: NextRequest) {
         title: data.title,
         slug: data.slug,
         description: data.description || null,
+        language: data.language,
+        runtimeType: data.runtimeType,
         order: data.order,
         isPublished: data.isPublished,
-
       },
     });
 

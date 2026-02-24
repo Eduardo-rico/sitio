@@ -1,34 +1,48 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { IssueReportFab } from "@/components/feedback/IssueReportFab";
 import { getSiteUrl } from "@/lib/site-url";
 
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
-  title: "Tutoriales Interactivos de Python",
+  title: "Tutoriales Interactivos de Programación",
   description:
-    "Cursos de Python básico e intermedio con lecciones prácticas, consola en vivo y validación automática de retos.",
+    "Cursos interactivos de Python, Clojure, JavaScript, TypeScript, SQL, Go, Rust y Bash en el navegador.",
   alternates: {
     canonical: "/tutoriales",
   },
   openGraph: {
     type: "website",
     url: `${siteUrl}/tutoriales`,
-    title: "Tutoriales Interactivos de Python | Eduardo Rico",
+    title: "Tutoriales Interactivos de Programación | Eduardo Rico",
     description:
-      "Aprende Python escribiendo y ejecutando código en tu navegador con retos prácticos.",
+      "Aprende múltiples lenguajes escribiendo y ejecutando código en tu navegador con retos prácticos.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tutoriales Interactivos de Python | Eduardo Rico",
+    title: "Tutoriales Interactivos de Programación | Eduardo Rico",
     description:
-      "Aprende Python escribiendo y ejecutando código en tu navegador con retos prácticos.",
+      "Aprende múltiples lenguajes escribiendo y ejecutando código en tu navegador con retos prácticos.",
   },
 };
 
-export default function TutorialsLayout({
+export default async function TutorialsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/auth/signin?callbackUrl=/tutoriales");
+  }
+
+  return (
+    <>
+      {children}
+      <IssueReportFab sourceArea="tutorials" />
+    </>
+  );
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { useIsTouchDevice, useMediaQuery } from '@/hooks/use-media-query';
 
 describe('useMediaQuery', () => {
   let matchMediaListeners: Map<string, Array<(e: MediaQueryListEvent) => void>>;
@@ -197,5 +197,41 @@ describe('useMediaQuery', () => {
 
     // Assert
     expect(result.current).toBe(false);
+  });
+});
+
+describe('useIsTouchDevice', () => {
+  beforeEach(() => {
+    delete (window as unknown as Record<string, unknown>).ontouchstart;
+    Object.defineProperty(navigator, 'maxTouchPoints', {
+      configurable: true,
+      value: 0,
+    });
+  });
+
+  it('devuelve true cuando ontouchstart existe en window', async () => {
+    Object.defineProperty(window, 'ontouchstart', {
+      configurable: true,
+      value: vi.fn(),
+    });
+
+    const { result } = renderHook(() => useIsTouchDevice());
+    await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it('devuelve true cuando maxTouchPoints es mayor a 0', async () => {
+    Object.defineProperty(navigator, 'maxTouchPoints', {
+      configurable: true,
+      value: 3,
+    });
+
+    const { result } = renderHook(() => useIsTouchDevice());
+    await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it('devuelve false cuando no hay soporte táctil', async () => {
+    delete (window as unknown as Record<string, unknown>).ontouchstart;
+    const { result } = renderHook(() => useIsTouchDevice());
+    await waitFor(() => expect(result.current).toBe(false));
   });
 });

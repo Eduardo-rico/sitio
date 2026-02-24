@@ -10,6 +10,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
+import type { CourseLanguage } from "@/lib/course-runtime";
+import { getExerciseLanguageBadge, getExercisePreset } from "@/lib/exercise-language-presets";
 import { 
   Type, 
   Hash,
@@ -67,6 +69,7 @@ export type ExerciseFormData = z.infer<typeof exerciseSchema>;
 interface ExerciseBuilderProps {
   defaultValues?: Partial<ExerciseFormData>;
   lessonId?: string;
+  language?: CourseLanguage;
   onSubmit: (data: ExerciseFormData) => void | Promise<void>;
   isSubmitting?: boolean;
   mode?: "create" | "edit";
@@ -80,6 +83,7 @@ function CodeEditor({
   placeholder,
   error,
   height = "200px",
+  languageLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -87,6 +91,7 @@ function CodeEditor({
   placeholder?: string;
   error?: string;
   height?: string;
+  languageLabel: string;
 }) {
   return (
     <div>
@@ -104,7 +109,7 @@ function CodeEditor({
           style={{ height }}
         />
         <div className="absolute top-2 right-2 px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
-          Python
+          {languageLabel}
         </div>
       </div>
       {error && (
@@ -117,12 +122,16 @@ function CodeEditor({
 export function ExerciseBuilder({ 
   defaultValues, 
   lessonId,
+  language = "python",
   onSubmit, 
   isSubmitting = false,
   mode = "create" 
 }: ExerciseBuilderProps) {
   const [activeSection, setActiveSection] = useState<"basic" | "code" | "validation" | "hints">("basic");
   const [testCaseExpanded, setTestCaseExpanded] = useState<number | null>(0);
+
+  const preset = getExercisePreset(language);
+  const languageLabel = getExerciseLanguageBadge(language);
 
   const {
     register,
@@ -137,13 +146,13 @@ export function ExerciseBuilder({
       title: "",
       instructions: "",
       order: 0,
-      starterCode: "# Escribe tu código aquí\n\n",
-      solutionCode: "# Solución\n\n",
+      starterCode: preset.starterCode,
+      solutionCode: preset.solutionCode,
       validationType: "exact",
       expectedOutput: "",
       isPublished: false,
       testCases: [],
-      hints: [],
+      hints: preset.hints.map((value) => ({ value })),
       ...defaultValues,
     },
   });
@@ -293,8 +302,9 @@ export function ExerciseBuilder({
               value={starterCode}
               onChange={(value) => setValue("starterCode", value)}
               label=""
-              placeholder={`# Codigo inicial`}
+              placeholder={preset.starterCode}
               height="300px"
+              languageLabel={languageLabel}
             />
           </div>
 
@@ -310,9 +320,10 @@ export function ExerciseBuilder({
               value={solutionCode}
               onChange={(value) => setValue("solutionCode", value)}
               label=""
-              placeholder="# Solución correcta\ndef main():\n    # Implementación...\n    pass"
+              placeholder={preset.solutionCode}
               error={errors.solutionCode?.message}
               height="300px"
+              languageLabel={languageLabel}
             />
           </div>
         </motion.div>
@@ -354,6 +365,17 @@ export function ExerciseBuilder({
                   </div>
                 </label>
               ))}
+            </div>
+
+            <div className="mt-5 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">
+                Recomendaciones para tests en {languageLabel}
+              </p>
+              <ul className="text-xs text-blue-700 dark:text-blue-200 space-y-1">
+                {preset.testHints.map((hint) => (
+                  <li key={hint}>- {hint}</li>
+                ))}
+              </ul>
             </div>
 
             {/* Expected Output (for exact/contains/regex) */}
@@ -467,7 +489,7 @@ export function ExerciseBuilder({
                               <textarea
                                 {...register(`testCases.${index}.input`)}
                                 rows={2}
-                                placeholder="Datos de entrada para el programa..."
+                                placeholder={preset.testInputPlaceholder}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               />
                             </div>
@@ -479,7 +501,7 @@ export function ExerciseBuilder({
                               <textarea
                                 {...register(`testCases.${index}.expected`)}
                                 rows={2}
-                                placeholder="Resultado esperado..."
+                                placeholder={preset.testExpectedPlaceholder}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               />
                               {errors.testCases?.[index]?.expected && (
@@ -523,11 +545,11 @@ export function ExerciseBuilder({
               <Lightbulb className="w-5 h-5" />
               Pistas
             </h3>
-            <button
-              type="button"
-              onClick={() => appendHint({ value: "" })}
-              className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-            >
+              <button
+                type="button"
+                onClick={() => appendHint({ value: preset.hints[0] ?? "" })}
+                className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              >
               <Plus className="w-4 h-4" />
               Añadir pista
             </button>
@@ -545,7 +567,7 @@ export function ExerciseBuilder({
                 <p className="text-gray-500 dark:text-gray-400">No hay pistas aún</p>
                 <button
                   type="button"
-                  onClick={() => appendHint({ value: "" })}
+                  onClick={() => appendHint({ value: preset.hints[0] ?? "" })}
                   className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >
                   Añadir la primera pista

@@ -8,6 +8,12 @@ import { StaggerContainer, StaggerItem } from "@/components/animations/stagger-c
 import { transitions } from "@/lib/animations";
 import { CardSkeleton } from "@/components/animations/loading-skeleton";
 import { useState, useEffect } from "react";
+import {
+  LANGUAGE_LABELS,
+  RUNTIME_LABELS,
+  isCourseLanguage,
+  isRuntimeType,
+} from "@/lib/course-runtime";
 
 // Course type definition
 interface Course {
@@ -15,6 +21,8 @@ interface Course {
   slug: string;
   title: string;
   description: string | null;
+  language?: string;
+  runtimeType?: string;
   lessonsCount: number;
   progressPercentage?: number;
   lessons?: Array<{
@@ -70,11 +78,11 @@ export default function TutorialsPage() {
           <BookOpen className="w-8 h-8 text-white" />
         </motion.div>
         <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-          Tutoriales Interactivos de Python
+          Tutoriales Interactivos de Programación
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Aprende Python ejecutando código directamente en tu navegador. 
-          Una experiencia práctica y gratuita para dominar el lenguaje de programación más popular del mundo.
+          Aprende y practica con cursos interactivos de Python, Clojure, JavaScript,
+          TypeScript, SQL, Go, Rust y Bash. Todo ejecuta directo en tu navegador.
         </p>
       </FadeIn>
 
@@ -96,7 +104,7 @@ export default function TutorialsPage() {
             transition={{ duration: 0.5, repeat: 2 }}
             className="text-6xl mb-4"
           >
-            🐍
+            💻
           </motion.div>
           <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Próximamente
@@ -130,7 +138,11 @@ function CourseCard({ course }: { course: Course }) {
         )
       : 10;
 
-  const courseEmoji = course.title.toLowerCase().includes("intermedio") ? "🚀" : "🐍";
+  const candidateLanguage = course.language ?? "";
+  const candidateRuntime = course.runtimeType ?? "";
+  const language = isCourseLanguage(candidateLanguage) ? candidateLanguage : "python";
+  const runtime = isRuntimeType(candidateRuntime) ? candidateRuntime : "browser_pyodide";
+  const courseEmoji = getLanguageEmoji(language);
 
   return (
     <motion.div
@@ -155,13 +167,22 @@ function CourseCard({ course }: { course: Course }) {
               {course.lessonsCount} lecciones
             </span>
           </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full">
+              {LANGUAGE_LABELS[language]}
+            </span>
+            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded-full">
+              {RUNTIME_LABELS[runtime]}
+            </span>
+          </div>
           
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {course.title}
           </h2>
           
           <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-            {course.description || "Curso práctico de Python con ejercicios interactivos."}
+            {course.description || "Curso práctico con ejercicios interactivos."}
           </p>
           
           <motion.div 
@@ -188,20 +209,20 @@ function FeaturedSection() {
   const benefits = [
     {
       icon: Rocket,
-      title: "Fácil de aprender",
-      description: "Sintaxis clara y legible, ideal para principiantes.",
+      title: "Práctica real",
+      description: "Corre código y valida ejercicios en una UX consistente.",
       color: "from-green-500 to-emerald-500",
     },
     {
       icon: BarChart3,
-      title: "Data Science",
-      description: "El estándar para análisis de datos e inteligencia artificial.",
+      title: "Multi-lenguaje",
+      description: "Una misma plataforma para varios stacks técnicos.",
       color: "from-blue-500 to-cyan-500",
     },
     {
       icon: Briefcase,
-      title: "Alta demanda",
-      description: "Uno de los lenguajes mejor pagados y más solicitados.",
+      title: "Escalable",
+      description: "Modelo de cursos y runtimes preparado para crecer.",
       color: "from-purple-500 to-pink-500",
     },
   ];
@@ -222,7 +243,7 @@ function FeaturedSection() {
             viewport={{ once: true }}
             className="text-2xl font-bold mb-6"
           >
-            ¿Por qué aprender Python?
+            ¿Por qué aprender aquí?
           </motion.h2>
           <StaggerContainer className="grid md:grid-cols-3 gap-6 text-sm" staggerDelay={0.1}>
             {benefits.map((benefit, idx) => (
@@ -246,4 +267,25 @@ function FeaturedSection() {
       </motion.div>
     </FadeIn>
   );
+}
+
+function getLanguageEmoji(language: keyof typeof LANGUAGE_LABELS): string {
+  switch (language) {
+    case "python":
+      return "🐍";
+    case "clojure":
+      return "🧠";
+    case "javascript":
+      return "🟨";
+    case "typescript":
+      return "🔷";
+    case "sql":
+      return "🗄️";
+    case "go":
+      return "🐹";
+    case "rust":
+      return "🦀";
+    case "bash":
+      return "🖥️";
+  }
 }

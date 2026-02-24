@@ -10,6 +10,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { ExerciseBuilder, ExerciseFormData } from "@/components/admin/exercise-builder";
+import type { CourseLanguage } from "@/lib/course-runtime";
+import { isCourseLanguage } from "@/lib/course-runtime";
 
 interface Lesson {
   id: string;
@@ -19,6 +21,7 @@ interface Lesson {
     id: string;
     title: string;
     slug: string;
+    language: string;
   };
 }
 
@@ -168,6 +171,12 @@ export default function NewExercisePage() {
       {/* Exercise Builder */}
       {selectedLesson ? (
         <ExerciseBuilder
+          key={`${selectedLesson.id}-${selectedLesson.course.language}`}
+          language={
+            isCourseLanguage(selectedLesson.course.language)
+              ? (selectedLesson.course.language as CourseLanguage)
+              : "python"
+          }
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           mode="create"

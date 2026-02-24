@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { ApiResponse } from "@/types"
 
-// GET /api/courses/[slug] - Obtener curso con sus lecciones
+// GET /api/courses/[slug] - Obtener curso con sus lecciones (requiere sesión)
 export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }
@@ -12,6 +12,12 @@ export async function GET(
     const { slug } = params
     const session = await auth()
     const userId = session?.user?.id
+    if (!userId) {
+      return Response.json(
+        { success: false, error: "Debes iniciar sesión para ver el curso" } satisfies ApiResponse,
+        { status: 401 }
+      )
+    }
 
     const course = await prisma.course.findFirst({
       where: {
@@ -27,10 +33,10 @@ export async function GET(
               where: { isPublished: true },
               select: { id: true },
             },
-            progress: userId ? {
+            progress: {
               where: { userId },
               select: { status: true, completedAt: true, lastAccessedAt: true },
-            } : false,
+            },
           },
         },
       },
@@ -54,6 +60,8 @@ export async function GET(
       slug: course.slug,
       title: course.title,
       description: course.description,
+      language: course.language,
+      runtimeType: course.runtimeType,
       order: course.order,
       createdAt: course.createdAt,
       lessonsCount: totalLessons,

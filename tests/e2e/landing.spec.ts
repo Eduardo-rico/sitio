@@ -10,19 +10,20 @@ test.describe('Landing Page', () => {
     await expect(page.getByRole('link', { name: /Crear Cuenta Gratis|Crear Cuenta/i }).first()).toBeVisible();
   });
 
-  test('course CTA navigates to the published Python path', async ({ page }) => {
+  test('course CTA redirects unauthenticated users to signin with callback', async ({ page }) => {
     await page.goto('/');
     const courseCta = page.getByRole('link', { name: 'Ir al Curso' });
     await expect(courseCta).toBeVisible();
     await courseCta.scrollIntoViewIfNeeded();
 
     await Promise.all([
-      page.waitForURL(/\/tutoriales\/python-basico/, { timeout: 30_000 }),
+      page.waitForURL(/\/auth\/signin\?callbackUrl=(%2Ftutoriales%2Fpython-basico|\/tutoriales\/python-basico)/, { timeout: 30_000 }),
       courseCta.click(),
     ]);
 
-    await expect(page).toHaveURL(/\/tutoriales\/python-basico/, { timeout: 30_000 });
-    await expect(page.getByRole('heading', { name: /Python Basico/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/auth\/signin\?callbackUrl=(%2Ftutoriales%2Fpython-basico|\/tutoriales\/python-basico)/, { timeout: 30_000 });
+    await expect(page.locator('input#email')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Iniciar sesión/i })).toBeVisible();
   });
 
   test('features and instructor sections are visible', async ({ page }) => {

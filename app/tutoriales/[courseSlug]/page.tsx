@@ -10,6 +10,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getSiteUrl } from '@/lib/site-url';
+import {
+  LANGUAGE_LABELS,
+  RUNTIME_LABELS,
+  isCourseLanguage,
+  isRuntimeType,
+} from '@/lib/course-runtime';
 import { CourseStartButton } from '@/components/lessons/CourseStartButton';
 import { Circle, Play, Clock, BookOpen } from 'lucide-react';
 
@@ -57,7 +63,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
   }
 
   return {
-    title: `${course.title} | Tutoriales Python`,
+    title: `${course.title} | Tutoriales Interactivos`,
     description: course.description || `Aprende ${course.title} con ejercicios interactivos`,
     alternates: {
       canonical: `/tutoriales/${params.courseSlug}`,
@@ -65,7 +71,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     openGraph: {
       type: "website",
       url: `${siteUrl}/tutoriales/${params.courseSlug}`,
-      title: `${course.title} | Tutoriales Python`,
+      title: `${course.title} | Tutoriales Interactivos`,
       description: course.description || `Aprende ${course.title} con ejercicios interactivos`,
     },
   };
@@ -79,6 +85,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
     notFound();
   }
 
+  const language = isCourseLanguage(course.language) ? course.language : "python";
+  const runtime = isRuntimeType(course.runtimeType) ? course.runtimeType : "browser_pyodide";
   const totalLessons = course.lessons.length;
   const totalExercises = course.lessons.reduce(
     (acc, lesson) => acc + lesson.exercises.length, 
@@ -93,7 +101,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
     "@context": "https://schema.org",
     "@type": "Course",
     name: course.title,
-    description: course.description || "Curso práctico de Python con ejercicios interactivos.",
+    description: course.description || "Curso práctico con ejercicios interactivos.",
     inLanguage: "es",
     provider: {
       "@type": "Person",
@@ -125,7 +133,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
       {/* Header del curso */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8">
         <div className="flex items-start gap-6">
-          <div className="text-6xl">🐍</div>
+          <div className="text-6xl">{getCourseEmoji(language)}</div>
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               {course.title}
@@ -133,6 +141,15 @@ export default async function CoursePage({ params }: CoursePageProps) {
             <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
               {course.description || 'Curso práctico con ejercicios interactivos.'}
             </p>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full">
+                {LANGUAGE_LABELS[language]}
+              </span>
+              <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded-full">
+                {RUNTIME_LABELS[runtime]}
+              </span>
+            </div>
             
             <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-1">
@@ -225,4 +242,25 @@ export default async function CoursePage({ params }: CoursePageProps) {
       </div>
     </main>
   );
+}
+
+function getCourseEmoji(language: keyof typeof LANGUAGE_LABELS): string {
+  switch (language) {
+    case "python":
+      return "🐍";
+    case "clojure":
+      return "🧠";
+    case "javascript":
+      return "🟨";
+    case "typescript":
+      return "🔷";
+    case "sql":
+      return "🗄️";
+    case "go":
+      return "🐹";
+    case "rust":
+      return "🦀";
+    case "bash":
+      return "🖥️";
+  }
 }

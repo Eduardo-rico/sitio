@@ -151,12 +151,19 @@ describe('useLocalStorage', () => {
     // Arrange
     storage['test-key'] = 'not-valid-json';
     const initialValue = { default: true };
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Act
     const { result } = renderHook(() => useLocalStorage('test-key', initialValue));
 
     // Assert - should fall back to initial value
     expect(result.current[0]).toEqual(initialValue);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Error reading localStorage key "test-key":'),
+      expect.any(SyntaxError)
+    );
+
+    warnSpy.mockRestore();
   });
 
   it('should update when storage event fires from another tab', () => {

@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
             id: true,
             title: true,
             slug: true,
+            language: true,
           },
         },
         _count: {

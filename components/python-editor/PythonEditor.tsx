@@ -7,6 +7,8 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import Editor, { OnMount, Monaco } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
+import type { CourseLanguage } from '@/lib/course-runtime';
+import { getMonacoLanguage } from '@/lib/course-runtime';
 
 export interface PythonEditorProps {
   /** Código inicial */
@@ -27,6 +29,8 @@ export interface PythonEditorProps {
   onMount?: OnMount;
   /** Tema forzado (si no se usa el del sistema) */
   theme?: 'vs' | 'vs-dark' | 'hc-black';
+  /** Lenguaje del editor */
+  language?: CourseLanguage;
 }
 
 // Código por defecto
@@ -76,6 +80,7 @@ export function PythonEditor({
   className = '',
   onMount,
   theme: forcedTheme,
+  language = 'python',
 }: PythonEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
@@ -96,6 +101,8 @@ export function PythonEditor({
 
   // Configurar autocompletado Python
   const configurePythonLanguage = useCallback((monaco: Monaco) => {
+    if (language !== 'python') return;
+
     // Palabras clave de Python
     const pythonKeywords = [
       'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await',
@@ -185,7 +192,7 @@ export function PythonEditor({
         };
       },
     });
-  }, []);
+  }, [language]);
 
   // Handler de montaje
   const handleMount: OnMount = useCallback(
@@ -271,7 +278,7 @@ export function PythonEditor({
     <div className={`python-editor ${className}`}>
       <Editor
         height={height}
-        defaultLanguage="python"
+        defaultLanguage={getMonacoLanguage(language)}
         value={editorValue}
         onChange={handleChange}
         onMount={handleMount}

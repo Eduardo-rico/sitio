@@ -6,9 +6,25 @@ import React from 'react';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: { children: React.ReactNode }) => (
-      <div {...props}>{children}</div>
-    ),
+    div: ({
+      children,
+      layout,
+      variants,
+      initial,
+      animate,
+      exit,
+      transition,
+      ...props
+    }: { children: React.ReactNode } & Record<string, unknown>) => {
+      void layout;
+      void variants;
+      void initial;
+      void animate;
+      void exit;
+      void transition;
+
+      return <div {...(props as React.HTMLAttributes<HTMLDivElement>)}>{children}</div>;
+    },
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -42,13 +58,10 @@ describe('Toast', () => {
   const mockOnRemove = vi.fn();
 
   beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
     resetToastState();
   });
 
   afterEach(() => {
-    vi.runOnlyPendingTimers();
-    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
@@ -155,13 +168,11 @@ describe('Toast', () => {
 
 describe('Toaster', () => {
   beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
     resetToastState();
   });
 
   afterEach(() => {
-    vi.runOnlyPendingTimers();
-    vi.useRealTimers();
+    resetToastState();
   });
 
   it('should render container with correct aria attributes', () => {
@@ -180,7 +191,7 @@ describe('Toaster', () => {
 
     // Act
     act(() => {
-      toast.success('Success message');
+      toast.success('Success message', { duration: Infinity });
     });
 
     // Assert
@@ -195,8 +206,8 @@ describe('Toaster', () => {
 
     // Act
     act(() => {
-      toast.success('First message');
-      toast.error('Second message');
+      toast.success('First message', { duration: Infinity });
+      toast.error('Second message', { duration: Infinity });
     });
 
     // Assert
@@ -212,7 +223,7 @@ describe('Toaster', () => {
     let toastId: string;
 
     act(() => {
-      toastId = toast.success('Dismiss me');
+      toastId = toast.success('Dismiss me', { duration: Infinity });
     });
 
     await waitFor(() => {
@@ -236,9 +247,9 @@ describe('Toaster', () => {
 
     // Act
     act(() => {
-      toast.success('Toast 1');
-      toast.success('Toast 2');
-      toast.success('Toast 3');
+      toast.success('Toast 1', { duration: Infinity });
+      toast.success('Toast 2', { duration: Infinity });
+      toast.success('Toast 3', { duration: Infinity });
     });
 
     // Assert

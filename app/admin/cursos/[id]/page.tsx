@@ -37,6 +37,8 @@ interface Course {
   slug: string;
   title: string;
   description: string | null;
+  language: string;
+  runtimeType: string;
   order: number;
   isPublished: boolean;
   imageUrl: string | null;
@@ -236,6 +238,8 @@ export default function EditCoursePage() {
             title: course.title,
             slug: course.slug,
             description: course.description || "",
+            language: course.language as CourseFormData["language"],
+            runtimeType: course.runtimeType as CourseFormData["runtimeType"],
             order: course.order,
             isPublished: course.isPublished,
             imageUrl: course.imageUrl || "",
