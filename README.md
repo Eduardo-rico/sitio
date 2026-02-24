@@ -1,249 +1,361 @@
-# Blog de Eduardo Rico con Tutoriales Interactivos de Python
+# Plataforma de Aprendizaje Interactivo Browser-Only
 
-Sitio personal de Eduardo Rico (Químico, Data Scientist y AI Researcher) con un sistema de tutoriales interactivos de Python integrado.
+Plataforma educativa full-stack para aprender programación con cursos interactivos, ejecución de código en navegador, panel admin, analítica en tiempo casi real y sistema de tickets de mejora/incidencias.
 
-## 🚀 Características
+## Estado actual (24 de febrero de 2026)
 
-- **Blog personal**: Posts sobre Data Science, NLP y PyTorch
-- **Tutoriales interactivos de Python**: Editor de código con ejecución en el navegador
-- **Ejercicios prácticos**: Validación automática de soluciones
-- **Panel de administración**: Gestión de cursos, lecciones y ejercicios
-- **Autenticación**: NextAuth.js con Google y GitHub
-- **Base de datos**: PostgreSQL con Prisma ORM
-- **Dashboard con Analytics**: Visualización de datos con Recharts
-- **Formularios avanzados**: React Hook Form con validación Zod
-- **Drag & Drop**: Ordenamiento de elementos con @dnd-kit
-- **Animaciones fluidas**: Transiciones con Framer Motion
-
-## 🛠️ Stack Tecnológico
-
-- **Framework**: Next.js 14+ (App Router)
-- **Database**: PostgreSQL (Neon)
-- **ORM**: Prisma
-- **Auth**: NextAuth.js v5
-- **Python Runtime**: Pyodide (WebAssembly)
-- **Editor**: Monaco Editor
-- **Estilos**: Tailwind CSS
-- **Animaciones**: Framer Motion
-- **Formularios**: React Hook Form + Zod
-- **Gráficos**: Recharts
-- **Drag & Drop**: @dnd-kit
-- **Testing**: Vitest + React Testing Library + Playwright
-- **Deployment**: Vercel
-
-## 📦 Instalación
-
-1. Clonar el repositorio:
-```bash
-git clone <repo-url>
-cd blog
-```
-
-2. Instalar dependencias:
-```bash
-# Usando pnpm (recomendado)
-pnpm install
-
-# O usando npm
-npm install
-
-# O usando yarn
-yarn install
-```
-
-3. Configurar variables de entorno:
-```bash
-cp .env.example .env.local
-# Editar .env.local con tus credenciales
-```
-
-4. Generar cliente Prisma y ejecutar migraciones:
-```bash
-npx prisma generate
-npx prisma migrate dev
-```
-
-5. Poblar la base de datos con contenido inicial:
-```bash
-npx prisma db seed
-```
-
-6. Iniciar servidor de desarrollo:
-```bash
-npm run dev
-```
-
-La aplicación estará disponible en [http://localhost:3000](http://localhost:3000)
-
-## 🗄️ Estructura de la Base de Datos
-
-### Modelos principales:
-
-- **User**: Usuarios (con NextAuth)
-- **Course**: Cursos de tutoriales
-- **Lesson**: Lecciones dentro de cursos
-- **Exercise**: Ejercicios prácticos
-- **Progress**: Progreso de usuarios
-- **CodeSubmission**: Envíos de código
-- **Subscription**: Suscripciones (preparado para monetización)
-
-## 🎓 Contenido del Curso Python
-
-El curso "Python desde Cero" incluye:
-
-1. **Tu primer programa** - print, comentarios
-2. **Variables y tipos de datos** - int, float, str, bool
-3. **Operadores aritméticos** - +, -, *, /, //, %, **
-4. **Condicionales** - if, elif, else
-5. **Bucles for** - Iteración y range()
-
-## 🔧 Scripts disponibles
-
-### Desarrollo
-```bash
-npm run dev              # Iniciar servidor de desarrollo
-npm run build            # Build de producción
-npm run start            # Iniciar servidor de producción
-npm run lint             # Ejecutar ESLint
-```
-
-### Base de datos
-```bash
-npm run db:generate      # Generar cliente Prisma
-npm run db:migrate       # Ejecutar migraciones
-npm run db:seed          # Poblar base de datos
-npm run db:studio        # Abrir Prisma Studio
-```
-
-### Testing
-```bash
-# Tests unitarios e integración (Vitest)
-npm run test             # Ejecutar tests en modo watch
-npm run test:ui          # Ejecutar tests con UI de Vitest
-npm run test:coverage    # Generar reporte de cobertura
-
-# Tests E2E (Playwright)
-npm run test:e2e         # Ejecutar tests E2E
-npm run test:e2e:ui      # Ejecutar tests E2E con UI
-```
-
-## 🧪 Testing
-
-### Tests Unitarios y de Integración (Vitest)
-
-Los tests están ubicados en la carpeta `tests/`. Utilizamos:
-- **Vitest**: Framework de testing
-- **React Testing Library**: Tests de componentes React
-- **jsdom**: Entorno de navegador simulado
-- **@testing-library/jest-dom**: Matchers adicionales
-
-Ejemplo de test:
-```tsx
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
-import MiComponente from '@/components/MiComponente'
-
-describe('MiComponente', () => {
-  it('debería renderizar correctamente', () => {
-    render(<MiComponente />)
-    expect(screen.getByText('Hola Mundo')).toBeInTheDocument()
-  })
-})
-```
-
-### Tests E2E (Playwright)
-
-Los tests E2E están en la carpeta `tests/e2e/`. Configurados para:
-- Ejecutar en múltiples navegadores (Chromium, Firefox, WebKit)
-- Modo headless y con UI
-- Screenshots automáticos en fallos
-
-## 🎨 Sistema de Diseño (Sileo Theme)
-
-### Colores principales
-- **Primary (Sileo)**: Azul cian (`sileo-500: #0ea5e9`)
-- **Accent**: Naranja (`accent-500: #f97316`)
-- **Success**: Verde (`success: #22c55e`)
-- **Warning**: Amarillo (`warning: #eab308`)
-- **Error**: Rojo (`error: #ef4444`)
-
-### Animaciones disponibles
-- `animate-fade-in` / `animate-fade-out`
-- `animate-slide-up` / `animate-slide-down`
-- `animate-bounce-in`
-- `animate-scale-in`
-- `animate-float`
-- `animate-shimmer`
-
-## 📝 Panel de Administración
-
-Accede a `/admin` para gestionar:
-- Cursos (crear, editar, publicar)
-- Lecciones con contenido Markdown
-- Ejercicios con código inicial y soluciones
-- Estadísticas de uso con gráficos interactivos
-
-## 🔐 Variables de Entorno
-
-Ver `.env.example` para todas las variables disponibles:
-
-```env
-# Database
-DATABASE_URL=postgresql://...
-DATABASE_URL_UNPOOLED=postgresql://...
-
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=tu_secreto
-
-# OAuth
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-GITHUB_ID=...
-GITHUB_SECRET=...
-
-# Stripe (opcional)
-STRIPE_PUBLISHABLE_KEY=...
-STRIPE_SECRET_KEY=...
-STRIPE_WEBHOOK_SECRET=...
-
-# App
-NODE_ENV=development
-PORT=3000
-```
-
-## 🚀 Deploy en Vercel
-
-1. Conectar repositorio a Vercel
-2. Configurar variables de entorno en el dashboard de Vercel
-3. Agregar `DATABASE_URL` en Vercel
-4. Ejecutar migraciones: `npx prisma migrate deploy`
-5. ¡Listo! La app se desplegará automáticamente con cada push a `main`
-
-## 📁 Estructura del Proyecto
-
-```
-.
-├── app/                    # App Router de Next.js
-│   ├── admin/             # Panel de administración
-│   ├── api/               # API Routes
-│   ├── courses/           # Páginas de cursos
-│   └── ...
-├── components/            # Componentes React
-│   ├── ui/               # Componentes base (Button, Input, etc.)
-│   └── ...
-├── lib/                   # Utilidades y helpers
-├── prisma/               # Schema y migraciones de Prisma
-├── tests/                # Tests unitarios y de integración
-├── tests/e2e/           # Tests E2E con Playwright
-├── types/               # Tipos TypeScript globales
-└── public/              # Archivos estáticos
-```
-
-## 📄 Licencia
-
-MIT - Eduardo Rico
+- 8 lenguajes habilitados: Python, Clojure, JavaScript, TypeScript, SQL, Go, Rust y Bash.
+- Acceso a cursos protegido por autenticación (`/tutoriales` requiere sesión).
+- Panel admin con CRUD de cursos/lecciones/ejercicios, anuncios, usuarios, analítica y tickets.
+- Botón flotante de reporte en tutoriales y admin para crear tickets.
+- Runtimes browser-only por lenguaje (sin backend de ejecución de código).
+- Calidad validada:
+  - Unit tests: `260/260` pasando
+  - Coverage: `98.76%` líneas
+  - E2E: `41/41` escenarios pasando
 
 ---
 
-Desarrollado con ❤️ y ☕ por Eduardo Rico
+## Qué incluye la plataforma (visión general)
+
+### Para estudiantes
+
+- Catálogo de cursos por lenguaje con ruta guiada.
+- Lecciones con contenido + ejercicios prácticos.
+- Editor Monaco con ejecución y salida en vivo.
+- Validación de ejercicios y avance de progreso.
+- Feedback de ejercicios (rating + comentario).
+- Reporte de incidencias/mejoras desde cualquier tutorial.
+
+### Para administradores
+
+- Gestión de cursos, lecciones y ejercicios con publicación controlada.
+- Configuración por curso de `language` y `runtimeType`.
+- `ExerciseBuilder` adaptado automáticamente al lenguaje del curso.
+- Gestión de anuncios del sistema.
+- Dashboard con métricas globales y analítica de aprendizaje.
+- Monitoreo casi en vivo de eventos de uso.
+- Bandeja de tickets con triage manual (estado, severidad, notas).
+
+---
+
+## Imagen general de arquitectura
+
+```mermaid
+flowchart LR
+  U[Usuario autenticado] --> FE[Next.js App Router UI]
+  A[Admin autenticado] --> FE
+
+  FE --> API[API Routes Next.js]
+  API --> DB[(PostgreSQL / Prisma)]
+
+  FE --> RT[Runtime Browser-Only]
+  RT --> PY[Pyodide - Python]
+  RT --> JS[Worker JS]
+  RT --> TS[TS transpile + Worker JS]
+  RT --> SQL[SQL engine simplificado]
+  RT --> WASM[Wasmer SDK - Clojure/Go/Rust/Bash]
+
+  API --> EVT[Learning Events]
+  EVT --> DB
+  API --> TKT[Issue Tickets]
+  TKT --> DB
+```
+
+---
+
+## Flujo funcional end-to-end
+
+```mermaid
+sequenceDiagram
+  participant S as Estudiante
+  participant W as Web App
+  participant R as Runtime Browser
+  participant API as API
+  participant DB as PostgreSQL
+
+  S->>W: Login
+  S->>W: Abre /tutoriales
+  W->>API: GET /api/courses
+  API->>DB: Cursos publicados + progreso
+  DB-->>API: Datos
+  API-->>W: Catálogo
+
+  S->>W: Inicia curso
+  W->>API: POST /api/courses/:slug/enroll
+  API->>DB: upsert progress + evento
+
+  S->>W: Ejecuta código
+  W->>R: run(code, language)
+  R-->>W: stdout/stderr/error
+
+  S->>W: Validar ejercicio
+  W->>API: POST /api/exercises/:id/validate
+  API->>DB: code_submission + progress + evento
+  DB-->>API: resultado
+  API-->>W: feedback
+```
+
+---
+
+## Arquitectura técnica (detalle)
+
+### Stack principal
+
+- Frontend/App: Next.js 14 (App Router), React 18, TypeScript.
+- UI/UX: Tailwind CSS, Framer Motion, Radix UI.
+- Editor: Monaco Editor.
+- Auth: NextAuth v5 + Prisma Adapter + credenciales.
+- DB: PostgreSQL (Neon) con Prisma ORM.
+- Validación: Zod + React Hook Form.
+- Analítica visual: Recharts.
+- Testing: Vitest + React Testing Library + Playwright.
+
+### Ejecución de código por lenguaje (browser-only)
+
+| Lenguaje | RuntimeType | Motor actual | Estado |
+|---|---|---|---|
+| Python | `browser_pyodide` | Pyodide WASM | Estable para ejercicios intro/intermedios |
+| JavaScript | `browser_javascript` | Web Worker + `new Function` | Estable |
+| TypeScript | `browser_typescript` | `typescript.transpileModule` + Worker JS | Estable (sin type-checking estricto en runtime) |
+| SQL | `browser_sql` | Evaluador SQL simplificado | Limitado (principalmente `SELECT` expresiones) |
+| Clojure | `browser_clojure` | Wasmer SDK (paquete configurable) | Requiere `NEXT_PUBLIC_WASMER_CLOJURE_PACKAGE` |
+| Go | `browser_go` | Wasmer SDK | Funcional |
+| Rust | `browser_rust` | Wasmer SDK (paquete configurable) | Requiere `NEXT_PUBLIC_WASMER_RUST_PACKAGE` |
+| Bash | `browser_bash` | Wasmer SDK | Funcional |
+
+### Lógica de aprendizaje
+
+- `Progress` se registra al abrir/iniciar lección y se marca `completed` al validar correcto.
+- `CodeSubmission` guarda intentos, salida y feedback.
+- `LearningEvent` captura eventos clave (`course_enrolled`, `lesson_viewed`, `exercise_validated`, etc.).
+
+### Sistema de tickets
+
+- FAB flotante en tutoriales y admin (`IssueReportFab`).
+- Endpoint usuario autenticado: `POST /api/tickets`.
+- Dashboard admin:
+  - `GET /api/admin/tickets` (filtros)
+  - `PATCH /api/admin/tickets/[id]` (estado/severidad/notas)
+- Triage manual por severidad y estado.
+
+### Seguridad y control de acceso
+
+- Middleware protege:
+  - `/tutoriales/**` (requiere sesión)
+  - `/dashboard/**` (requiere sesión)
+  - `/admin/**` (requiere rol admin)
+- Headers de seguridad activos en `next.config.js`:
+  - `COOP`, `COEP`, `X-Frame-Options`, `nosniff`, `Referrer-Policy`.
+
+---
+
+## Modelo de datos principal
+
+- `User`: cuentas, rol, sesiones.
+- `Course`: curso, lenguaje, runtime.
+- `Lesson`: lecciones publicadas por curso.
+- `Exercise`: ejercicios, starter/solution, test cases, hints.
+- `Progress`: avance por usuario/lección.
+- `CodeSubmission`: envíos y resultado.
+- `LearningEvent`: telemetría de aprendizaje.
+- `Announcement`: comunicaciones del sistema.
+- `IssueTicket`: incidencias/mejoras reportadas.
+- `Subscription`: base para monetización.
+
+---
+
+## Calidad y pruebas
+
+### Comandos
+
+```bash
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm exec vitest run --coverage
+pnpm test:e2e
+```
+
+### Resultado validado
+
+- Unit/integration: `260/260` tests.
+- Coverage: `98.76%` líneas.
+- E2E (Playwright): `41/41` escenarios.
+
+---
+
+## Instalación y ejecución local
+
+```bash
+pnpm install
+cp .env.example .env
+pnpm db:generate
+pnpm db:migrate
+pnpm db:seed
+pnpm dev
+```
+
+App local: [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Backlog escalable (producto + tecnología)
+
+## Horizonte 0-3 meses
+
+- Integrar linters reales por lenguaje:
+  - Python (`ruff`/`pyright` en modo browser-compatible donde aplique)
+  - JS/TS (`eslint`/`typescript diagnostics`)
+  - SQL parser robusto
+  - ShellCheck-like para Bash
+- Motor SQL completo en WASM (SQLite/DuckDB) en lugar del evaluador simplificado.
+- Paquetes/runtime versionados para Clojure/Rust (catálogo interno de runtimes).
+- Observabilidad operativa (Sentry + trazas por endpoint).
+- Hardening de validación de ejercicios (sandboxing y límites de recursos por runtime).
+
+## Horizonte 3-6 meses
+
+- Tracks de Data Science (Python + SQL + notebooks browser-only).
+- Roles y permisos más granulares en admin.
+- Segmentación avanzada de anuncios y campañas in-app.
+- Certificados verificables por ruta/curso.
+- Soporte multi-idioma (ES/EN/PT).
+
+## Horizonte 6-12 meses
+
+- Modo Team/Enterprise multi-tenant.
+- LMS integrations (LTI/SCORM/xAPI opcional).
+- Marketplace de cursos de terceros con revenue-share.
+- Motor adaptativo de recomendación de lecciones según desempeño.
+
+---
+
+## Go-to-market: escenarios de marketing
+
+### Escenario A: B2C self-serve (LatAm devs y estudiantes)
+
+- ICP: estudiantes STEM, career-switchers, dev junior.
+- Canal principal: contenido orgánico (YouTube, X, TikTok, blog técnico, SEO).
+- Oferta: cursos interactivos browser-only + rutas guiadas por stack.
+- KPI foco: Visitor -> Registro -> Primer ejercicio completado -> Suscripción.
+
+### Escenario B: B2B Team Plan (startups y pymes)
+
+- ICP: equipos de ingeniería/data de 5-100 personas.
+- Canal principal: outbound consultivo + partnerships + webinars.
+- Oferta: espacios de equipo, reportes, rutas por rol, admin seat.
+- KPI foco: demos agendadas, tasa de cierre, expansión por seats.
+
+### Escenario C: Instituciones educativas / bootcamps
+
+- ICP: universidades, academias, bootcamps.
+- Canal principal: acuerdos institucionales + pilotos de cohorte.
+- Oferta: licencias por cohorte + analítica docente + contenido personalizado.
+- KPI foco: retención por cohorte, completion rate, renovación anual.
+
+---
+
+## Estrategia de monetización
+
+### Propuesta de pricing inicial (recomendada)
+
+| Plan | Precio sugerido | Público | Incluye |
+|---|---:|---|---|
+| Free | $0 | Descubrimiento | acceso limitado, progreso básico |
+| Pro | $19/mes | B2C | catálogo completo, certificaciones, feedback avanzado |
+| Pro Annual | $180/año | B2C | equivalente $15/mes |
+| Team | $25/usuario/mes (anual) | B2B | admin de equipo, reportes, gestión de usuarios |
+| Enterprise | custom | B2B/Institucional | SSO, SLA, soporte y contenido a medida |
+
+### Monetización adicional
+
+- Certificación proctored/capstone (fee por intento).
+- Mentorías 1:1 o cohortes premium.
+- Patrocinios de empresas hiring-partner.
+- Revenue share con creadores de cursos.
+
+---
+
+## Business case (12 meses)
+
+### Supuestos base
+
+- Conversión free -> paid: 2% (conservador), 3.5% (base), 5% (agresivo).
+- ARPPU B2C estimado: $16-$22/mes según mix mensual/anual.
+- Margen bruto objetivo: >80% (infra browser-first + SaaS).
+
+### Proyección simplificada
+
+| Escenario | MAU | Paid conversion | Paid users | ARPPU | MRR estimado |
+|---|---:|---:|---:|---:|---:|
+| Conservador | 8,000 | 2.0% | 160 | $16 | $2,560 |
+| Base | 20,000 | 3.5% | 700 | $18 | $12,600 |
+| Agresivo | 50,000 | 5.0% | 2,500 | $22 | $55,000 |
+
+Si se agrega componente B2B (ej. 10 equipos de 20 seats a $25/seat/mes), se suman ~$5,000 MRR.
+
+### Outcome posible
+
+- 0-6 meses: PMF temprano en 1-2 segmentos (Python/Data + JS/TS).
+- 6-12 meses: negocio mixto B2C + primeros contratos Team.
+- 12-18 meses: crecimiento predecible con expansión de contenido y retención.
+
+---
+
+## Flywheel de crecimiento
+
+```mermaid
+flowchart LR
+  C[Contenido útil + retos reales] --> A[Activación: primer ejercicio completado]
+  A --> R[Retención por progreso y feedback]
+  R --> P[Conversión a Pro/Team]
+  P --> D[Más data de uso y aprendizaje]
+  D --> O[Mejoras de producto y personalización]
+  O --> C
+```
+
+---
+
+## Riesgos principales y mitigación
+
+- Complejidad de runtimes browser-only multi-lenguaje.
+  - Mitigación: versionado de paquetes WASM + pruebas smoke por lenguaje en CI.
+- Validación inconsistente entre lenguajes.
+  - Mitigación: contrato unificado de test cases + harness por runtime.
+- Dependencia de adquisición orgánica lenta.
+  - Mitigación: estrategia híbrida (SEO + partnerships + B2B outbound).
+- Soporte de librerías pesadas (ej. ciencia de datos).
+  - Mitigación: catálogo curado de paquetes, lazy loading y límites de memoria.
+
+---
+
+## Benchmarks externos de referencia (mercado)
+
+- Codecademy pricing (planes individuales):
+  - [Codecademy Pricing](https://www.codecademy.com/pricing)
+- DataCamp pricing (Basic/Premium/Teams):
+  - [DataCamp Pricing](https://www.datacamp.com/pricing)
+- Coursera Plus (ejemplo de referencia pública):
+  - [Coursera Plus](https://www.coursera.org/collections/coursera-plus-landing-page-april-2024)
+- Demanda laboral tech (EE.UU.):
+  - [BLS Software Developers Outlook](https://www.bls.gov/ooh/computer-and-information-technology/software-developers.htm)
+- Brecha de skills y upskilling:
+  - [WEF Future of Jobs 2025](https://www.weforum.org/publications/the-future-of-jobs-report-2025/)
+
+> Nota: precios y benchmarks cambian con frecuencia; revisar trimestralmente antes de decisiones comerciales.
+
+---
+
+## Próximas implementaciones recomendadas (prioridad alta)
+
+1. Linters y diagnósticos reales por lenguaje en editor.
+2. SQL runtime completo (SQLite/DuckDB WASM).
+3. Paquetes WASM internos para Clojure/Rust con fallback robusto.
+4. Módulo de suscripciones completo (billing, dunning, upgrade/downgrade).
+5. Dashboards de cohorte y retención (D1, D7, D30) para decisiones de crecimiento.
+
+---
+
+## Licencia
+
+MIT
