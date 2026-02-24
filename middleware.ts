@@ -1,9 +1,7 @@
-import { normalizeAuthUrlEnv } from "@/lib/normalize-auth-url-env";
+import "@/lib/normalize-auth-url-env";
 import NextAuth from "next-auth";
 import authConfig from "@/lib/auth.config";
 import { NextResponse } from "next/server";
-
-normalizeAuthUrlEnv();
 
 const { auth } = NextAuth(authConfig);
 

@@ -9,6 +9,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { getSiteUrl } from '@/lib/site-url';
 import { LessonContent } from '@/components/lessons/LessonContent';
 import { LessonNavigation } from '@/components/lessons/LessonNavigation';
 import { ArrowLeft, ArrowRight, BookOpen, Clock } from 'lucide-react';
@@ -69,6 +70,7 @@ async function getLessonWithContext(courseSlug: string, lessonSlug: string) {
 
 export async function generateMetadata({ params }: LessonPageProps): Promise<Metadata> {
   const data = await getLessonWithContext(params.courseSlug, params.lessonSlug);
+  const siteUrl = getSiteUrl();
   
   if (!data) {
     return {
@@ -79,11 +81,21 @@ export async function generateMetadata({ params }: LessonPageProps): Promise<Met
   return {
     title: `${data.lesson.title} | ${data.course.title}`,
     description: `Lección interactiva: ${data.lesson.title}`,
+    alternates: {
+      canonical: `/tutoriales/${params.courseSlug}/${params.lessonSlug}`,
+    },
+    openGraph: {
+      type: "article",
+      url: `${siteUrl}/tutoriales/${params.courseSlug}/${params.lessonSlug}`,
+      title: `${data.lesson.title} | ${data.course.title}`,
+      description: `Lección interactiva: ${data.lesson.title}`,
+    },
   };
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
   const data = await getLessonWithContext(params.courseSlug, params.lessonSlug);
+  const siteUrl = getSiteUrl();
 
   if (!data) {
     notFound();
@@ -96,9 +108,27 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const prevLesson = currentIndex > 0 ? course.lessons[currentIndex - 1] : null;
   const nextLesson = currentIndex < course.lessons.length - 1 ? course.lessons[currentIndex + 1] : null;
   const progress = ((currentIndex + 1) / course.lessons.length) * 100;
+  const lessonSchema = {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    name: lesson.title,
+    description: `Lección interactiva: ${lesson.title}`,
+    inLanguage: "es",
+    educationalLevel: "beginner",
+    isPartOf: {
+      "@type": "Course",
+      name: course.title,
+      url: `${siteUrl}/tutoriales/${course.slug}`,
+    },
+    url: `${siteUrl}/tutoriales/${course.slug}/${lesson.slug}`,
+  };
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(lessonSchema) }}
+      />
       {/* Header fijo */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4">

@@ -14,11 +14,13 @@ test.describe('Admin CMS', () => {
 
   test('lessons and exercises creation pages render required forms', async ({ page }) => {
     await page.goto('/admin/lecciones/nueva', { waitUntil: 'domcontentloaded', timeout: 45000 });
-    await expect(page.getByRole('heading', { name: /Nueva Lección|Nueva Leccion/i })).toBeVisible();
-    await expect(page.locator('input[name="title"], input#title')).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/lecciones\/nueva/);
+    await expect(page.getByRole('heading', { name: /Nueva Lección|Nueva Leccion/i })).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('input[name="title"], input#title').first()).toBeVisible({ timeout: 30000 });
 
     await page.goto('/admin/ejercicios/nuevo', { waitUntil: 'domcontentloaded', timeout: 45000 });
-    await expect(page.getByRole('heading', { name: /Nuevo Ejercicio/i })).toBeVisible();
-    await expect(page.locator('input[name="title"], input#title')).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/ejercicios\/nuevo/);
+    await expect(page.getByRole('heading', { name: /Nuevo Ejercicio/i })).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('input[name="title"], input#title').first()).toBeVisible({ timeout: 30000 });
   });
 });

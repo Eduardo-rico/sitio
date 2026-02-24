@@ -9,6 +9,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { getSiteUrl } from '@/lib/site-url';
 import { CheckCircle, Circle, Play, Clock, BookOpen } from 'lucide-react';
 
 interface CoursePageProps {
@@ -46,6 +47,7 @@ async function getCourseWithLessons(courseSlug: string) {
 
 export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
   const course = await getCourseWithLessons(params.courseSlug);
+  const siteUrl = getSiteUrl();
   
   if (!course) {
     return {
@@ -56,11 +58,21 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
   return {
     title: `${course.title} | Tutoriales Python`,
     description: course.description || `Aprende ${course.title} con ejercicios interactivos`,
+    alternates: {
+      canonical: `/tutoriales/${params.courseSlug}`,
+    },
+    openGraph: {
+      type: "website",
+      url: `${siteUrl}/tutoriales/${params.courseSlug}`,
+      title: `${course.title} | Tutoriales Python`,
+      description: course.description || `Aprende ${course.title} con ejercicios interactivos`,
+    },
   };
 }
 
 export default async function CoursePage({ params }: CoursePageProps) {
   const course = await getCourseWithLessons(params.courseSlug);
+  const siteUrl = getSiteUrl();
 
   if (!course) {
     notFound();
@@ -75,9 +87,31 @@ export default async function CoursePage({ params }: CoursePageProps) {
     (acc, lesson) => acc + lesson.estimatedMinutes, 
     0
   );
+  const courseUrl = `${siteUrl}/tutoriales/${course.slug}`;
+  const courseSchema = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: course.title,
+    description: course.description || "Curso práctico de Python con ejercicios interactivos.",
+    inLanguage: "es",
+    provider: {
+      "@type": "Person",
+      name: "Eduardo Rico Sotomayor",
+      url: `${siteUrl}/cv`,
+    },
+    hasCourseInstance: {
+      "@type": "CourseInstance",
+      courseMode: "online",
+      url: courseUrl,
+    },
+  };
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
+      />
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 dark:text-gray-400 mb-6">
         <Link href="/tutoriales" className="hover:text-blue-600 dark:hover:text-blue-400">

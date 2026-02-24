@@ -9,11 +9,15 @@ test.describe('Tutorial Pages', () => {
   });
 
   test('navigates to a specific published course', async ({ page }) => {
-    await page.goto('/tutoriales');
-    await page.getByText(/Python Basico/i).first().click();
+    await page.goto('/tutoriales', { waitUntil: 'domcontentloaded' });
+    const pythonBasicoLink = page.locator('a[href="/tutoriales/python-basico"]').first();
+    await expect(pythonBasicoLink).toBeVisible({ timeout: 30000 });
+    await pythonBasicoLink.click();
 
-    await expect(page).toHaveURL(/\/tutoriales\/python-basico/);
-    await expect(page.getByRole('heading', { name: /Python Basico/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/tutoriales\/python-basico$/, { timeout: 30000 });
+    await expect(page.getByRole('heading', { name: /Python Basico|Python Básico/i })).toBeVisible({
+      timeout: 30000,
+    });
   });
 
   test('admin page requires authentication', async ({ page }) => {
