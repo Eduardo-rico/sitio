@@ -6,9 +6,11 @@ import React from 'react';
 // Mock framer-motion
 vi.mock('framer-motion', () => {
   const createMockComponent = (Tag: any) => {
-    return ({ children, layout, variants, initial, animate, exit, transition, ...props }: any) => {
+    const MockMotionComponent = ({ children, layout, variants, initial, animate, exit, transition, ...props }: any) => {
       return <Tag {...props}>{children}</Tag>;
     };
+    MockMotionComponent.displayName = `MockMotion(${String(Tag)})`;
+    return MockMotionComponent;
   };
 
   return {

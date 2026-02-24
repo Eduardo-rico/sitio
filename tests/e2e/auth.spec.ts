@@ -103,6 +103,32 @@ test.describe('Auth Flows', () => {
     });
   });
 
+  test('callbackUrl to tutorials is respected after login', async ({ page }) => {
+    const user = createTestUser('callback-tutoriales');
+
+    await registerUser(page, user);
+    await page.goto('/auth/signin?callbackUrl=%2Ftutoriales');
+    await page.fill('input#email', user.email);
+    await page.fill('input#password', user.password);
+    await page.click('button[type="submit"]');
+
+    await expect(page).toHaveURL(/\/tutoriales(?:\?.*)?$/, {
+      timeout: 30000,
+    });
+  });
+
+  test('authenticated user on signin with callbackUrl is auto-redirected', async ({ page }) => {
+    const user = createTestUser('already-auth-callback');
+
+    await registerUser(page, user);
+    await loginUser(page, user);
+
+    await page.goto('/auth/signin?callbackUrl=%2Ftutoriales');
+    await expect(page).toHaveURL(/\/tutoriales(?:\?.*)?$/, {
+      timeout: 30000,
+    });
+  });
+
   test('admin credentials remain valid from seed user', async ({ page }) => {
     await page.goto('/auth/signin');
     await page.fill('input#email', ADMIN_USER.email);

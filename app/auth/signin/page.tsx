@@ -12,6 +12,34 @@ import { ScaleTransition } from "@/components/animations/page-transition";
 import { transitions, fadeInUp } from "@/lib/animations";
 import { Spinner } from "@/components/loading/spinner";
 
+const DEFAULT_CALLBACK_URL = "/dashboard";
+
+function normalizeCallbackUrl(rawCallbackUrl: string | null | undefined): string {
+  if (!rawCallbackUrl) return DEFAULT_CALLBACK_URL;
+
+  let normalized = rawCallbackUrl.trim();
+  if (!normalized) return DEFAULT_CALLBACK_URL;
+
+  if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+    try {
+      const parsed = new URL(normalized);
+      normalized = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch {
+      return DEFAULT_CALLBACK_URL;
+    }
+  }
+
+  if (!normalized.startsWith("/") || normalized.startsWith("//")) {
+    return DEFAULT_CALLBACK_URL;
+  }
+
+  if (normalized.startsWith("/auth/signin")) {
+    return DEFAULT_CALLBACK_URL;
+  }
+
+  return normalized;
+}
+
 // Loading fallback for Suspense
 function SignInLoading() {
   return (
@@ -44,15 +72,28 @@ function SignInForm() {
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
   
-  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+  const rawCallbackUrl = searchParams?.get("callbackUrl");
+  const callbackUrl = normalizeCallbackUrl(rawCallbackUrl);
   const success = searchParams?.get("success");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    if (status !== "authenticated" || !session?.user) return;
+    if (!rawCallbackUrl) return;
+
+    router.replace(callbackUrl);
+  }, [mounted, status, session?.user, rawCallbackUrl, callbackUrl, router]);
+
   // Si ya está logueado, mostrar opciones
   if (session?.user) {
+    if (rawCallbackUrl) {
+      return <SignInLoading />;
+    }
+
     return (
       <motion.div 
         initial={{ opacity: 0 }}
@@ -152,8 +193,7 @@ function SignInForm() {
         setError("Credenciales inválidas. Por favor, inténtalo de nuevo.");
       } else if (result?.ok) {
         toast.success("¡Bienvenido de vuelta!");
-        router.push(callbackUrl);
-        router.refresh();
+        window.location.assign(callbackUrl);
       }
     } catch {
       toast.error("Ocurrió un error al iniciar sesión.");
