@@ -50,22 +50,40 @@ interface WasmExecutionOutput {
 }
 
 type RuntimePlan = {
-  packageName: string;
+  packageSpecifiers: string[];
   args: string[];
+  preferredCommands?: string[];
   cwd?: string;
   mount?: Record<string, Record<string, string>>;
+};
+
+const GO_PACKAGE_FALLBACKS = ["golang/go@1.25.5-wasix-1", "golang/go"] as const;
+const BASH_PACKAGE_FALLBACKS = ["wasmer/bash@1.0.25", "wasmer/bash"] as const;
+const LANGUAGE_PACKAGE_OVERRIDES: {
+  clojure: string | null;
+  rust: string | null;
+} = {
+  // Define aquí el paquete Wasmer cuando tengas un runtime real para cada lenguaje.
+  clojure: null,
+  rust: null,
 };
 
 let sdkPromise: Promise<WasmerSDK> | null = null;
 let runtimePromise: Promise<WasmerRuntime> | null = null;
 const packageCache = new Map<string, Promise<WasmerPackage>>();
 
-function getConfiguredPackage(language: "clojure" | "rust"): string | null {
-  if (language === "clojure") {
-    return process.env.NEXT_PUBLIC_WASMER_CLOJURE_PACKAGE ?? null;
-  }
+function normalizePackageValue(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
 
-  return process.env.NEXT_PUBLIC_WASMER_RUST_PACKAGE ?? null;
+function getConfiguredPackage(language: "clojure" | "rust"): string | null {
+  return normalizePackageValue(LANGUAGE_PACKAGE_OVERRIDES[language]);
+}
+
+function withConfiguredFirst(configured: string | null, fallbacks: readonly string[]): string[] {
+  const candidates = configured ? [configured, ...fallbacks] : [...fallbacks];
+  return Array.from(new Set(candidates));
 }
 
 function getRuntimePlan(
@@ -75,13 +93,15 @@ function getRuntimePlan(
   switch (language) {
     case "bash":
       return {
-        packageName: "wasmer/bash",
-        args: ["-lc", code],
+        packageSpecifiers: [...BASH_PACKAGE_FALLBACKS],
+        preferredCommands: ["sh", "bash"],
+        args: ["-c", code],
       };
     case "go":
       return {
-        packageName: "golang/go",
-        args: ["run", "/workspace/main.go"],
+        packageSpecifiers: [...GO_PACKAGE_FALLBACKS],
+        preferredCommands: ["go"],
+        args: ["run", "main.go"],
         cwd: "/workspace",
         mount: {
           "/workspace": {
@@ -93,12 +113,12 @@ function getRuntimePlan(
       const packageName = getConfiguredPackage("clojure");
       if (!packageName) {
         throw new Error(
-          "Runtime WASM de Clojure no configurado. Define NEXT_PUBLIC_WASMER_CLOJURE_PACKAGE."
+          "Runtime WASM de Clojure no configurado. Define LANGUAGE_PACKAGE_OVERRIDES.clojure en wasm-language-runtime.ts."
         );
       }
 
       return {
-        packageName,
+        packageSpecifiers: [packageName],
         args: ["/workspace/main.clj"],
         cwd: "/workspace",
         mount: {
@@ -112,12 +132,12 @@ function getRuntimePlan(
       const packageName = getConfiguredPackage("rust");
       if (!packageName) {
         throw new Error(
-          "Runtime WASM de Rust no configurado. Define NEXT_PUBLIC_WASMER_RUST_PACKAGE."
+          "Runtime WASM de Rust no configurado. Define LANGUAGE_PACKAGE_OVERRIDES.rust en wasm-language-runtime.ts."
         );
       }
 
       return {
-        packageName,
+        packageSpecifiers: [packageName],
         args: ["/workspace/main.rs"],
         cwd: "/workspace",
         mount: {
@@ -171,6 +191,37 @@ async function getPackage(specifier: string) {
   return packageCache.get(specifier)!;
 }
 
+async function resolvePackage(specifiers: string[]) {
+  const errors: string[] = [];
+
+  for (const specifier of specifiers) {
+    try {
+      const pkg = await getPackage(specifier);
+      return { specifier, pkg };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${specifier}: ${message}`);
+    }
+  }
+
+  throw new Error(
+    `No se pudo cargar ningún runtime WASM. Intentos: ${errors.join(" | ")}`
+  );
+}
+
+function resolveCommand(pkg: WasmerPackage, preferredCommands?: string[]): WasmerCommand | null {
+  if (preferredCommands?.length) {
+    for (const commandName of preferredCommands) {
+      const command = pkg.commands[commandName];
+      if (command) {
+        return command;
+      }
+    }
+  }
+
+  return pkg.entrypoint ?? Object.values(pkg.commands)[0] ?? null;
+}
+
 function withTimeout<T>(promise: Promise<T>, timeout: number, message: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(message)), timeout);
@@ -187,17 +238,52 @@ function withTimeout<T>(promise: Promise<T>, timeout: number, message: string): 
   });
 }
 
+function normalizeRuntimeError(
+  language: WasmExecutionInput["language"],
+  output: WasmerRunOutput
+): string | undefined {
+  if (output.ok) {
+    return undefined;
+  }
+
+  const stderr = output.stderr?.trim() ?? "";
+  const lowerStderr = stderr.toLowerCase();
+
+  if (language === "bash" && output.code === 45 && !stderr) {
+    return "Runtime Bash no pudo ejecutar el script en este entorno (exit code 45).";
+  }
+
+  if (
+    language === "go" &&
+    (lowerStderr.includes("bad file number") ||
+      lowerStderr.includes("cannot determine current directory") ||
+      lowerStderr.includes("file name too long"))
+  ) {
+    return "Runtime Go no pudo inicializar el filesystem WASM en este entorno.";
+  }
+
+  return stderr || `Exit code ${output.code}`;
+}
+
 export async function executeWasmLanguage({
   language,
   code,
   timeout,
 }: WasmExecutionInput): Promise<WasmExecutionOutput> {
   const plan = getRuntimePlan(language, code);
-  const pkg = await getPackage(plan.packageName);
-  const command = pkg.entrypoint ?? Object.values(pkg.commands)[0];
+  const loadTimeoutMessage =
+    language === "go"
+      ? `Timeout cargando runtime Go (${timeout}ms). El runtime base de Go tardó demasiado en inicializarse.`
+      : `Timeout cargando runtime ${LANGUAGE_LABELS[language]} (${timeout}ms).`;
+  const { specifier, pkg } = await withTimeout(
+    resolvePackage(plan.packageSpecifiers),
+    timeout,
+    loadTimeoutMessage
+  );
+  const command = resolveCommand(pkg, plan.preferredCommands);
 
   if (!command) {
-    throw new Error(`El paquete ${plan.packageName} no expone un comando ejecutable.`);
+    throw new Error(`El paquete ${specifier} no expone un comando ejecutable.`);
   }
 
   const instance = await withTimeout(
@@ -219,6 +305,6 @@ export async function executeWasmLanguage({
   return {
     stdout: output.stdout,
     stderr: output.stderr,
-    error: output.ok ? undefined : output.stderr || `Exit code ${output.code}`,
+    error: normalizeRuntimeError(language, output),
   };
 }

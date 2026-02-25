@@ -119,10 +119,17 @@ sequenceDiagram
 | JavaScript | `browser_javascript` | Web Worker + `new Function` | Estable |
 | TypeScript | `browser_typescript` | `typescript.transpileModule` + Worker JS | Estable (sin type-checking estricto en runtime) |
 | SQL | `browser_sql` | Evaluador SQL simplificado | Limitado (principalmente `SELECT` expresiones) |
-| Clojure | `browser_clojure` | Wasmer SDK (paquete configurable) | Requiere `NEXT_PUBLIC_WASMER_CLOJURE_PACKAGE` |
-| Go | `browser_go` | Wasmer SDK | Funcional |
-| Rust | `browser_rust` | Wasmer SDK (paquete configurable) | Requiere `NEXT_PUBLIC_WASMER_RUST_PACKAGE` |
-| Bash | `browser_bash` | Wasmer SDK | Funcional |
+| Clojure | `browser_clojure` | Wasmer SDK (paquete configurable en código) | Define `LANGUAGE_PACKAGE_OVERRIDES.clojure` |
+| Go | `browser_go` | Wasmer SDK | Fallback automático: `golang/go@1.25.5-wasix-1` |
+| Rust | `browser_rust` | Wasmer SDK (paquete configurable en código) | Define `LANGUAGE_PACKAGE_OVERRIDES.rust` |
+| Bash | `browser_bash` | Wasmer SDK | Fallback automático: `wasmer/bash@1.0.25` |
+
+### Configuración de runtimes WASM
+
+- Go y Bash usan paquetes internos fijos (no requieren `.env`).
+- Clojure y Rust se configuran en `components/python-editor/wasm-language-runtime.ts` usando `LANGUAGE_PACKAGE_OVERRIDES`.
+
+Si Clojure o Rust no están configurados en código, el editor mostrará un error explícito de configuración en la consola de salida.
 
 ### Lógica de aprendizaje
 
@@ -196,6 +203,9 @@ pnpm dev
 ```
 
 App local: [http://localhost:3000](http://localhost:3000)
+
+Para habilitar Clojure y Rust en browser debes definir paquetes Wasmer en:
+`components/python-editor/wasm-language-runtime.ts`
 
 ---
 

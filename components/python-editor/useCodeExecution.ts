@@ -498,10 +498,20 @@ async function executeWasmBackedLanguage({
   timeout: number;
   startTime: number;
 }): Promise<ExecutionResult> {
+  const minimumTimeoutByLanguage: Record<
+    "clojure" | "go" | "rust" | "bash",
+    number
+  > = {
+    clojure: 30000,
+    go: 120000,
+    rust: 30000,
+    bash: 20000,
+  };
+  const wasmTimeout = Math.max(timeout, minimumTimeoutByLanguage[language]);
   const output = await executeWasmLanguage({
     language,
     code,
-    timeout,
+    timeout: wasmTimeout,
   });
 
   return {
