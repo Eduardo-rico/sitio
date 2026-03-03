@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaGithub,
@@ -15,10 +15,6 @@ import {
   LogIn,
   UserPlus,
   Shield,
-  BookOpen,
-  Code,
-  Menu,
-  X,
   ChevronDown
 } from "lucide-react";
 import Image from "next/image";
@@ -31,6 +27,8 @@ export function Navbar() {
   const isAdmin = session?.user?.role === "admin";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Detect scroll for navbar styling
   useEffect(() => {
@@ -64,13 +62,31 @@ export function Navbar() {
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setIsUserMenuOpen(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleDocumentClick);
+    return () => document.removeEventListener("mousedown", handleDocumentClick);
+  }, []);
+
   return (
     <>
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={transitions.spring}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+        className={`fixed top-0 left-0 right-0 z-[70] transition-all duration-300 ${isScrolled
             ? "bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-gray-200 dark:border-gray-800"
             : "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700"
           }`}
@@ -144,24 +160,35 @@ export function Navbar() {
                   </Link>
 
                   {/* User Menu */}
-                  <div className="relative group">
-                    <button className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all ${isScrolled
+                  <div ref={userMenuRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsUserMenuOpen((current) => !current)}
+                      aria-haspopup="menu"
+                      aria-expanded={isUserMenuOpen}
+                      aria-label="Abrir menú de usuario"
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all ${isScrolled
                         ? "hover:bg-gray-100 dark:hover:bg-gray-800"
                         : "hover:bg-white/10"
-                      }`}>
+                      }`}
+                    >
                       <Avatar
                         name={session.user?.name}
                         image={session.user?.image}
                         size="sm"
                       />
-                      <ChevronDown className={`w-4 h-4 ${isScrolled ? "text-gray-500" : "text-white/70"}`} />
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${isUserMenuOpen ? "rotate-180" : "rotate-0"} ${isScrolled ? "text-gray-500" : "text-white/70"}`}
+                      />
                     </button>
 
                     {/* Dropdown */}
                     <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      whileHover={{ opacity: 1, y: 0, scale: 1 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right"
+                      role="menu"
+                      initial={false}
+                      animate={isUserMenuOpen ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 8, scale: 0.97 }}
+                      transition={transitions.ease}
+                      className={`absolute right-0 top-full mt-2 w-48 z-[70] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 transform origin-top-right ${isUserMenuOpen ? "visible pointer-events-auto" : "invisible pointer-events-none"}`}
                     >
                       <div className="p-3 border-b border-gray-100 dark:border-gray-700">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -174,13 +201,18 @@ export function Navbar() {
                       <div className="p-2">
                         <Link
                           href="/dashboard/configuracion"
+                          onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
                         >
                           <LayoutDashboard className="w-4 h-4" />
                           Configuración
                         </Link>
                         <button
-                          onClick={() => signOut({ callbackUrl: "/" })}
+                          type="button"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            signOut({ callbackUrl: "/" });
+                          }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
@@ -223,7 +255,10 @@ export function Navbar() {
 
             {/* Mobile Menu Button */}
             <motion.button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => {
+                setIsUserMenuOpen(false);
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+              }}
               whileTap={{ scale: 0.95 }}
               className={`md:hidden relative w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${isScrolled
                   ? "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"

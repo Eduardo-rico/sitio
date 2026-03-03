@@ -2,6 +2,8 @@ import type { CourseLanguage } from "@/lib/course-runtime";
 import { LANGUAGE_LABELS } from "@/lib/course-runtime";
 
 const WASMER_SDK_URL = "https://unpkg.com/@wasmer/sdk@0.10.0/dist/index.mjs";
+const SCITTLE_RUNTIME_URL = "https://cdn.jsdelivr.net/npm/scittle@0.8.31/dist/scittle.js";
+const YAEGI_RUNTIME_URL = "https://cdn.jsdelivr.net/npm/yaegi-wasm@1.0.2/src/index.js";
 
 type WasmerRunOutput = {
   stdout: string;
@@ -37,6 +39,29 @@ type WasmerSDK = {
   };
 };
 
+type ScittleGlobal = {
+  core?: {
+    eval_string?: (code: string) => unknown;
+  };
+};
+
+type YaegiResult = {
+  success?: boolean;
+  output?: string;
+  error?: string | null;
+};
+
+type YaegiGlobal = {
+  eval: (code: string) => Promise<YaegiResult> | YaegiResult;
+  reset?: () => void;
+};
+
+type RuntimeWindow = Window &
+  typeof globalThis & {
+    scittle?: ScittleGlobal;
+    yaegi?: YaegiGlobal;
+  };
+
 interface WasmExecutionInput {
   language: Extract<CourseLanguage, "clojure" | "go" | "rust" | "bash">;
   code: string;
@@ -59,26 +84,17 @@ type RuntimePlan = {
 
 const GO_PACKAGE_FALLBACKS = ["golang/go@1.25.5-wasix-1", "golang/go"] as const;
 const BASH_PACKAGE_FALLBACKS = ["wasmer/bash@1.0.25", "wasmer/bash"] as const;
-const LANGUAGE_PACKAGE_OVERRIDES: {
-  clojure: string | null;
-  rust: string | null;
-} = {
-  // Define aquí el paquete Wasmer cuando tengas un runtime real para cada lenguaje.
-  clojure: null,
-  rust: null,
-};
+const RUST_PACKAGE_OVERRIDE: string | null = null;
 
 let sdkPromise: Promise<WasmerSDK> | null = null;
 let runtimePromise: Promise<WasmerRuntime> | null = null;
 const packageCache = new Map<string, Promise<WasmerPackage>>();
+let scittlePromise: Promise<ScittleGlobal> | null = null;
+let yaegiPromise: Promise<YaegiGlobal> | null = null;
 
 function normalizePackageValue(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
-}
-
-function getConfiguredPackage(language: "clojure" | "rust"): string | null {
-  return normalizePackageValue(LANGUAGE_PACKAGE_OVERRIDES[language]);
 }
 
 function withConfiguredFirst(configured: string | null, fallbacks: readonly string[]): string[] {
@@ -109,30 +125,13 @@ function getRuntimePlan(
           },
         },
       };
-    case "clojure": {
-      const packageName = getConfiguredPackage("clojure");
-      if (!packageName) {
-        throw new Error(
-          "Runtime WASM de Clojure no configurado. Define LANGUAGE_PACKAGE_OVERRIDES.clojure en wasm-language-runtime.ts."
-        );
-      }
-
-      return {
-        packageSpecifiers: [packageName],
-        args: ["/workspace/main.clj"],
-        cwd: "/workspace",
-        mount: {
-          "/workspace": {
-            "main.clj": code,
-          },
-        },
-      };
-    }
+    case "clojure":
+      throw new Error("El runtime de Clojure se ejecuta con Scittle en browser.");
     case "rust": {
-      const packageName = getConfiguredPackage("rust");
+      const packageName = normalizePackageValue(RUST_PACKAGE_OVERRIDE);
       if (!packageName) {
         throw new Error(
-          "Runtime WASM de Rust no configurado. Define LANGUAGE_PACKAGE_OVERRIDES.rust en wasm-language-runtime.ts."
+          "Runtime WASM de Rust no configurado. Define RUST_PACKAGE_OVERRIDE en wasm-language-runtime.ts."
         );
       }
 
@@ -238,6 +237,248 @@ function withTimeout<T>(promise: Promise<T>, timeout: number, message: string): 
   });
 }
 
+function getRuntimeWindow(): RuntimeWindow {
+  return window as RuntimeWindow;
+}
+
+function formatCapturedValues(values: unknown[]): string {
+  return values
+    .map((value) => {
+      if (typeof value === "string") {
+        return value;
+      }
+
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    })
+    .join(" ");
+}
+
+function normalizeUnknownError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
+async function injectScriptOnce(src: string): Promise<void> {
+  const runtimeWindow = getRuntimeWindow();
+
+  const existing = runtimeWindow.document.querySelector<HTMLScriptElement>(
+    `script[src="${src}"]`
+  );
+
+  if (existing?.getAttribute("data-loaded") === "true") {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const script = existing ?? runtimeWindow.document.createElement("script");
+    script.src = src;
+    script.async = true;
+
+    script.onload = () => {
+      script.setAttribute("data-loaded", "true");
+      resolve();
+    };
+
+    script.onerror = () => {
+      reject(new Error(`No se pudo cargar el script externo: ${src}`));
+    };
+
+    if (!existing) {
+      runtimeWindow.document.head.appendChild(script);
+    }
+  });
+}
+
+async function getScittleRuntime(): Promise<ScittleGlobal> {
+  if (!scittlePromise) {
+    scittlePromise = (async () => {
+      const runtimeWindow = getRuntimeWindow();
+
+      if (!runtimeWindow.scittle?.core?.eval_string) {
+        await injectScriptOnce(SCITTLE_RUNTIME_URL);
+      }
+
+      const evaluator = runtimeWindow.scittle?.core?.eval_string;
+
+      if (typeof evaluator !== "function") {
+        throw new Error("No se pudo inicializar Scittle para ejecutar Clojure.");
+      }
+
+      const scittleRuntime = runtimeWindow.scittle;
+
+      if (!scittleRuntime) {
+        throw new Error("Scittle no quedó disponible en window.scittle.");
+      }
+
+      return scittleRuntime;
+    })();
+  }
+
+  return scittlePromise!;
+}
+
+async function getYaegiRuntime(): Promise<YaegiGlobal> {
+  if (!yaegiPromise) {
+    yaegiPromise = (async () => {
+      const module = (await import(
+        /* webpackIgnore: true */
+        YAEGI_RUNTIME_URL
+      )) as {
+        createYaegiRunner?: () => Promise<unknown>;
+      };
+
+      if (typeof module.createYaegiRunner !== "function") {
+        throw new Error("El runtime de Go (Yaegi) no expone createYaegiRunner.");
+      }
+
+      await module.createYaegiRunner();
+
+      const runtimeWindow = getRuntimeWindow();
+
+      if (!runtimeWindow.yaegi || typeof runtimeWindow.yaegi.eval !== "function") {
+        throw new Error("El runtime de Go (Yaegi) no quedó disponible en window.yaegi.");
+      }
+
+      return runtimeWindow.yaegi;
+    })();
+  }
+
+  return yaegiPromise;
+}
+
+async function executeClojureViaScittle({
+  code,
+  timeout,
+}: Pick<WasmExecutionInput, "code" | "timeout">): Promise<WasmExecutionOutput> {
+  const runtimeWindow = getRuntimeWindow();
+  const stdout: string[] = [];
+  const stderr: string[] = [];
+  const stdoutKey = `__clj_stdout_${Math.random().toString(36).slice(2)}`;
+  const stderrKey = `__clj_stderr_${Math.random().toString(36).slice(2)}`;
+  const dynamicWindow = runtimeWindow as RuntimeWindow & Record<string, (...values: unknown[]) => void>;
+
+  dynamicWindow[stdoutKey] = (...values: unknown[]) => {
+    stdout.push(formatCapturedValues(values));
+  };
+  dynamicWindow[stderrKey] = (...values: unknown[]) => {
+    stderr.push(formatCapturedValues(values));
+  };
+
+  try {
+    const scittle = await withTimeout(
+      getScittleRuntime(),
+      timeout,
+      `Timeout cargando runtime Clojure (${timeout}ms).`
+    );
+    const evalString = scittle.core?.eval_string;
+
+    if (typeof evalString !== "function") {
+      throw new Error("Scittle no expone eval_string.");
+    }
+
+    const wrappedCode = `
+      (binding [*print-fn* (fn [& xs] (apply js/${stdoutKey} xs))
+                *print-err-fn* (fn [& xs] (apply js/${stderrKey} xs))]
+        ${code}
+      )
+    `;
+
+    await withTimeout(
+      Promise.resolve(evalString(wrappedCode)),
+      timeout,
+      `Timeout ejecutando Clojure (${timeout}ms).`
+    );
+
+    return {
+      stdout: stdout.join("\n").trim(),
+      stderr: stderr.join("\n").trim(),
+      error: stderr.length ? stderr.join("\n").trim() : undefined,
+    };
+  } catch (error) {
+    const errorMessage = normalizeUnknownError(error);
+
+    return {
+      stdout: stdout.join("\n").trim(),
+      stderr: stderr.join("\n").trim(),
+      error: errorMessage,
+    };
+  } finally {
+    delete dynamicWindow[stdoutKey];
+    delete dynamicWindow[stderrKey];
+  }
+}
+
+function normalizeYaegiResult(value: unknown): YaegiResult {
+  if (!value || typeof value !== "object") {
+    return { success: true, output: "", error: null };
+  }
+
+  const maybeResult = value as YaegiResult;
+  return {
+    success: maybeResult.success ?? true,
+    output: maybeResult.output ?? "",
+    error: maybeResult.error ?? null,
+  };
+}
+
+async function executeGoViaYaegi({
+  code,
+  timeout,
+}: Pick<WasmExecutionInput, "code" | "timeout">): Promise<WasmExecutionOutput> {
+  const stdout: string[] = [];
+  const stderr: string[] = [];
+  const runtime = await withTimeout(
+    getYaegiRuntime(),
+    timeout,
+    `Timeout cargando runtime Go (${timeout}ms).`
+  );
+
+  runtime.reset?.();
+
+  const originalLog = console.log;
+  const originalError = console.error;
+
+  console.log = (...values: unknown[]) => {
+    stdout.push(formatCapturedValues(values));
+  };
+  console.error = (...values: unknown[]) => {
+    stderr.push(formatCapturedValues(values));
+  };
+
+  try {
+    const rawResult = await withTimeout(
+      Promise.resolve(runtime.eval(code)),
+      timeout,
+      `Timeout ejecutando Go (${timeout}ms).`
+    );
+    const result = normalizeYaegiResult(rawResult);
+
+    if (result.output?.trim()) {
+      stdout.push(result.output.trim());
+    }
+
+    if (result.error?.trim()) {
+      stderr.push(result.error.trim());
+    }
+
+    return {
+      stdout: stdout.join("\n").trim(),
+      stderr: stderr.join("\n").trim(),
+      error: result.success ? undefined : result.error?.trim() || stderr.join("\n").trim(),
+    };
+  } finally {
+    console.log = originalLog;
+    console.error = originalError;
+  }
+}
+
 function normalizeRuntimeError(
   language: WasmExecutionInput["language"],
   output: WasmerRunOutput
@@ -265,7 +506,7 @@ function normalizeRuntimeError(
   return stderr || `Exit code ${output.code}`;
 }
 
-export async function executeWasmLanguage({
+async function executeViaWasmer({
   language,
   code,
   timeout,
@@ -307,4 +548,41 @@ export async function executeWasmLanguage({
     stderr: output.stderr,
     error: normalizeRuntimeError(language, output),
   };
+}
+
+export async function executeWasmLanguage({
+  language,
+  code,
+  timeout,
+}: WasmExecutionInput): Promise<WasmExecutionOutput> {
+  if (language === "clojure") {
+    return executeClojureViaScittle({ code, timeout });
+  }
+
+  if (language === "go") {
+    try {
+      return await executeGoViaYaegi({ code, timeout });
+    } catch (error) {
+      const fallback = await executeViaWasmer({
+        language,
+        code,
+        timeout,
+      });
+      const fallbackReason = normalizeUnknownError(error);
+      const fallbackStderr = [fallback.stderr, `Fallback Yaegi: ${fallbackReason}`]
+        .filter(Boolean)
+        .join("\n");
+
+      return {
+        ...fallback,
+        stderr: fallbackStderr,
+      };
+    }
+  }
+
+  return executeViaWasmer({
+    language,
+    code,
+    timeout,
+  });
 }

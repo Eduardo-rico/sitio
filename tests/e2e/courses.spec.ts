@@ -173,25 +173,22 @@ test.describe('Course Flow', () => {
     }
   });
 
-  test('go runtime executes when package is healthy or reports actionable timeout', async ({
+  test('go runtime executes in browser and returns expected output', async ({
     page,
   }) => {
-    test.setTimeout(4 * 60 * 1000);
-    const outputPanel = await executeLessonCode(page, 'go-desde-cero', 130000);
+    test.setTimeout(3 * 60 * 1000);
+    const outputPanel = await executeLessonCode(page, 'go-desde-cero', 90000);
 
-    await expect(outputPanel).toContainText(
-      /(Hola Go|Timeout cargando runtime Go|Runtime Go no pudo inicializar el filesystem WASM)/i,
-      { timeout: 120000 }
-    );
+    await expect(outputPanel).toContainText(/Hola Go/i, { timeout: 90000 });
+    await expect(outputPanel).not.toContainText(/Bad file number|Runtime Go no pudo inicializar/i);
     await expect(outputPanel).not.toContainText(/Unable to find .* in the registry/i);
   });
 
-  test('clojure runtime requires package config or executes when configured', async ({ page }) => {
+  test('clojure runtime executes in browser and returns expected output', async ({ page }) => {
     const outputPanel = await executeLessonCode(page, 'clojure-desde-cero');
 
-    await expect(outputPanel).toContainText(
-      /(Hola Clojure|Runtime WASM de Clojure no configurado)/i
-    );
+    await expect(outputPanel).toContainText(/Hola Clojure/i);
+    await expect(outputPanel).not.toContainText(/Runtime WASM de Clojure no configurado/i);
     await expect(outputPanel).not.toContainText(/Unable to find .* in the registry/i);
   });
 

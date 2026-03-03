@@ -44,4 +44,16 @@ test.describe('Dashboard', () => {
     await logoutFromDashboard(page);
     await expect(page.getByText('Comenzar a Aprender')).toBeVisible();
   });
+
+  test('allows logout from top navbar user dropdown', async ({ page }) => {
+    const userMenuButton = page.getByRole('button', { name: 'Abrir menú de usuario' });
+    await expect(userMenuButton).toBeVisible();
+
+    await userMenuButton.click();
+    const userMenu = page.getByRole('menu');
+    await expect(userMenu).toBeVisible();
+
+    await userMenu.getByRole('button', { name: /^Cerrar sesión$/i }).click();
+    await expect(page).toHaveURL('/');
+  });
 });
