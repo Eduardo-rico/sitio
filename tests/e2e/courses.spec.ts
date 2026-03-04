@@ -74,17 +74,21 @@ test.describe('Course Flow', () => {
     await expect(page.locator('a[href=\"/tutoriales/python-intermedio\"]').first()).toBeVisible({ timeout: 45000 });
     await expect(page.locator('a[href=\"/tutoriales/python-analisis-datos\"]').first()).toBeVisible({ timeout: 45000 });
     await expect(page.locator('a[href=\"/tutoriales/python-analisis-negocio\"]').first()).toBeVisible({ timeout: 45000 });
+    await expect(page.locator('a[href=\"/tutoriales/python-forecasting-ab-testing\"]').first()).toBeVisible({ timeout: 45000 });
     await expect(page.locator('a[href=\"/tutoriales/javascript-desde-cero\"]').first()).toBeVisible({ timeout: 45000 });
     await expect(page.locator('a[href=\"/tutoriales/rust-desde-cero\"]').first()).toBeVisible({ timeout: 45000 });
   });
 
   test('shows bibliography section in course detail', async ({ page }) => {
-    await page.goto('/tutoriales/python-analisis-datos');
+    await page.goto('/tutoriales/python-forecasting-ab-testing');
+    await expect(page.getByRole('heading', { name: 'Ruta pedagogica' })).toBeVisible({
+      timeout: 45000,
+    });
     await expect(page.getByRole('heading', { name: 'Bibliografia recomendada' })).toBeVisible({
       timeout: 45000,
     });
     await expect(
-      page.getByRole('link', { name: /pandas user guide|python official documentation/i }).first()
+      page.getByRole('link', { name: /forecasting: principles and practice|trustworthy online controlled experiments/i }).first()
     ).toBeVisible({
       timeout: 45000,
     });

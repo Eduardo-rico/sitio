@@ -17,9 +17,13 @@ import {
   isCourseLanguage,
   isRuntimeType,
 } from '@/lib/course-runtime';
+import {
+  getPythonCoursePedagogy,
+  getPythonLessonStage,
+} from '@/lib/python-course-pedagogy';
 import { LessonContent } from '@/components/lessons/LessonContent';
 import { LessonNavigation } from '@/components/lessons/LessonNavigation';
-import { ArrowLeft, ArrowRight, BookOpen, Clock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Clock, Target, Lightbulb } from 'lucide-react';
 
 interface LessonPageProps {
   params: {
@@ -113,6 +117,10 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const runtimeType = isRuntimeType(course.runtimeType)
     ? course.runtimeType
     : getDefaultRuntimeForLanguage(courseLanguage);
+  const pythonPedagogy =
+    courseLanguage === "python" ? getPythonCoursePedagogy(course.slug) : null;
+  const lessonStage =
+    courseLanguage === "python" ? getPythonLessonStage(course.slug, lesson.order) : null;
   const session = await auth();
 
   if (session?.user?.id) {
@@ -228,6 +236,36 @@ export default async function LessonPage({ params }: LessonPageProps) {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 {lesson.title}
               </h1>
+
+              {pythonPedagogy && lessonStage && (
+                <div className="mb-6 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-900/20 p-4">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+                      Etapa pedagogica: {lessonStage.label}
+                    </span>
+                    <span className="text-xs text-blue-700/80 dark:text-blue-300/80">
+                      Rubrica: {pythonPedagogy.rubricDimensions.join(" / ")}
+                    </span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-md bg-white/70 dark:bg-gray-900/30 p-3">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 inline-flex items-center gap-1">
+                        <Target className="w-3 h-3" />
+                        Objetivo de esta etapa
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-200">{lessonStage.objective}</p>
+                    </div>
+                    <div className="rounded-md bg-white/70 dark:bg-gray-900/30 p-3">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 inline-flex items-center gap-1">
+                        <Lightbulb className="w-3 h-3" />
+                        Pregunta de reflexion
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-200">{lessonStage.reflectionPrompt}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <LessonContent content={lesson.content} />
             </div>
 

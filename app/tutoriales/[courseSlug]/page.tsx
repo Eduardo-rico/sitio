@@ -17,8 +17,18 @@ import {
   isRuntimeType,
 } from '@/lib/course-runtime';
 import { getCourseBibliography } from '@/lib/course-bibliography';
+import { getPythonCoursePedagogy } from '@/lib/python-course-pedagogy';
 import { CourseStartButton } from '@/components/lessons/CourseStartButton';
-import { Circle, Play, Clock, BookOpen, ExternalLink } from 'lucide-react';
+import {
+  Circle,
+  Play,
+  Clock,
+  BookOpen,
+  ExternalLink,
+  Target,
+  ClipboardList,
+  CheckCircle2,
+} from 'lucide-react';
 
 interface CoursePageProps {
   params: {
@@ -88,6 +98,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
   const language = isCourseLanguage(course.language) ? course.language : "python";
   const runtime = isRuntimeType(course.runtimeType) ? course.runtimeType : "browser_pyodide";
+  const pythonPedagogy = language === "python" ? getPythonCoursePedagogy(course.slug) : null;
   const bibliography = getCourseBibliography(course.slug, language);
   const totalLessons = course.lessons.length;
   const totalExercises = course.lessons.reduce(
@@ -177,6 +188,61 @@ export default async function CoursePage({ params }: CoursePageProps) {
           )}
         </div>
       </div>
+
+      {pythonPedagogy && (
+        <section className="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Ruta pedagogica
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Perfil objetivo: {pythonPedagogy.learnerProfile}
+          </p>
+          <div className="grid lg:grid-cols-3 gap-4">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center gap-2 mb-2 text-blue-700 dark:text-blue-300">
+                <Target className="w-4 h-4" />
+                <span className="text-sm font-semibold">Learning Outcomes</span>
+              </div>
+              <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                {pythonPedagogy.learningOutcomes.map((outcome) => (
+                  <li key={outcome}>• {outcome}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center gap-2 mb-2 text-emerald-700 dark:text-emerald-300">
+                <ClipboardList className="w-4 h-4" />
+                <span className="text-sm font-semibold">Plan de evaluacion</span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Diagnostica: {pythonPedagogy.assessmentPlan.diagnostic}
+              </p>
+              <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                {pythonPedagogy.assessmentPlan.formative.map((check) => (
+                  <li key={check}>• {check}</li>
+                ))}
+              </ul>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Sumativa: {pythonPedagogy.assessmentPlan.summative}
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center gap-2 mb-2 text-violet-700 dark:text-violet-300">
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="text-sm font-semibold">Criterios de dominio</span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Dedicacion sugerida: {pythonPedagogy.timeCommitment}
+              </p>
+              <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                {pythonPedagogy.masteryCriteria.map((criterion) => (
+                  <li key={criterion}>• {criterion}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Lista de lecciones */}
       <div className="space-y-4">

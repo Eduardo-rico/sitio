@@ -224,6 +224,33 @@ const COURSE_SPECIFIC_BIBLIOGRAPHY: Record<string, CourseBibliographyItem[]> = {
       note: "Articulos tecnicos aplicados a analisis de negocio.",
     },
   ],
+  "python-forecasting-ab-testing": [
+    {
+      title: "Forecasting: Principles and Practice (3rd ed.)",
+      url: "https://otexts.com/fpp3/",
+      note: "Libro academico-practico de referencia para series temporales y forecasting.",
+    },
+    {
+      title: "Time Series Analysis and Its Applications",
+      url: "https://link.springer.com/book/10.1007/978-3-319-52452-8",
+      note: "Texto academico sobre modelado de series temporales y metodos estadisticos.",
+    },
+    {
+      title: "Trustworthy Online Controlled Experiments",
+      url: "https://experimentguide.com/",
+      note: "Libro clave para diseno, analisis e interpretacion de A/B tests en producto.",
+    },
+    {
+      title: "Improving the Sensitivity of Online Controlled Experiments (CUPED)",
+      url: "https://exp-platform.com/Documents/2013-02-CUPED-ImprovingSensitivityOfControlledExperiments.pdf",
+      note: "Paper clasico de ajuste pre-experimento para reducir varianza en experimentos.",
+    },
+    {
+      title: "Seven Rules of Thumb for Web Site Experimenters",
+      url: "https://exp-platform.com/Documents/2014%20experimentersRulesOfThumb.pdf",
+      note: "Paper practico con recomendaciones estadisticas para evaluacion de experimentos.",
+    },
+  ],
 };
 
 export function getCourseBibliography(

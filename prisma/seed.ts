@@ -1,7 +1,7 @@
 /**
  * Seed principal:
  * - Usuario admin
- * - 4 cursos de Python (basico, intermedio, datos y negocio)
+ * - 5 cursos de Python (basico, intermedio, datos, negocio y forecasting/ab testing)
  * - Lecciones + retos interactivos con tests
  * - Anuncio inicial
  */
@@ -1139,6 +1139,222 @@ Cerraras con un mini caso para proyectar ingresos y definir accion.
       },
     ],
   },
+  {
+    slug: 'python-forecasting-ab-testing',
+    title: 'Python para Forecasting y A/B Testing',
+    description:
+      'Ruta aplicada para pronosticar metricas y evaluar experimentos A/B con criterio estadistico.',
+    order: 5,
+    language: 'python',
+    runtimeType: 'browser_pyodide',
+    lessons: [
+      {
+        slug: 'forecasting-series-temporales',
+        title: 'Series temporales y pronostico base',
+        order: 1,
+        estimatedMinutes: 26,
+        content: `
+# Forecasting con series temporales
+
+Aprenderas a construir pronosticos iniciales con moving average y estacionalidad simple.
+Todo con datasets simulados para enfocarte en la logica analitica.
+        `,
+        exercises: [
+          {
+            id: 'pyfa-l1-e1',
+            order: 1,
+            title: 'Moving average de 3 periodos',
+            instructions:
+              'Calcula el forecast del siguiente periodo usando el promedio de los ultimos 3 valores e imprime el resultado con 1 decimal.',
+            starterCode:
+              'serie = [120, 128, 133, 141, 150, 158]\n# Imprime el forecast usando moving average de 3 periodos\n',
+            solutionCode:
+              'serie = [120, 128, 133, 141, 150, 158]\nforecast = round(sum(serie[-3:]) / 3, 1)\nprint(forecast)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Forecast esperado',
+                expected: '149.7',
+              },
+            ],
+            hints: ['Usa serie[-3:] para tomar los ultimos 3', 'Redondea con round(valor, 1)'],
+          },
+          {
+            id: 'pyfa-l1-e2',
+            order: 2,
+            title: 'Ajuste estacional simple',
+            instructions:
+              'Con el valor del Q1 anterior y crecimiento esperado de 8%, proyecta Q1 siguiente e imprime el valor.',
+            starterCode:
+              'q1_anterior = 200\ngrowth = 0.08\n# Imprime proyeccion de Q1 siguiente\n',
+            solutionCode:
+              'q1_anterior = 200\ngrowth = 0.08\nprint(round(q1_anterior * (1 + growth), 1))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Proyeccion Q1',
+                expected: '216.0',
+              },
+            ],
+            hints: ['Multiplica por (1 + growth)'],
+          },
+        ],
+      },
+      {
+        slug: 'forecasting-evaluacion-modelo',
+        title: 'Evaluacion de pronosticos',
+        order: 2,
+        estimatedMinutes: 26,
+        content: `
+# Evaluacion de modelos de forecast
+
+Un pronostico util no solo predice: tambien se evalua con metricas claras como MAPE.
+        `,
+        exercises: [
+          {
+            id: 'pyfa-l2-e1',
+            order: 1,
+            title: 'Tendencia lineal simple',
+            instructions:
+              'Usa una pendiente constante para proyectar el mes 7 e imprime el valor estimado.',
+            starterCode:
+              'meses = [1, 2, 3, 4, 5, 6]\nventas = [100, 108, 116, 124, 132, 140]\n# Proyecta el mes 7 e imprime el valor\n',
+            solutionCode:
+              'meses = [1, 2, 3, 4, 5, 6]\nventas = [100, 108, 116, 124, 132, 140]\npendiente = ventas[1] - ventas[0]\nforecast_mes7 = ventas[-1] + pendiente\nprint(forecast_mes7)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Proyeccion mes 7',
+                expected: '148',
+              },
+            ],
+            hints: ['Calcula la diferencia entre puntos consecutivos'],
+          },
+          {
+            id: 'pyfa-l2-e2',
+            order: 2,
+            title: 'MAPE del pronostico',
+            instructions:
+              'Calcula el MAPE para actual y forecast dados e imprime el porcentaje con 2 decimales.',
+            starterCode:
+              'actual = [130, 150, 170]\nforecast = [125, 152, 168]\n# Calcula e imprime MAPE en porcentaje\n',
+            solutionCode:
+              'actual = [130, 150, 170]\nforecast = [125, 152, 168]\nape = [abs(a - f) / a for a, f in zip(actual, forecast)]\nmape = round((sum(ape) / len(ape)) * 100, 2)\nprint(mape)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'MAPE esperado',
+                expected: '2.12',
+              },
+            ],
+            hints: ['APE = abs(actual - forecast) / actual'],
+          },
+        ],
+      },
+      {
+        slug: 'ab-testing-diseno',
+        title: 'Diseno de experimentos A/B',
+        order: 3,
+        estimatedMinutes: 28,
+        content: `
+# Diseno A/B testing
+
+Aqui pasaras de intuicion a experimentacion: conversion rates, lift y ajustes pre-experimento.
+        `,
+        exercises: [
+          {
+            id: 'pyfa-l3-e1',
+            order: 1,
+            title: 'Lift de conversion',
+            instructions:
+              'Calcula tasa control, tasa variante y lift porcentual. Imprime 3 lineas con formato exacto.',
+            starterCode:
+              'control_conv = 480\ncontrol_visits = 4000\nvariant_conv = 552\nvariant_visits = 4000\n# Imprime:\n# Control: <tasa>\n# Variante: <tasa>\n# Lift: <porcentaje>\n',
+            solutionCode:
+              'control_conv = 480\ncontrol_visits = 4000\nvariant_conv = 552\nvariant_visits = 4000\ncontrol_rate = control_conv / control_visits\nvariant_rate = variant_conv / variant_visits\nlift = ((variant_rate - control_rate) / control_rate) * 100\nprint(f"Control: {round(control_rate, 3)}")\nprint(f"Variante: {round(variant_rate, 3)}")\nprint(f"Lift: {round(lift, 1)}")',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Salida de tasas y lift',
+                expected: 'Control: 0.12\nVariante: 0.138\nLift: 15.0',
+              },
+            ],
+            hints: ['Lift relativo: (variante-control)/control * 100'],
+          },
+          {
+            id: 'pyfa-l3-e2',
+            order: 2,
+            title: 'Ajuste tipo CUPED simplificado',
+            instructions:
+              'Aplica ajuste lineal con theta=0.4 y covariables dadas. Imprime el promedio ajustado con 2 decimales.',
+            starterCode:
+              'metricas = [15.2, 14.8, 16.0, 15.5]\ncovariable = [14.0, 14.2, 15.1, 14.7]\ntheta = 0.4\n# Ajusta cada metrica: y_adj = y - theta * (x - mean(x))\n# Imprime promedio ajustado\n',
+            solutionCode:
+              'metricas = [15.2, 14.8, 16.0, 15.5]\ncovariable = [14.0, 14.2, 15.1, 14.7]\ntheta = 0.4\nmean_x = sum(covariable) / len(covariable)\najustadas = [y - theta * (x - mean_x) for y, x in zip(metricas, covariable)]\npromedio_ajustado = round(sum(ajustadas) / len(ajustadas), 2)\nprint(promedio_ajustado)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Promedio ajustado',
+                expected: '15.38',
+              },
+            ],
+            hints: ['Primero calcula mean_x', 'Luego ajusta cada observacion'],
+          },
+        ],
+      },
+      {
+        slug: 'ab-testing-significancia-decision',
+        title: 'Significancia y decision de negocio',
+        order: 4,
+        estimatedMinutes: 30,
+        content: `
+# Significancia y decision
+
+Cierre del curso: combinar evidencia estadistica con guardrails de negocio para decidir lanzamiento.
+        `,
+        exercises: [
+          {
+            id: 'pyfa-l4-e1',
+            order: 1,
+            title: 'Z-test de dos proporciones',
+            instructions:
+              'Calcula z-score y decision para control/variante. Imprime 2 lineas: "Z: <valor>" y "Decision: <significativo|no significativo>".',
+            starterCode:
+              'from math import sqrt\ncontrol_conv = 480\ncontrol_n = 4000\nvariant_conv = 560\nvariant_n = 4000\n# alpha=0.05 bilateral, umbral z=1.96\n# Imprime z con 2 decimales y decision\n',
+            solutionCode:
+              'from math import sqrt\ncontrol_conv = 480\ncontrol_n = 4000\nvariant_conv = 560\nvariant_n = 4000\np1 = control_conv / control_n\np2 = variant_conv / variant_n\npooled = (control_conv + variant_conv) / (control_n + variant_n)\nse = sqrt(pooled * (1 - pooled) * (1 / control_n + 1 / variant_n))\nz = (p2 - p1) / se\ndecision = "significativo" if abs(z) >= 1.96 else "no significativo"\nprint(f"Z: {round(z, 2)}")\nprint(f"Decision: {decision}")',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Z y decision esperados',
+                expected: 'Z: 2.66\nDecision: significativo',
+              },
+            ],
+            hints: ['Usa proporcion combinada para el error estandar'],
+          },
+          {
+            id: 'pyfa-l4-e2',
+            order: 2,
+            title: 'Guardrail de churn',
+            instructions:
+              'Si el aumento de churn supera 1.0 punto porcentual, imprime "rechazar lanzamiento"; si no, "aprobar lanzamiento".',
+            starterCode:
+              'baseline_churn = 3.2\nexperiment_churn = 4.5\n# Imprime la decision final\n',
+            solutionCode:
+              'baseline_churn = 3.2\nexperiment_churn = 4.5\naumento = experiment_churn - baseline_churn\nif aumento > 1.0:\n    print("rechazar lanzamiento")\nelse:\n    print("aprobar lanzamiento")',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Decision guardrail',
+                expected: 'rechazar lanzamiento',
+              },
+            ],
+            hints: ['Calcula aumento = experiment_churn - baseline_churn'],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
@@ -1146,7 +1362,7 @@ const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
     slug: "clojure-desde-cero",
     title: "Clojure desde Cero",
     description: "Curso base de Clojure con enfoque funcional y REPL en navegador.",
-    order: 5,
+    order: 6,
     language: "clojure",
     runtimeType: "browser_clojure",
     lessons: [
@@ -1190,7 +1406,7 @@ Sugerencia: inicia con expresiones, colecciones y funciones puras.
     slug: "javascript-desde-cero",
     title: "JavaScript desde Cero",
     description: "Fundamentos de JavaScript moderno con práctica interactiva.",
-    order: 6,
+    order: 7,
     language: "javascript",
     runtimeType: "browser_javascript",
     lessons: [
@@ -1233,7 +1449,7 @@ Curso base creado. Puedes agregar retos de variables, funciones y objetos.
     slug: "typescript-desde-cero",
     title: "TypeScript desde Cero",
     description: "TypeScript con tipado estático para apps frontend/backend.",
-    order: 7,
+    order: 8,
     language: "typescript",
     runtimeType: "browser_typescript",
     lessons: [
@@ -1278,7 +1494,7 @@ Curso base creado. Recomendado: tipos primitivos, funciones y interfaces.
     slug: "sql-desde-cero",
     title: "SQL desde Cero",
     description: "Consultas SQL prácticas para análisis y producto.",
-    order: 8,
+    order: 9,
     language: "sql",
     runtimeType: "browser_sql",
     lessons: [
@@ -1321,7 +1537,7 @@ Curso base creado. Recomendado: SELECT, WHERE, ORDER BY y agregaciones.
     slug: "go-desde-cero",
     title: "Go desde Cero",
     description: "Fundamentos de Go para backend y herramientas CLI.",
-    order: 9,
+    order: 10,
     language: "go",
     runtimeType: "browser_go",
     lessons: [
@@ -1366,7 +1582,7 @@ Curso base creado. Agrega ejercicios de funciones, slices y structs.
     slug: "rust-desde-cero",
     title: "Rust desde Cero",
     description: "Rust para programación segura y de alto rendimiento.",
-    order: 10,
+    order: 11,
     language: "rust",
     runtimeType: "browser_rust",
     lessons: [
@@ -1409,7 +1625,7 @@ Curso base creado. Recomendado: ownership, borrowing y pattern matching.
     slug: "bash-desde-cero",
     title: "Bash desde Cero",
     description: "Automatización y scripting en Bash desde fundamentos.",
-    order: 11,
+    order: 12,
     language: "bash",
     runtimeType: "browser_bash",
     lessons: [
@@ -1593,7 +1809,7 @@ async function main() {
       data: {
         title: 'Anuncio inicial',
         message:
-          'Ya tienes disponibles rutas de Python Basico e Intermedio con retos interactivos y tests.',
+          'Ya tienes disponibles rutas de Python Basico, Intermedio, Analisis de Datos, Analisis de Negocio y Forecasting/A-B Testing.',
         type: 'info',
         priority: 'normal',
         displayType: 'banner',
