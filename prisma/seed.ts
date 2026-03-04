@@ -1,7 +1,7 @@
 /**
  * Seed principal:
  * - Usuario admin
- * - 2 cursos de Python (basico e intermedio)
+ * - 4 cursos de Python (basico, intermedio, datos y negocio)
  * - Lecciones + retos interactivos con tests
  * - Anuncio inicial
  */
@@ -55,7 +55,7 @@ const PYTHON_COURSES: SeedCourse[] = [
     slug: 'python-basico',
     title: 'Python Basico: fundamentos y practica',
     description:
-      'Empieza desde cero con Python y resuelve retos interactivos estilo DataCamp con consola y tests.',
+      'Empieza desde cero con Python y resuelve retos interactivos con consola y tests.',
     order: 1,
     language: 'python',
     runtimeType: 'browser_pyodide',
@@ -387,7 +387,7 @@ Vas a trabajar con colecciones:
   },
   {
     slug: 'python-intermedio',
-    title: 'Python Intermedio: retos tipo DataCamp',
+    title: 'Python Intermedio: retos practicos',
     description:
       'Sube de nivel con comprehensions, manejo de errores, parsing y mini proyectos con tests.',
     order: 2,
@@ -657,7 +657,7 @@ Patrones funcionales para transformaciones compactas en pipelines.
         content: `
 # Mini proyecto: analizador de ventas
 
-Haras un cierre tipo DataCamp: combinar logica, estructuras y salida limpia.
+Haras un cierre practico: combinar logica, estructuras y salida limpia.
         `,
         exercises: [
           {
@@ -706,6 +706,439 @@ Haras un cierre tipo DataCamp: combinar logica, estructuras y salida limpia.
       },
     ],
   },
+  {
+    slug: 'python-analisis-datos',
+    title: 'Python para Analisis de Datos',
+    description:
+      'Ruta aplicada de analisis de datos con tablas, limpieza, KPIs y reportes accionables.',
+    order: 3,
+    language: 'python',
+    runtimeType: 'browser_pyodide',
+    lessons: [
+      {
+        slug: 'datos-tablas-y-series',
+        title: 'Tablas, series y lectura de datos',
+        order: 1,
+        estimatedMinutes: 24,
+        content: `
+# Tablas y series para analisis
+
+En esta leccion convertiras datos crudos en estructuras utiles para analisis.
+Trabajaras con listas, diccionarios y, cuando este disponible, pandas.
+        `,
+        exercises: [
+          {
+            id: 'pyd-l1-e1',
+            order: 1,
+            title: 'Total de ventas mensuales',
+            instructions:
+              'Calcula el total de ventas e imprime exactamente \`355\`.',
+            starterCode:
+              'ventas = [120, 95, 140]\n# Si tienes pandas disponible puedes usar DataFrame, pero la salida final debe ser 355\n',
+            solutionCode:
+              'try:\n    import pandas as pd\nexcept Exception:\n    pd = None\n\nventas = [120, 95, 140]\nif pd:\n    df = pd.DataFrame({"monto": ventas})\n    print(int(df["monto"].sum()))\nelse:\n    print(sum(ventas))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Suma total correcta',
+                expected: '355',
+              },
+            ],
+            hints: ['Puedes usar sum(ventas)', 'Si usas pandas, df["monto"].sum()'],
+          },
+          {
+            id: 'pyd-l1-e2',
+            order: 2,
+            title: 'Mes con mayor venta',
+            instructions:
+              'Con el diccionario dado, imprime exactamente \`marzo\`.',
+            starterCode:
+              'ventas = {"enero": 120, "febrero": 95, "marzo": 140}\n# Imprime el mes con mayor monto\n',
+            solutionCode:
+              'ventas = {"enero": 120, "febrero": 95, "marzo": 140}\nprint(max(ventas, key=ventas.get))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Mes top correcto',
+                expected: 'marzo',
+              },
+            ],
+            hints: ['Usa max(diccionario, key=diccionario.get)'],
+          },
+        ],
+      },
+      {
+        slug: 'datos-limpieza-y-calidad',
+        title: 'Limpieza y calidad de datos',
+        order: 2,
+        estimatedMinutes: 24,
+        content: `
+# Limpieza de datos
+
+La calidad de datos es clave para cualquier analisis confiable.
+Aqui practicaras valores nulos, normalizacion y deduplicacion.
+        `,
+        exercises: [
+          {
+            id: 'pyd-l2-e1',
+            order: 1,
+            title: 'Rellenar valores faltantes',
+            instructions:
+              'Completa los valores \`None\` con \`0\` e imprime la suma final.',
+            starterCode:
+              'datos = [10, None, 5, None, 20]\n# Rellena faltantes con 0 y luego imprime la suma total\n',
+            solutionCode:
+              'datos = [10, None, 5, None, 20]\nlimpios = [0 if d is None else d for d in datos]\nprint(sum(limpios))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Suma limpia esperada',
+                expected: '35',
+              },
+            ],
+            hints: ['Puedes usar list comprehension con condicion'],
+          },
+          {
+            id: 'pyd-l2-e2',
+            order: 2,
+            title: 'Categorias normalizadas',
+            instructions:
+              'Normaliza el texto (trim + lowercase), elimina duplicados y luego imprime la cantidad de categorias unicas.',
+            starterCode:
+              'categorias = [" Ventas", "marketing ", "VENTAS", "Producto", "producto "]\n# Normaliza y cuenta categorias unicas\n',
+            solutionCode:
+              'categorias = [" Ventas", "marketing ", "VENTAS", "Producto", "producto "]\nnormalizadas = [c.strip().lower() for c in categorias]\nprint(len(set(normalizadas)))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Conteo de categorias unicas',
+                expected: '3',
+              },
+            ],
+            hints: ['Usa strip() y lower()', 'set(...) elimina duplicados'],
+          },
+        ],
+      },
+      {
+        slug: 'datos-kpis-y-agregaciones',
+        title: 'KPIs y agregaciones',
+        order: 3,
+        estimatedMinutes: 26,
+        content: `
+# KPIs y agregaciones
+
+Haras agregaciones para convertir eventos en indicadores de negocio.
+        `,
+        exercises: [
+          {
+            id: 'pyd-l3-e1',
+            order: 1,
+            title: 'Ingreso total por canal',
+            instructions:
+              'Suma los ingresos del canal \`ads\` e imprime el resultado.',
+            starterCode:
+              'registros = [("ads", 120), ("organico", 80), ("ads", 230), ("referidos", 50), ("ads", 150)]\n# Imprime el total del canal ads\n',
+            solutionCode:
+              'registros = [("ads", 120), ("organico", 80), ("ads", 230), ("referidos", 50), ("ads", 150)]\ntotal_ads = sum(valor for canal, valor in registros if canal == "ads")\nprint(total_ads)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Total ads correcto',
+                expected: '500',
+              },
+            ],
+            hints: ['Filtra por canal == "ads"'],
+          },
+          {
+            id: 'pyd-l3-e2',
+            order: 2,
+            title: 'Tasa de conversion',
+            instructions:
+              'Con \`leads = 240\` y \`clientes = 36\`, imprime la tasa de conversion porcentual con 1 decimal.',
+            starterCode:
+              'leads = 240\nclientes = 36\n# Imprime la conversion en porcentaje con 1 decimal\n',
+            solutionCode:
+              'leads = 240\nclientes = 36\nconversion = round((clientes / leads) * 100, 1)\nprint(conversion)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Conversion correcta',
+                expected: '15.0',
+              },
+            ],
+            hints: ['Formula: clientes / leads * 100', 'Usa round(valor, 1)'],
+          },
+        ],
+      },
+      {
+        slug: 'datos-visualizacion-y-storytelling',
+        title: 'Visualizacion y storytelling',
+        order: 4,
+        estimatedMinutes: 24,
+        content: `
+# Visualizacion de datos
+
+La visualizacion transforma analisis en decisiones.
+Usaras matplotlib si esta disponible y dejaras una salida verificable.
+        `,
+        exercises: [
+          {
+            id: 'pyd-l4-e1',
+            order: 1,
+            title: 'Grafica de tendencia',
+            instructions:
+              'Genera una grafica simple de tendencia (si matplotlib esta disponible) e imprime exactamente \`grafica lista\`.',
+            starterCode:
+              'meses = ["ene", "feb", "mar", "abr"]\nventas = [30, 45, 40, 55]\n# Crea la grafica de linea y termina imprimiendo "grafica lista"\n',
+            solutionCode:
+              'meses = ["ene", "feb", "mar", "abr"]\nventas = [30, 45, 40, 55]\ntry:\n    import matplotlib.pyplot as plt\n    plt.plot(meses, ventas)\n    plt.title("Tendencia mensual")\nexcept Exception:\n    pass\nprint("grafica lista")',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Confirmacion de grafica',
+                expected: 'grafica lista',
+              },
+            ],
+            hints: ['Si falla matplotlib, captura la excepcion y continua'],
+          },
+          {
+            id: 'pyd-l4-e2',
+            order: 2,
+            title: 'Resumen ejecutivo',
+            instructions:
+              'Imprime dos lineas: \`KPI principal: ingresos\` y \`Decision: invertir en ads\`.',
+            starterCode:
+              '# Imprime las dos lineas solicitadas para un resumen ejecutivo\n',
+            solutionCode:
+              'print("KPI principal: ingresos")\nprint("Decision: invertir en ads")',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Linea KPI',
+                expected: 'KPI principal: ingresos\nDecision: invertir en ads',
+              },
+            ],
+            hints: ['Respeta mayusculas y texto exacto'],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'python-analisis-negocio',
+    title: 'Python para Analisis de Negocio',
+    description:
+      'Curso aplicado para analistas de negocio: metricas, embudos, segmentacion y pronostico.',
+    order: 4,
+    language: 'python',
+    runtimeType: 'browser_pyodide',
+    lessons: [
+      {
+        slug: 'negocio-metricas-esenciales',
+        title: 'Metricas esenciales de negocio',
+        order: 1,
+        estimatedMinutes: 24,
+        content: `
+# Metricas esenciales
+
+Aprenderas a traducir datos operativos en metricas de negocio utiles.
+        `,
+        exercises: [
+          {
+            id: 'pyba-l1-e1',
+            order: 1,
+            title: 'Margen bruto',
+            instructions:
+              'Con \`ingresos = 1800\` y \`costos = 1170\`, imprime el margen bruto porcentual con 1 decimal.',
+            starterCode:
+              'ingresos = 1800\ncostos = 1170\n# Calcula e imprime el margen bruto en porcentaje\n',
+            solutionCode:
+              'ingresos = 1800\ncostos = 1170\nmargen = round(((ingresos - costos) / ingresos) * 100, 1)\nprint(margen)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Margen correcto',
+                expected: '35.0',
+              },
+            ],
+            hints: ['(ingresos - costos) / ingresos * 100'],
+          },
+          {
+            id: 'pyba-l1-e2',
+            order: 2,
+            title: 'ARPU mensual',
+            instructions:
+              'Con \`ingresos = 2250\` y \`clientes = 60\`, imprime el ARPU.',
+            starterCode:
+              'ingresos = 2250\nclientes = 60\n# Imprime ARPU\n',
+            solutionCode:
+              'ingresos = 2250\nclientes = 60\nprint(ingresos / clientes)',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'ARPU esperado',
+                expected: '37.5',
+              },
+            ],
+            hints: ['ARPU = ingresos / clientes'],
+          },
+        ],
+      },
+      {
+        slug: 'negocio-embudo-conversion',
+        title: 'Embudo de conversion',
+        order: 2,
+        estimatedMinutes: 26,
+        content: `
+# Embudo de conversion
+
+Modelaras cada etapa del funnel para detectar perdidas y oportunidades.
+        `,
+        exercises: [
+          {
+            id: 'pyba-l2-e1',
+            order: 1,
+            title: 'Conversion visita a lead',
+            instructions:
+              'Con \`visitas = 1200\` y \`leads = 96\`, imprime la conversion en porcentaje con 1 decimal.',
+            starterCode:
+              'visitas = 1200\nleads = 96\n# Imprime conversion visita->lead\n',
+            solutionCode:
+              'visitas = 1200\nleads = 96\nprint(round((leads / visitas) * 100, 1))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Conversion visita-lead',
+                expected: '8.0',
+              },
+            ],
+            hints: ['leads / visitas * 100'],
+          },
+          {
+            id: 'pyba-l2-e2',
+            order: 2,
+            title: 'Etapa mas debil',
+            instructions:
+              'Detecta la etapa con menor tasa en el diccionario e imprime su nombre.',
+            starterCode:
+              'tasas = {"visita_lead": 8.0, "lead_demo": 42.0, "demo_cierre": 18.5}\n# Imprime la etapa con menor valor\n',
+            solutionCode:
+              'tasas = {"visita_lead": 8.0, "lead_demo": 42.0, "demo_cierre": 18.5}\nprint(min(tasas, key=tasas.get))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Etapa mas debil',
+                expected: 'visita_lead',
+              },
+            ],
+            hints: ['Usa min(diccionario, key=diccionario.get)'],
+          },
+        ],
+      },
+      {
+        slug: 'negocio-segmentacion-y-priorizacion',
+        title: 'Segmentacion y priorizacion',
+        order: 3,
+        estimatedMinutes: 24,
+        content: `
+# Segmentacion de clientes
+
+Segmentar permite priorizar cuentas de mayor impacto comercial.
+        `,
+        exercises: [
+          {
+            id: 'pyba-l3-e1',
+            order: 1,
+            title: 'Clientes premium',
+            instructions:
+              'Cuenta cuantos clientes tienen MRR mayor o igual a 100 e imprime el total.',
+            starterCode:
+              'mrr = [40, 120, 85, 300, 110, 60]\n# Imprime cantidad de clientes premium (>=100)\n',
+            solutionCode:
+              'mrr = [40, 120, 85, 300, 110, 60]\npremium = [x for x in mrr if x >= 100]\nprint(len(premium))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Conteo premium',
+                expected: '3',
+              },
+            ],
+            hints: ['Filtra con >= 100'],
+          },
+          {
+            id: 'pyba-l3-e2',
+            order: 2,
+            title: 'Ticket promedio por segmento',
+            instructions:
+              'Calcula ticket promedio del segmento enterprise e imprime el valor.',
+            starterCode:
+              'ventas = [("smb", 300), ("enterprise", 1200), ("enterprise", 900), ("smb", 250)]\n# Imprime promedio de enterprise\n',
+            solutionCode:
+              'ventas = [("smb", 300), ("enterprise", 1200), ("enterprise", 900), ("smb", 250)]\nenterprise = [monto for segmento, monto in ventas if segmento == "enterprise"]\nprint(sum(enterprise) / len(enterprise))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Promedio enterprise',
+                expected: '1050.0',
+              },
+            ],
+            hints: ['Filtra enterprise y luego promedio'],
+          },
+        ],
+      },
+      {
+        slug: 'negocio-pronostico-y-plan',
+        title: 'Pronostico y plan de accion',
+        order: 4,
+        estimatedMinutes: 24,
+        content: `
+# Pronostico y plan
+
+Cerraras con un mini caso para proyectar ingresos y definir accion.
+        `,
+        exercises: [
+          {
+            id: 'pyba-l4-e1',
+            order: 1,
+            title: 'Pronostico lineal simple',
+            instructions:
+              'Con crecimiento mensual del 12% sobre 5000, calcula e imprime ingreso proyectado del siguiente mes redondeado a 2 decimales.',
+            starterCode:
+              'ingreso_actual = 5000\ngrowth = 0.12\n# Imprime pronostico del siguiente mes\n',
+            solutionCode:
+              'ingreso_actual = 5000\ngrowth = 0.12\nprint(round(ingreso_actual * (1 + growth), 2))',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Pronostico correcto',
+                expected: '5600.0',
+              },
+            ],
+            hints: ['Multiplica por (1 + growth)'],
+          },
+          {
+            id: 'pyba-l4-e2',
+            order: 2,
+            title: 'Decision de negocio',
+            instructions:
+              'Si churn es mayor a 5 imprime \`priorizar retencion\`; de lo contrario imprime \`acelerar adquisicion\`.',
+            starterCode:
+              'churn = 6.2\n# Imprime la decision correspondiente\n',
+            solutionCode:
+              'churn = 6.2\nif churn > 5:\n    print("priorizar retencion")\nelse:\n    print("acelerar adquisicion")',
+            validationType: 'exact',
+            testCases: [
+              {
+                description: 'Decision correcta',
+                expected: 'priorizar retencion',
+              },
+            ],
+            hints: ['Compara churn > 5'],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
@@ -713,7 +1146,7 @@ const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
     slug: "clojure-desde-cero",
     title: "Clojure desde Cero",
     description: "Curso base de Clojure con enfoque funcional y REPL en navegador.",
-    order: 3,
+    order: 5,
     language: "clojure",
     runtimeType: "browser_clojure",
     lessons: [
@@ -757,7 +1190,7 @@ Sugerencia: inicia con expresiones, colecciones y funciones puras.
     slug: "javascript-desde-cero",
     title: "JavaScript desde Cero",
     description: "Fundamentos de JavaScript moderno con práctica interactiva.",
-    order: 4,
+    order: 6,
     language: "javascript",
     runtimeType: "browser_javascript",
     lessons: [
@@ -800,7 +1233,7 @@ Curso base creado. Puedes agregar retos de variables, funciones y objetos.
     slug: "typescript-desde-cero",
     title: "TypeScript desde Cero",
     description: "TypeScript con tipado estático para apps frontend/backend.",
-    order: 5,
+    order: 7,
     language: "typescript",
     runtimeType: "browser_typescript",
     lessons: [
@@ -845,7 +1278,7 @@ Curso base creado. Recomendado: tipos primitivos, funciones y interfaces.
     slug: "sql-desde-cero",
     title: "SQL desde Cero",
     description: "Consultas SQL prácticas para análisis y producto.",
-    order: 6,
+    order: 8,
     language: "sql",
     runtimeType: "browser_sql",
     lessons: [
@@ -888,7 +1321,7 @@ Curso base creado. Recomendado: SELECT, WHERE, ORDER BY y agregaciones.
     slug: "go-desde-cero",
     title: "Go desde Cero",
     description: "Fundamentos de Go para backend y herramientas CLI.",
-    order: 7,
+    order: 9,
     language: "go",
     runtimeType: "browser_go",
     lessons: [
@@ -933,7 +1366,7 @@ Curso base creado. Agrega ejercicios de funciones, slices y structs.
     slug: "rust-desde-cero",
     title: "Rust desde Cero",
     description: "Rust para programación segura y de alto rendimiento.",
-    order: 8,
+    order: 10,
     language: "rust",
     runtimeType: "browser_rust",
     lessons: [
@@ -976,7 +1409,7 @@ Curso base creado. Recomendado: ownership, borrowing y pattern matching.
     slug: "bash-desde-cero",
     title: "Bash desde Cero",
     description: "Automatización y scripting en Bash desde fundamentos.",
-    order: 9,
+    order: 11,
     language: "bash",
     runtimeType: "browser_bash",
     lessons: [

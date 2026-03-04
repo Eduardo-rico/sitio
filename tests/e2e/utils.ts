@@ -21,16 +21,19 @@ export function createTestUser(prefix = 'e2e'): E2ETestUser {
 }
 
 export async function registerUser(page: Page, user: E2ETestUser): Promise<void> {
-  await page.goto('/auth/signup');
-  await expect(page).toHaveURL(/\/auth\/signup/);
+  // Prefer API registration for deterministic setup across E2E suites.
+  const response = await page.request.post('/api/auth/register', {
+    data: {
+      name: user.name,
+      email: user.email,
+      password: user.password,
+    },
+  });
 
-  await page.fill('input#name', user.name);
-  await page.fill('input#email', user.email);
-  await page.fill('input#password', user.password);
-  await page.fill('input#confirmPassword', user.password);
-  await page.click('button[type="submit"]');
-
-  await expect(page).toHaveURL(/\/auth\/signin/, { timeout: 30000 });
+  if (response.status() !== 201) {
+    const body = await response.text();
+    throw new Error(`Failed to register E2E user (${response.status()}): ${body}`);
+  }
 }
 
 export async function loginUser(
@@ -41,14 +44,39 @@ export async function loginUser(
   await page.goto('/auth/signin');
   await expect(page).toHaveURL(/\/auth\/signin/);
 
-  // If session is already active, go directly to dashboard.
+  const loadingText = page.getByText('Cargando...');
   const alreadySignedIn = page.getByRole('heading', { name: /Ya has iniciado sesión/i });
+  const emailInput = page.locator('input#email');
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (await alreadySignedIn.isVisible().catch(() => false)) {
+      break;
+    }
+
+    if (await emailInput.isVisible().catch(() => false)) {
+      break;
+    }
+
+    if (await loadingText.isVisible().catch(() => false)) {
+      if (attempt === 1) {
+        await page.reload();
+        await expect(page).toHaveURL(/\/auth\/signin/);
+      } else {
+        await page.waitForTimeout(800);
+      }
+    } else {
+      await page.waitForTimeout(300);
+    }
+  }
+
+  // If session is already active, go directly to dashboard.
   if (await alreadySignedIn.isVisible().catch(() => false)) {
     await page.getByRole('link', { name: /Ir al Dashboard/i }).click();
     await expect(page).toHaveURL(expectedUrl, { timeout: 30000 });
     return;
   }
 
+  await expect(emailInput).toBeVisible({ timeout: 30000 });
   await page.fill('input#email', credentials.email);
   await page.fill('input#password', credentials.password);
   await page.click('button[type="submit"]');

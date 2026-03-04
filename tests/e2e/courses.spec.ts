@@ -72,8 +72,22 @@ test.describe('Course Flow', () => {
     await expect(page.getByRole('heading', { name: 'Tutoriales Interactivos de Programación' })).toBeVisible();
     await expect(page.locator('a[href=\"/tutoriales/python-basico\"]').first()).toBeVisible({ timeout: 45000 });
     await expect(page.locator('a[href=\"/tutoriales/python-intermedio\"]').first()).toBeVisible({ timeout: 45000 });
+    await expect(page.locator('a[href=\"/tutoriales/python-analisis-datos\"]').first()).toBeVisible({ timeout: 45000 });
+    await expect(page.locator('a[href=\"/tutoriales/python-analisis-negocio\"]').first()).toBeVisible({ timeout: 45000 });
     await expect(page.locator('a[href=\"/tutoriales/javascript-desde-cero\"]').first()).toBeVisible({ timeout: 45000 });
     await expect(page.locator('a[href=\"/tutoriales/rust-desde-cero\"]').first()).toBeVisible({ timeout: 45000 });
+  });
+
+  test('shows bibliography section in course detail', async ({ page }) => {
+    await page.goto('/tutoriales/python-analisis-datos');
+    await expect(page.getByRole('heading', { name: 'Bibliografia recomendada' })).toBeVisible({
+      timeout: 45000,
+    });
+    await expect(
+      page.getByRole('link', { name: /pandas user guide|python official documentation/i }).first()
+    ).toBeVisible({
+      timeout: 45000,
+    });
   });
 
   test('navigates from catalog to course detail', async ({ page }) => {

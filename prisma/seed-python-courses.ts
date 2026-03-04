@@ -1,6 +1,6 @@
 /**
  * Seed script para crear cursos de Python interactivos
- * Curso Básico y Curso Intermedio con ejercicios tipo DataCamp
+ * Curso Básico y Curso Intermedio con ejercicios interactivos guiados
  */
 
 import { Prisma, PrismaClient } from '@prisma/client';

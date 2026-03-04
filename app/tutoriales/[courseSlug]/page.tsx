@@ -16,8 +16,9 @@ import {
   isCourseLanguage,
   isRuntimeType,
 } from '@/lib/course-runtime';
+import { getCourseBibliography } from '@/lib/course-bibliography';
 import { CourseStartButton } from '@/components/lessons/CourseStartButton';
-import { Circle, Play, Clock, BookOpen } from 'lucide-react';
+import { Circle, Play, Clock, BookOpen, ExternalLink } from 'lucide-react';
 
 interface CoursePageProps {
   params: {
@@ -87,6 +88,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
   const language = isCourseLanguage(course.language) ? course.language : "python";
   const runtime = isRuntimeType(course.runtimeType) ? course.runtimeType : "browser_pyodide";
+  const bibliography = getCourseBibliography(course.slug, language);
   const totalLessons = course.lessons.length;
   const totalExercises = course.lessons.reduce(
     (acc, lesson) => acc + lesson.exercises.length, 
@@ -227,6 +229,33 @@ export default async function CoursePage({ params }: CoursePageProps) {
           </div>
         )}
       </div>
+
+      {bibliography.length > 0 && (
+        <section className="mt-10 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Bibliografia recomendada
+          </h2>
+          <ul className="space-y-3">
+            {bibliography.map((item) => (
+              <li
+                key={item.url}
+                className="rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+              >
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 font-medium text-blue-700 dark:text-blue-300 hover:underline"
+                >
+                  {item.title}
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.note}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Botón de navegación */}
       <div className="mt-8 flex justify-between">

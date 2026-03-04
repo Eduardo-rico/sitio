@@ -92,7 +92,7 @@ He desarrollado una plataforma educativa completa con editor de Python integrado
     },
     {
       name: "Cursos Interactivos Python",
-      description: "Dos cursos completos (Básico e Intermedio) con 20+ lecciones y ejercicios prácticos tipo DataCamp.",
+      description: "Dos cursos completos (Básico e Intermedio) con 20+ lecciones y ejercicios prácticos guiados.",
       tech: ["Python", "Educación", "Gamificación"],
       link: "https://eduardorico.com/tutoriales",
     },
