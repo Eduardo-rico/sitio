@@ -31,4 +31,25 @@ describe("course-bibliography", () => {
     expect(refs.length).toBeGreaterThan(0);
     expect(refs.some((ref) => /clojure/i.test(ref.title))).toBe(true);
   });
+
+  it("expone bibliografia especializada para la ruta avanzada de clojure", () => {
+    const intermediateRefs = getCourseBibliography("clojure-intermedio", "clojure");
+    const dataRefs = getCourseBibliography("clojure-datos-y-transformacion", "clojure");
+    const architectureRefs = getCourseBibliography(
+      "clojure-macros-estado-y-arquitectura",
+      "clojure"
+    );
+
+    expect(intermediateRefs.some((ref) => /joy of clojure|sequences/i.test(ref.title))).toBe(true);
+    expect(dataRefs.some((ref) => /threading macros|data structures/i.test(ref.title))).toBe(true);
+    expect(
+      architectureRefs.some((ref) => /atoms|macros|elements of clojure/i.test(ref.title))
+    ).toBe(true);
+  });
+
+  it("retorna arreglo vacio cuando no existe slug ni lenguaje soportado", () => {
+    const refs = getCourseBibliography("curso-inexistente", "desconocido" as never);
+
+    expect(refs).toEqual([]);
+  });
 });

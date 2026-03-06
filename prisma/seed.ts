@@ -1385,11 +1385,12 @@ Cierre del curso: combinar evidencia estadistica con guardrails de negocio para 
   },
 ];
 
-const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
+const CLOJURE_ROUTE_COURSES: SeedCourse[] = [
   {
     slug: "clojure-desde-cero",
     title: "Clojure desde Cero",
-    description: "Curso base de Clojure con enfoque funcional y REPL en navegador.",
+    description:
+      "Curso de entrada para dominar expresiones, colecciones y pensamiento funcional en el REPL.",
     order: 6,
     language: "clojure",
     runtimeType: "browser_clojure",
@@ -1398,16 +1399,26 @@ const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
         slug: "clojure-intro-repl",
         title: "Introducción al REPL de Clojure",
         order: 1,
-        estimatedMinutes: 18,
+        estimatedMinutes: 22,
         content: `
 # Clojure desde Cero
 
-Este curso está listo para que cargues contenido y ejercicios.
-Sugerencia: inicia con expresiones, colecciones y funciones puras.
+En esta primera leccion vas a:
+- entender que todo en Clojure es una expresion
+- ejecutar codigo en el REPL del navegador
+- pensar en datos y resultados, no en pasos mutables
+
+## Patron de trabajo
+1. Lee la expresion.
+2. Evalua su resultado.
+3. Ajusta hasta obtener la salida exacta.
+
+## Reflexion
+Que cambia cuando tu programa es una composicion de expresiones que devuelven valores?
         `,
         exercises: [
           {
-            id: "clj-l1-e1",
+            id: "cljb-l1-e1",
             order: 1,
             title: "Primer output en Clojure",
             instructions:
@@ -1426,15 +1437,1004 @@ Sugerencia: inicia con expresiones, colecciones y funciones puras.
               "Respeta mayúsculas y espacios",
             ],
           },
+          {
+            id: "cljb-l1-e2",
+            order: 2,
+            title: "Aritmetica como expresion",
+            instructions:
+              "Evalua una expresion que sume 14 y 8 e imprima el resultado exacto.",
+            starterCode: ";; Imprime el resultado de sumar 14 y 8\n",
+            solutionCode: "(println (+ 14 8))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Suma correcta",
+                expected: "22",
+              },
+            ],
+            hints: [
+              "En Clojure el operador va primero: (+ a b)",
+              "Usa println para mostrar el resultado",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-colecciones-basicas",
+        title: "Colecciones: listas, vectores y mapas",
+        order: 2,
+        estimatedMinutes: 24,
+        content: `
+# Colecciones basicas
+
+Clojure gira alrededor de datos inmutables.
+Aprenderas a leer y consultar:
+- vectores
+- listas
+- mapas
+
+## Objetivo
+Consultar datos sin destruir la estructura original.
+
+## Reflexion
+Cuando te conviene usar una coleccion indexada y cuando una coleccion con llaves?
+        `,
+        exercises: [
+          {
+            id: "cljb-l2-e1",
+            order: 1,
+            title: "Contar elementos de un vector",
+            instructions:
+              "Imprime cuántos usuarios contiene el vector `usuarios`.",
+            starterCode:
+              '(def usuarios ["ada" "linus" "grace" "maria"])\n;; Imprime la cantidad total\n',
+            solutionCode:
+              '(def usuarios ["ada" "linus" "grace" "maria"])\n(println (count usuarios))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Cantidad correcta",
+                expected: "4",
+              },
+            ],
+            hints: [
+              "Usa count sobre el vector",
+              "Imprime el resultado final",
+            ],
+          },
+          {
+            id: "cljb-l2-e2",
+            order: 2,
+            title: "Leer valores desde un mapa",
+            instructions:
+              "Imprime el valor de `:tier` dentro del mapa `cliente`.",
+            starterCode:
+              '(def cliente {:name "Lalo" :tier "pro" :credits 12})\n;; Imprime el tier del cliente\n',
+            solutionCode:
+              '(def cliente {:name "Lalo" :tier "pro" :credits 12})\n(println (:tier cliente))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Tier correcto",
+                expected: "pro",
+              },
+            ],
+            hints: [
+              "Puedes leer una key keyword como funcion",
+              "La key que necesitas es :tier",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-funciones-y-destructuring",
+        title: "Funciones puras y destructuring",
+        order: 3,
+        estimatedMinutes: 26,
+        content: `
+# Funciones y destructuring
+
+Ahora vas a encapsular logica y extraer datos con una sintaxis compacta.
+
+## Aprenderas
+- definir funciones con \`defn\`
+- pasar parametros
+- usar destructuring para trabajar con mapas
+
+## Reflexion
+Que gana tu codigo cuando una funcion depende solo de sus entradas?
+        `,
+        exercises: [
+          {
+            id: "cljb-l3-e1",
+            order: 1,
+            title: "Crear una funcion de saludo",
+            instructions:
+              "Define una función `saludo` que reciba un nombre y luego imprime exactamente `Hola Ada`.",
+            starterCode:
+              ';; Define saludo y luego imprime el resultado con "Ada"\n',
+            solutionCode:
+              '(defn saludo [nombre]\n  (str "Hola " nombre))\n\n(println (saludo "Ada"))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Saludo correcto",
+                expected: "Hola Ada",
+              },
+            ],
+            hints: [
+              "Usa defn para declarar la funcion",
+              "Devuelve un string y luego imprimelo con println",
+            ],
+          },
+          {
+            id: "cljb-l3-e2",
+            order: 2,
+            title: "Destructuring sobre mapa",
+            instructions:
+              "Usa destructuring para imprimir exactamente `Lalo - 3` a partir del mapa `venta`.",
+            starterCode:
+              '(def venta {:seller "Lalo" :items 3})\n;; Usa destructuring e imprime "Lalo - 3"\n',
+            solutionCode:
+              '(def venta {:seller "Lalo" :items 3})\n(let [{:keys [seller items]} venta]\n  (println (str seller " - " items)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Salida esperada",
+                expected: "Lalo - 3",
+              },
+            ],
+            hints: [
+              "Usa let con {:keys [...]}",
+              "Combina seller e items con str",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-transformaciones-secuencias",
+        title: "Transformaciones con map, filter y reduce",
+        order: 4,
+        estimatedMinutes: 28,
+        content: `
+# Transformaciones funcionales
+
+Esta es la base del pensamiento de datos en Clojure:
+- transformar
+- filtrar
+- agregar
+
+## Meta
+Resolver problemas reales trabajando secuencias inmutables.
+
+## Reflexion
+Como cambia tu forma de pensar cuando recorres datos con transformaciones declarativas?
+        `,
+        exercises: [
+          {
+            id: "cljb-l4-e1",
+            order: 1,
+            title: "Suma de numeros pares",
+            instructions:
+              "Filtra los números pares de `numeros` y luego imprime la suma total.",
+            starterCode:
+              '(def numeros [1 2 3 4 5 6])\n;; Filtra los pares y suma el total\n',
+            solutionCode:
+              '(def numeros [1 2 3 4 5 6])\n(println (reduce + (filter even? numeros)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Suma de pares",
+                expected: "12",
+              },
+            ],
+            hints: [
+              "Usa filter con even?",
+              "Acumula con reduce +",
+            ],
+          },
+          {
+            id: "cljb-l4-e2",
+            order: 2,
+            title: "Promedio entero simple",
+            instructions:
+              "Calcula e imprime el promedio entero de los valores en `tickets`.",
+            starterCode:
+              '(def tickets [9 12 15 18])\n;; Imprime el promedio entero\n',
+            solutionCode:
+              '(def tickets [9 12 15 18])\n(println (quot (reduce + tickets) (count tickets)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Promedio esperado",
+                expected: "13",
+              },
+            ],
+            hints: [
+              "Suma todos los valores",
+              "Divide usando quot para mantener entero",
+            ],
+          },
         ],
       },
     ],
   },
   {
+    slug: "clojure-intermedio",
+    title: "Clojure Intermedio",
+    description:
+      "Secuencias lazy, recursion, composicion y modelado funcional para resolver problemas con mas criterio.",
+    order: 7,
+    language: "clojure",
+    runtimeType: "browser_clojure",
+    lessons: [
+      {
+        slug: "clojure-secuencias-y-laziness",
+        title: "Secuencias y evaluacion lazy",
+        order: 1,
+        estimatedMinutes: 24,
+        content: `
+# Secuencias y laziness
+
+Las secuencias son una abstraccion central de Clojure.
+Aqui vas a practicar transformaciones que solo producen lo necesario.
+
+## Reflexion
+Que ventaja obtienes cuando calculas solo el tramo de datos que realmente necesitas?
+        `,
+        exercises: [
+          {
+            id: "clji-l1-e1",
+            order: 1,
+            title: "Tomar una ventana desde range",
+            instructions:
+              "Imprime exactamente los primeros 4 valores del rango 10..19.",
+            starterCode:
+              ";; Imprime los primeros 4 valores de (range 10 20)\n",
+            solutionCode:
+              "(println (take 4 (range 10 20)))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Ventana correcta",
+                expected: "(10 11 12 13)",
+              },
+            ],
+            hints: [
+              "Usa take para limitar la secuencia",
+              "range 10 20 genera de 10 a 19",
+            ],
+          },
+          {
+            id: "clji-l1-e2",
+            order: 2,
+            title: "Incrementar una secuencia",
+            instructions:
+              "Usa `map` para incrementar cada valor de `puntos` e imprime la secuencia resultante.",
+            starterCode:
+              "(def puntos [3 4 5])\n;; Imprime la secuencia incrementada\n",
+            solutionCode:
+              "(def puntos [3 4 5])\n(println (map inc puntos))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Transformacion correcta",
+                expected: "(4 5 6)",
+              },
+            ],
+            hints: [
+              "inc aumenta en uno",
+              "map aplica una funcion a cada elemento",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-loop-recur",
+        title: "Recursion y loop/recur",
+        order: 2,
+        estimatedMinutes: 28,
+        content: `
+# Recursion y loop/recur
+
+En Clojure los bucles tipicos se expresan con recursion o con \`loop/recur\`.
+
+## Reflexion
+Cuando es mas claro usar una transformacion sobre secuencias y cuando conviene un loop explicito?
+        `,
+        exercises: [
+          {
+            id: "clji-l2-e1",
+            order: 1,
+            title: "Factorial con recur",
+            instructions:
+              "Calcula e imprime el factorial de 5 usando `loop/recur`.",
+            starterCode:
+              ";; Calcula factorial de 5 con loop/recur e imprime el resultado\n",
+            solutionCode:
+              "(loop [n 5 acc 1]\n  (if (zero? n)\n    (println acc)\n    (recur (dec n) (* acc n))))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Factorial correcto",
+                expected: "120",
+              },
+            ],
+            hints: [
+              "Usa un acumulador",
+              "Deten el loop cuando n sea 0",
+            ],
+          },
+          {
+            id: "clji-l2-e2",
+            order: 2,
+            title: "Suma acumulada del 1 al 100",
+            instructions:
+              "Usa `loop/recur` para sumar del 1 al 100 e imprime el total.",
+            starterCode:
+              ";; Suma del 1 al 100 con loop/recur e imprime el resultado\n",
+            solutionCode:
+              "(loop [n 1 total 0]\n  (if (> n 100)\n    (println total)\n    (recur (inc n) (+ total n))))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Suma correcta",
+                expected: "5050",
+              },
+            ],
+            hints: [
+              "Incrementa n en cada vuelta",
+              "Acumula el total hasta 100",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-modelado-funcional",
+        title: "Modelado funcional con mapas",
+        order: 3,
+        estimatedMinutes: 28,
+        content: `
+# Modelado funcional
+
+Los mapas son una estructura base para modelar entidades y resultados de negocio.
+
+## Reflexion
+Como te ayuda un modelo de datos claro a simplificar las transformaciones posteriores?
+        `,
+        exercises: [
+          {
+            id: "clji-l3-e1",
+            order: 1,
+            title: "Contar clientes enterprise",
+            instructions:
+              "Agrupa por `:segment` y luego imprime cuántos registros pertenecen a `:enterprise`.",
+            starterCode:
+              '(def clientes [{:segment :smb :mrr 120}\n               {:segment :enterprise :mrr 900}\n               {:segment :enterprise :mrr 1400}\n               {:segment :smb :mrr 160}])\n;; Imprime cantidad de enterprise\n',
+            solutionCode:
+              '(def clientes [{:segment :smb :mrr 120}\n               {:segment :enterprise :mrr 900}\n               {:segment :enterprise :mrr 1400}\n               {:segment :smb :mrr 160}])\n(println (count ((group-by :segment clientes) :enterprise)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Cantidad enterprise",
+                expected: "2",
+              },
+            ],
+            hints: [
+              "Usa group-by :segment",
+              "Luego cuenta el grupo :enterprise",
+            ],
+          },
+          {
+            id: "clji-l3-e2",
+            order: 2,
+            title: "Encontrar mejor score",
+            instructions:
+              "Ordena `leaderboard` por `:score` descendente y luego imprime el `:name` del primer registro.",
+            starterCode:
+              '(def leaderboard [{:name "ana" :score 77}\n                 {:name "maria" :score 92}\n                 {:name "luis" :score 84}])\n;; Imprime el nombre con mejor score\n',
+            solutionCode:
+              '(def leaderboard [{:name "ana" :score 77}\n                 {:name "maria" :score 92}\n                 {:name "luis" :score 84}])\n(println (:name (first (sort-by :score > leaderboard))))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Top score correcto",
+                expected: "maria",
+              },
+            ],
+            hints: [
+              "Usa sort-by con > para descendente",
+              "Toma el primer elemento y luego su :name",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-composicion-y-reuso",
+        title: "Composicion y reuso funcional",
+        order: 4,
+        estimatedMinutes: 26,
+        content: `
+# Composicion y reuso
+
+En esta leccion practicaras dos herramientas idiomaticas:
+- \`comp\`
+- \`partial\`
+
+## Reflexion
+Que parte de una solucion vale la pena encapsular para volverla reusable?
+        `,
+        exercises: [
+          {
+            id: "clji-l4-e1",
+            order: 1,
+            title: "Componer una transformacion",
+            instructions:
+              "Define una función compuesta que cuente cuántos números impares hay en `muestras` e imprime el resultado.",
+            starterCode:
+              "(def muestras [1 2 3 4 5 6])\n;; Define una funcion compuesta e imprime el total de impares\n",
+            solutionCode:
+              "(def muestras [1 2 3 4 5 6])\n(def contar-impares (comp count (partial filter odd?)))\n(println (contar-impares muestras))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Conteo correcto",
+                expected: "3",
+              },
+            ],
+            hints: [
+              "comp conecta funciones de derecha a izquierda",
+              "partial puede fijar filter con odd?",
+            ],
+          },
+          {
+            id: "clji-l4-e2",
+            order: 2,
+            title: "Reusar una funcion parcial",
+            instructions:
+              "Crea una función `agregar-iva` con `partial` y úsala para imprimir el resultado de aplicar IVA a 100.",
+            starterCode:
+              ";; Crea agregar-iva con partial y luego imprime el resultado para 100\n",
+            solutionCode:
+              "(def agregar-iva (partial * 1.16))\n(println (agregar-iva 100))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "IVA correcto",
+                expected: "116.0",
+              },
+            ],
+            hints: [
+              "partial fija el primer argumento de una funcion",
+              "La multiplicacion debe aplicar 1.16",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "clojure-datos-y-transformacion",
+    title: "Clojure para Datos y Transformacion",
+    description:
+      "Pipelines de transformacion, datos anidados y reporting funcional con estructuras inmutables.",
+    order: 8,
+    language: "clojure",
+    runtimeType: "browser_clojure",
+    lessons: [
+      {
+        slug: "clojure-get-in-update-in",
+        title: "Datos anidados con get-in y update-in",
+        order: 1,
+        estimatedMinutes: 24,
+        content: `
+# Datos anidados
+
+Gran parte del trabajo con Clojure consiste en leer y modificar estructuras anidadas sin mutarlas.
+
+## Reflexion
+Por que es util modificar datos de forma declarativa sin perder el valor original?
+        `,
+        exercises: [
+          {
+            id: "cljd-l1-e1",
+            order: 1,
+            title: "Leer un KPI anidado",
+            instructions:
+              "Usa `get-in` para imprimir el revenue almacenado en `reporte`.",
+            starterCode:
+              '(def reporte {:kpis {:revenue 1250 :margin 32}})\n;; Imprime revenue con get-in\n',
+            solutionCode:
+              '(def reporte {:kpis {:revenue 1250 :margin 32}})\n(println (get-in reporte [:kpis :revenue]))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Revenue correcto",
+                expected: "1250",
+              },
+            ],
+            hints: [
+              "get-in recibe la estructura y una ruta vector",
+              "La ruta correcta es [:kpis :revenue]",
+            ],
+          },
+          {
+            id: "cljd-l1-e2",
+            order: 2,
+            title: "Actualizar stock anidado",
+            instructions:
+              "Incrementa en 3 el valor de `:stock` y luego imprime el nuevo stock.",
+            starterCode:
+              '(def inventario {:producto {:stock 9 :name "teclado"}})\n;; Actualiza stock e imprime el nuevo valor\n',
+            solutionCode:
+              '(def inventario {:producto {:stock 9 :name "teclado"}})\n(def actualizado (update-in inventario [:producto :stock] + 3))\n(println (get-in actualizado [:producto :stock]))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Stock actualizado",
+                expected: "12",
+              },
+            ],
+            hints: [
+              "Usa update-in con la ruta [:producto :stock]",
+              "Suma 3 al valor actual",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-threading-macros",
+        title: "Threading macros para pipelines",
+        order: 2,
+        estimatedMinutes: 28,
+        content: `
+# Threading macros
+
+Los threading macros ayudan a leer pipelines de datos como una historia:
+- toma datos
+- filtra
+- transforma
+- agrega
+
+## Reflexion
+Cuando un pipeline con \`->\` o \`->>\` se vuelve mas claro que una composicion anidada?
+        `,
+        exercises: [
+          {
+            id: "cljd-l2-e1",
+            order: 1,
+            title: "Total enterprise con ->>",
+            instructions:
+              "Filtra ventas enterprise, extrae `:amount` y luego imprime el total usando `->>`.",
+            starterCode:
+              '(def ventas [{:segment :smb :amount 120}\n             {:segment :enterprise :amount 400}\n             {:segment :enterprise :amount 550}])\n;; Usa ->> e imprime el total enterprise\n',
+            solutionCode:
+              '(def ventas [{:segment :smb :amount 120}\n             {:segment :enterprise :amount 400}\n             {:segment :enterprise :amount 550}])\n(println (->> ventas\n              (filter #(= :enterprise (:segment %)))\n              (map :amount)\n              (reduce +)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Total enterprise",
+                expected: "950",
+              },
+            ],
+            hints: [
+              "Usa ->> para secuencias",
+              "Despues de filtrar, proyecta con map :amount",
+            ],
+          },
+          {
+            id: "cljd-l2-e2",
+            order: 2,
+            title: "Actualizar cliente con ->",
+            instructions:
+              "Usa `->` para incrementar `:visits` y luego imprime el valor final.",
+            starterCode:
+              '(def cliente {:name "Ada" :visits 3})\n;; Usa -> para incrementar visits e imprimir el resultado\n',
+            solutionCode:
+              '(def cliente {:name "Ada" :visits 3})\n(println (-> cliente\n              (update :visits inc)\n              :visits))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Visits actualizadas",
+                expected: "4",
+              },
+            ],
+            hints: [
+              "-> funciona mejor cuando el dato entra como primer argumento",
+              "Extrae :visits al final del pipeline",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-agrupacion-y-frecuencias",
+        title: "Agrupacion, conteo y distribuciones",
+        order: 3,
+        estimatedMinutes: 26,
+        content: `
+# Agrupacion y frecuencias
+
+Estas operaciones son utiles para analitica, producto y operaciones.
+
+## Reflexion
+Que preguntas de negocio puedes responder solo agrupando y contando datos correctamente?
+        `,
+        exercises: [
+          {
+            id: "cljd-l3-e1",
+            order: 1,
+            title: "Frecuencia de estados",
+            instructions:
+              "Calcula las frecuencias de `estados` e imprime cuántos `pending` existen.",
+            starterCode:
+              '(def estados [:ok :ok :error :ok :pending :pending])\n;; Imprime cantidad de pending\n',
+            solutionCode:
+              '(def estados [:ok :ok :error :ok :pending :pending])\n(println ((frequencies estados) :pending))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Pending correcto",
+                expected: "2",
+              },
+            ],
+            hints: [
+              "Usa frequencies para obtener conteos",
+              "Luego consulta la key :pending",
+            ],
+          },
+          {
+            id: "cljd-l3-e2",
+            order: 2,
+            title: "Cuantas regiones hay",
+            instructions:
+              "Agrupa `ordenes` por `:region` e imprime cuántas regiones distintas aparecen.",
+            starterCode:
+              '(def ordenes [{:region :north :amount 100}\n              {:region :south :amount 120}\n              {:region :north :amount 90}\n              {:region :west :amount 150}])\n;; Imprime cantidad de regiones distintas\n',
+            solutionCode:
+              '(def ordenes [{:region :north :amount 100}\n              {:region :south :amount 120}\n              {:region :north :amount 90}\n              {:region :west :amount 150}])\n(println (count (group-by :region ordenes)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Regiones distintas",
+                expected: "3",
+              },
+            ],
+            hints: [
+              "group-by te devuelve un mapa por region",
+              "Cuenta cuantas llaves tiene el resultado",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-reportes-y-pipelines",
+        title: "Reportes funcionales y resultados accionables",
+        order: 4,
+        estimatedMinutes: 28,
+        content: `
+# Reportes y pipelines
+
+Vas a cerrar el curso armando salidas listas para comunicar hallazgos.
+
+## Reflexion
+Que hace que un pipeline de transformacion sea facil de mantener cuando cambian las reglas del negocio?
+        `,
+        exercises: [
+          {
+            id: "cljd-l4-e1",
+            order: 1,
+            title: "Top 2 del leaderboard",
+            instructions:
+              "Ordena por score descendente, toma los 2 primeros, proyecta `:name` y luego imprime el vector resultante.",
+            starterCode:
+              '(def ranking [{:name "ana" :score 91}\n              {:name "luis" :score 88}\n              {:name "maria" :score 95}])\n;; Imprime el vector con los 2 nombres top\n',
+            solutionCode:
+              '(def ranking [{:name "ana" :score 91}\n              {:name "luis" :score 88}\n              {:name "maria" :score 95}])\n(println (->> ranking\n              (sort-by :score >)\n              (take 2)\n              (map :name)\n              vec))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Top 2 correcto",
+                expected: '["maria" "ana"]',
+              },
+            ],
+            hints: [
+              "Ordena descendente con sort-by :score >",
+              "Convierte el resultado final a vector con vec",
+            ],
+          },
+          {
+            id: "cljd-l4-e2",
+            order: 2,
+            title: "Promedio de tickets",
+            instructions:
+              "Calcula e imprime el promedio entero de `tickets` usando una pipeline funcional.",
+            starterCode:
+              "(def tickets [100 150 200])\n;; Imprime el promedio entero\n",
+            solutionCode:
+              "(def tickets [100 150 200])\n(println (quot (reduce + tickets) (count tickets)))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Promedio correcto",
+                expected: "150",
+              },
+            ],
+            hints: [
+              "Suma con reduce +",
+              "Divide entre el count con quot",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "clojure-macros-estado-y-arquitectura",
+    title: "Clojure: Macros, Estado y Arquitectura",
+    description:
+      "Ruta avanzada para dominar atoms, macros y patrones de organizacion funcional en sistemas pequenos.",
+    order: 9,
+    language: "clojure",
+    runtimeType: "browser_clojure",
+    lessons: [
+      {
+        slug: "clojure-atoms-y-estado-controlado",
+        title: "Atoms y estado controlado",
+        order: 1,
+        estimatedMinutes: 26,
+        content: `
+# Atoms y estado controlado
+
+El estado existe, pero en Clojure se aísla y se gestiona de forma explícita.
+
+## Reflexion
+Que problemas evitas cuando el estado mutable se concentra en pocos puntos del sistema?
+        `,
+        exercises: [
+          {
+            id: "cljm-l1-e1",
+            order: 1,
+            title: "Incrementar un contador atomico",
+            instructions:
+              "Crea un `atom` con valor 3, incrementalo en 5 con `swap!` e imprime el valor final.",
+            starterCode:
+              ";; Crea un atom, actualizalo e imprime el resultado final\n",
+            solutionCode:
+              "(def contador (atom 3))\n(swap! contador + 5)\n(println @contador)\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Valor correcto",
+                expected: "8",
+              },
+            ],
+            hints: [
+              "Usa atom para crear el estado",
+              "Lee el valor final con @contador",
+            ],
+          },
+          {
+            id: "cljm-l1-e2",
+            order: 2,
+            title: "Actualizar mapa dentro de un atom",
+            instructions:
+              "Incrementa `:hits` dos veces dentro de un atom y luego imprime el total.",
+            starterCode:
+              '(def metricas (atom {:hits 1}))\n;; Incrementa :hits dos veces e imprime el total\n',
+            solutionCode:
+              '(def metricas (atom {:hits 1}))\n(swap! metricas update :hits inc)\n(swap! metricas update :hits inc)\n(println (:hits @metricas))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Hits correctos",
+                expected: "3",
+              },
+            ],
+            hints: [
+              "Usa update dentro de swap!",
+              "Lee la key :hits desde el atom final",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-funciones-puras-y-shells-impuras",
+        title: "Funciones puras y shells impuras",
+        order: 2,
+        estimatedMinutes: 28,
+        content: `
+# Pure core, impure shell
+
+Una arquitectura Clojure madura separa:
+- logica pura
+- lectura/escritura de estado
+- efectos externos
+
+## Reflexion
+Que parte de tu programa deberia ser 100% determinista y facil de probar?
+        `,
+        exercises: [
+          {
+            id: "cljm-l2-e1",
+            order: 1,
+            title: "Funcion pura de descuento",
+            instructions:
+              "Define `apply-discount` y úsala para imprimir el precio final de 100 con descuento de 0.15.",
+            starterCode:
+              ";; Define apply-discount y luego imprime el resultado para 100 y 0.15\n",
+            solutionCode:
+              "(defn apply-discount [price discount]\n  (* price (- 1 discount)))\n\n(println (apply-discount 100 0.15))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Descuento correcto",
+                expected: "85.0",
+              },
+            ],
+            hints: [
+              "La funcion debe depender solo de price y discount",
+              "Multiplica por (1 - discount)",
+            ],
+          },
+          {
+            id: "cljm-l2-e2",
+            order: 2,
+            title: "Reducer de carrito",
+            instructions:
+              "Crea una función pura `add-item` que reciba estado y precio, y úsala para imprimir el total final después de agregar 40 y 80.",
+            starterCode:
+              ";; Define add-item y luego imprime el total final del carrito\n",
+            solutionCode:
+              "(defn add-item [state price]\n  (update state :total + price))\n\n(def final-state (-> {:total 0}\n                     (add-item 40)\n                     (add-item 80)))\n\n(println (:total final-state))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Total correcto",
+                expected: "120",
+              },
+            ],
+            hints: [
+              "Usa update sobre :total",
+              "Encadena las actualizaciones con ->",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-macros-primeros-pasos",
+        title: "Macros: primeros pasos",
+        order: 3,
+        estimatedMinutes: 30,
+        content: `
+# Macros
+
+Las macros permiten extender el lenguaje.
+No son para todo: se usan cuando necesitas transformar codigo antes de evaluarlo.
+
+## Reflexion
+Que diferencia hay entre una funcion que transforma valores y una macro que transforma codigo?
+        `,
+        exercises: [
+          {
+            id: "cljm-l3-e1",
+            order: 1,
+            title: "Macro unless",
+            instructions:
+              "Define una macro `unless` y úsala para imprimir `guardar` cuando `approved?` sea falso.",
+            starterCode:
+              "(def approved? false)\n;; Define unless y luego usala para imprimir guardar\n",
+            solutionCode:
+              "(def approved? false)\n(defmacro unless [pred & body]\n  `(if (not ~pred)\n     (do ~@body)))\n\n(unless approved?\n  (println \"guardar\"))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Macro ejecutada",
+                expected: "guardar",
+              },
+            ],
+            hints: [
+              "La macro debe expandir a un if con not",
+              "Usa syntax quote y unquote",
+            ],
+          },
+          {
+            id: "cljm-l3-e2",
+            order: 2,
+            title: "Macro infix simple",
+            instructions:
+              "Define una macro `infix` para evaluar `(2 + 3)` e imprime el resultado.",
+            starterCode:
+              ";; Define infix y luego imprime el resultado de (infix (2 + 3))\n",
+            solutionCode:
+              "(defmacro infix [[a op b]]\n  `(~op ~a ~b))\n\n(println (infix (2 + 3)))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Resultado correcto",
+                expected: "5",
+              },
+            ],
+            hints: [
+              "Desestructura la expresion como [a op b]",
+              "La expansion debe invocar el operador como funcion",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-eventos-y-arquitectura",
+        title: "Eventos, reducers y arquitectura",
+        order: 4,
+        estimatedMinutes: 30,
+        content: `
+# Arquitectura funcional
+
+Cerrarás la ruta construyendo piezas pequeñas y previsibles:
+- reducers
+- eventos
+- estado derivado
+
+## Reflexion
+Como ayuda un reducer puro a entender la evolucion del estado de una aplicacion?
+        `,
+        exercises: [
+          {
+            id: "cljm-l4-e1",
+            order: 1,
+            title: "Reducer de aprobacion",
+            instructions:
+              "Define `apply-event` para actualizar el estado con el evento `:approve` e imprime exactamente `approved - 2`.",
+            starterCode:
+              ";; Define apply-event y usa el evento :approve sobre {:status :draft :count 1}\n",
+            solutionCode:
+              "(defn apply-event [state event]\n  (case (:type event)\n    :approve (-> state\n                 (assoc :status :approved)\n                 (update :count inc))\n    state))\n\n(def next-state (apply-event {:status :draft :count 1} {:type :approve}))\n(println (str (name (:status next-state)) \" - \" (:count next-state)))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Estado actualizado",
+                expected: "approved - 2",
+              },
+            ],
+            hints: [
+              "Usa case para despachar por tipo de evento",
+              "Actualiza status y count dentro del pipeline",
+            ],
+          },
+          {
+            id: "cljm-l4-e2",
+            order: 2,
+            title: "Resumen de eventos",
+            instructions:
+              "Reduce la secuencia `eventos` sobre un estado inicial y luego imprime exactamente `2/1` para visitas/compras.",
+            starterCode:
+              "(def eventos [:visit :visit :purchase])\n;; Reduce eventos y luego imprime visitas/compras\n",
+            solutionCode:
+              "(def eventos [:visit :visit :purchase])\n(defn step [state event]\n  (case event\n    :visit (update state :visits inc)\n    :purchase (update state :purchases inc)\n    state))\n\n(def final-state (reduce step {:visits 0 :purchases 0} eventos))\n(println (str (:visits final-state) \"/\" (:purchases final-state)))\n",
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Resumen correcto",
+                expected: "2/1",
+              },
+            ],
+            hints: [
+              "Usa reduce con un estado inicial mapa",
+              "Actualiza cada contador segun el evento",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
+  ...CLOJURE_ROUTE_COURSES,
+  {
     slug: "javascript-desde-cero",
     title: "JavaScript desde Cero",
     description: "Fundamentos de JavaScript moderno con práctica interactiva.",
-    order: 7,
+    order: 10,
     language: "javascript",
     runtimeType: "browser_javascript",
     lessons: [
@@ -1477,7 +2477,7 @@ Curso base creado. Puedes agregar retos de variables, funciones y objetos.
     slug: "typescript-desde-cero",
     title: "TypeScript desde Cero",
     description: "TypeScript con tipado estático para apps frontend/backend.",
-    order: 8,
+    order: 11,
     language: "typescript",
     runtimeType: "browser_typescript",
     lessons: [
@@ -1522,7 +2522,7 @@ Curso base creado. Recomendado: tipos primitivos, funciones y interfaces.
     slug: "sql-desde-cero",
     title: "SQL desde Cero",
     description: "Consultas SQL prácticas para análisis y producto.",
-    order: 9,
+    order: 12,
     language: "sql",
     runtimeType: "browser_sql",
     lessons: [
@@ -1565,7 +2565,7 @@ Curso base creado. Recomendado: SELECT, WHERE, ORDER BY y agregaciones.
     slug: "go-desde-cero",
     title: "Go desde Cero",
     description: "Fundamentos de Go para backend y herramientas CLI.",
-    order: 10,
+    order: 13,
     language: "go",
     runtimeType: "browser_go",
     lessons: [
@@ -1610,7 +2610,7 @@ Curso base creado. Agrega ejercicios de funciones, slices y structs.
     slug: "rust-desde-cero",
     title: "Rust desde Cero",
     description: "Rust para programación segura y de alto rendimiento.",
-    order: 11,
+    order: 14,
     language: "rust",
     runtimeType: "browser_rust",
     lessons: [
@@ -1653,7 +2653,7 @@ Curso base creado. Recomendado: ownership, borrowing y pattern matching.
     slug: "bash-desde-cero",
     title: "Bash desde Cero",
     description: "Automatización y scripting en Bash desde fundamentos.",
-    order: 12,
+    order: 15,
     language: "bash",
     runtimeType: "browser_bash",
     lessons: [

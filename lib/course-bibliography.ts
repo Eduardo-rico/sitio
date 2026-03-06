@@ -146,6 +146,79 @@ const LANGUAGE_BASE_BIBLIOGRAPHY: Record<CourseLanguage, CourseBibliographyItem[
 };
 
 const COURSE_SPECIFIC_BIBLIOGRAPHY: Record<string, CourseBibliographyItem[]> = {
+  "clojure-desde-cero": [
+    {
+      title: "Getting Started with Clojure",
+      url: "https://clojure.org/guides/getting_started",
+      note: "Arranque oficial con REPL, expresiones y primeras formas.",
+    },
+    {
+      title: "Clojure for the Brave and True",
+      url: "https://www.braveclojure.com/",
+      note: "Recurso practico ideal para consolidar fundamentos y sintaxis.",
+    },
+    {
+      title: "Clojure Cheatsheet",
+      url: "https://clojure.org/api/cheatsheet",
+      note: "Referencia rapida para colecciones, funciones y formas comunes.",
+    },
+  ],
+  "clojure-intermedio": [
+    {
+      title: "The Joy of Clojure",
+      url: "https://www.manning.com/books/the-joy-of-clojure-second-edition",
+      note: "Texto de referencia para secuencias, recursion y pensamiento idiomatico.",
+    },
+    {
+      title: "Sequences",
+      url: "https://clojure.org/reference/sequences",
+      note: "Documentacion oficial sobre la abstraccion de secuencias y su evaluacion.",
+    },
+    {
+      title: "Clojure Patterns - Functional Composition",
+      url: "https://clojurepatterns.com/",
+      note: "Patrones practicos para composicion, pipelines y reutilizacion funcional.",
+    },
+  ],
+  "clojure-datos-y-transformacion": [
+    {
+      title: "Threading Macros Guide",
+      url: "https://clojure.org/guides/threading_macros",
+      note: "Referencia oficial para escribir pipelines claros con -> y ->>.",
+    },
+    {
+      title: "Clojure Data Structures and Transforms",
+      url: "https://clojure.org/reference/data_structures",
+      note: "Base tecnica para trabajar mapas, vectores y transformacion de datos anidados.",
+    },
+    {
+      title: "Practicalli Clojure Data Transformation",
+      url: "https://practical.li/clojure/",
+      note: "Material practico orientado a pipelines, reporting y modelado de datos.",
+    },
+  ],
+  "clojure-macros-estado-y-arquitectura": [
+    {
+      title: "Atoms",
+      url: "https://clojure.org/reference/atoms",
+      note: "Documentacion oficial sobre estado local coordinado con atoms.",
+    },
+    {
+      title: "Refs and Transactions",
+      url: "https://clojure.org/reference/refs",
+      note: "Marco conceptual para entender estado coordinado y STM en Clojure.",
+    },
+    {
+      title: "Macros",
+      url: "https://clojure.org/reference/macros",
+      note: "Guia oficial para expansion de codigo, metaprogramacion y buenas practicas.",
+    },
+    {
+      title: "Elements of Clojure",
+      url: "https://elementsofclojure.com/",
+      note: "Enfoque de diseño y arquitectura para escribir sistemas Clojure mantenibles.",
+    },
+  ],
   "python-basico": [
     {
       title: "Python Tutorial (Official)",
