@@ -92,6 +92,7 @@ model Course {
   description String?
   language    String   @default("python") // "python", "clojure", "javascript", "typescript", "sql", "go", "rust", "bash"
   runtimeType String   @default("browser_pyodide") // Runtime interpreter/compiler target
+  pedagogy    Json?
   order       Int      @default(0)
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())

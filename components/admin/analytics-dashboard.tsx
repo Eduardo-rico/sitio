@@ -89,13 +89,30 @@ interface AnalyticsData {
       activeMinutes: number;
     }>;
   };
+  filterOptions: {
+    courses: Array<{
+      id: string;
+      slug: string;
+      title: string;
+      language: string;
+    }>;
+    languages: string[];
+  };
+  appliedFilters: {
+    courseId: string | null;
+    language: string | null;
+    scopeNotice: string | null;
+  };
 }
 
 export function AnalyticsDashboard() {
   const [dateRange, setDateRange] = useState<DateRange>("30days");
+  const [selectedLanguage, setSelectedLanguage] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AnalyticsData | null>(null);
 
@@ -115,7 +132,12 @@ export function AnalyticsDashboard() {
       ).toISOString();
 
       const response = await fetch(
-        `/api/admin/analytics?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+        `/api/admin/analytics?${new URLSearchParams({
+          startDate,
+          endDate,
+          ...(selectedLanguage ? { language: selectedLanguage } : {}),
+          ...(selectedCourseId ? { courseId: selectedCourseId } : {}),
+        }).toString()}`
       );
 
       if (!response.ok) {
@@ -135,15 +157,59 @@ export function AnalyticsDashboard() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [dateRange]);
+  }, [dateRange, selectedCourseId, selectedLanguage]);
 
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  const handleExport = () => {
-    // Placeholder for export functionality
-    alert("Export functionality coming soon!");
+  useEffect(() => {
+    if (!data || !selectedCourseId) {
+      return;
+    }
+    const selectedCourseStillVisible = data.filterOptions.courses.some(
+      (course) =>
+        course.id === selectedCourseId && (!selectedLanguage || course.language === selectedLanguage)
+    );
+    if (!selectedCourseStillVisible) {
+      setSelectedCourseId("");
+    }
+  }, [data, selectedCourseId, selectedLanguage]);
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const selectedRange = DATE_RANGES.find((r) => r.value === dateRange);
+      const endDate = new Date().toISOString();
+      const startDate = new Date(
+        Date.now() - (selectedRange?.days || 30) * 24 * 60 * 60 * 1000
+      ).toISOString();
+      const query = new URLSearchParams({
+        startDate,
+        endDate,
+        ...(selectedLanguage ? { language: selectedLanguage } : {}),
+        ...(selectedCourseId ? { courseId: selectedCourseId } : {}),
+      });
+      const response = await fetch(`/api/admin/analytics/export?${query.toString()}`);
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `analytics-export-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(anchor);
+    } catch (exportError) {
+      setError(exportError instanceof Error ? exportError.message : "Export failed");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const selectedRangeLabel = DATE_RANGES.find((r) => r.value === dateRange)?.label || "30 Days";
@@ -184,6 +250,9 @@ export function AnalyticsDashboard() {
           ) / data.learningMetrics.courseCompletionRates.length
         )
       : 0;
+  const filteredCourseOptions = data.filterOptions.courses.filter(
+    (course) => !selectedLanguage || course.language === selectedLanguage
+  );
 
   return (
     <div className="space-y-6">
@@ -199,6 +268,62 @@ export function AnalyticsDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
+          <label className="sr-only" htmlFor="analytics-language-filter">
+            Filtrar por lenguaje
+          </label>
+          <select
+            id="analytics-language-filter"
+            data-testid="analytics-language-filter"
+            value={selectedLanguage}
+            onChange={(event) => {
+              const nextLanguage = event.target.value;
+              if (
+                nextLanguage &&
+                selectedCourseId &&
+                data.filterOptions.courses.some(
+                  (course) => course.id === selectedCourseId && course.language !== nextLanguage
+                )
+              ) {
+                setSelectedCourseId("");
+              }
+              setSelectedLanguage(nextLanguage);
+            }}
+            className={cn(
+              "rounded-lg border border-gray-200 dark:border-gray-700",
+              "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300",
+              "px-3 py-2 text-sm"
+            )}
+          >
+            <option value="">Todos los lenguajes</option>
+            {data.filterOptions.languages.map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
+          </select>
+
+          <label className="sr-only" htmlFor="analytics-course-filter">
+            Filtrar por curso
+          </label>
+          <select
+            id="analytics-course-filter"
+            data-testid="analytics-course-filter"
+            value={selectedCourseId}
+            onChange={(event) => setSelectedCourseId(event.target.value)}
+            className={cn(
+              "rounded-lg border border-gray-200 dark:border-gray-700",
+              "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300",
+              "px-3 py-2 text-sm min-w-[220px]"
+            )}
+          >
+            <option value="">Todos los cursos</option>
+            {filteredCourseOptions.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.title}
+              </option>
+            ))}
+          </select>
+
           {/* Refresh button */}
           <button
             onClick={() => fetchAnalytics(true)}
@@ -267,17 +392,28 @@ export function AnalyticsDashboard() {
           {/* Export button */}
           <button
             onClick={handleExport}
+            disabled={isExporting}
+            data-testid="analytics-export-button"
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg",
               "bg-blue-600 text-white hover:bg-blue-700",
-              "transition-colors font-medium"
+              "transition-colors font-medium disabled:opacity-50"
             )}
           >
-            <Download className="w-4 h-4" />
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
+
+      {data.appliedFilters.scopeNotice && (
+        <div
+          data-testid="analytics-scope-notice"
+          className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 text-sm text-blue-700 dark:text-blue-300"
+        >
+          {data.appliedFilters.scopeNotice}
+        </div>
+      )}
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

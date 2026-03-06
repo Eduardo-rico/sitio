@@ -17,10 +17,8 @@ import {
   isCourseLanguage,
   isRuntimeType,
 } from '@/lib/course-runtime';
-import {
-  getPythonCoursePedagogy,
-  getPythonLessonStage,
-} from '@/lib/python-course-pedagogy';
+import { getLessonStageFromPedagogy } from '@/lib/course-pedagogy';
+import { resolveCoursePedagogy } from '@/lib/course-pedagogy-registry';
 import { LessonContent } from '@/components/lessons/LessonContent';
 import { LessonNavigation } from '@/components/lessons/LessonNavigation';
 import { ArrowLeft, ArrowRight, BookOpen, Clock, Target, Lightbulb } from 'lucide-react';
@@ -117,10 +115,9 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const runtimeType = isRuntimeType(course.runtimeType)
     ? course.runtimeType
     : getDefaultRuntimeForLanguage(courseLanguage);
-  const pythonPedagogy =
-    courseLanguage === "python" ? getPythonCoursePedagogy(course.slug) : null;
+  const coursePedagogy = resolveCoursePedagogy(courseLanguage, course.slug, course.pedagogy);
   const lessonStage =
-    courseLanguage === "python" ? getPythonLessonStage(course.slug, lesson.order) : null;
+    coursePedagogy ? getLessonStageFromPedagogy(coursePedagogy, lesson.order) : null;
   const session = await auth();
 
   if (session?.user?.id) {
@@ -237,14 +234,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 {lesson.title}
               </h1>
 
-              {pythonPedagogy && lessonStage && (
+              {coursePedagogy && lessonStage && (
                 <div className="mb-6 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-900/20 p-4">
                   <div className="flex flex-wrap items-center gap-3 mb-2">
                     <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
                       Etapa pedagogica: {lessonStage.label}
                     </span>
                     <span className="text-xs text-blue-700/80 dark:text-blue-300/80">
-                      Rubrica: {pythonPedagogy.rubricDimensions.join(" / ")}
+                      Rubrica: {coursePedagogy.rubricDimensions.join(" / ")}
                     </span>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3 text-sm">

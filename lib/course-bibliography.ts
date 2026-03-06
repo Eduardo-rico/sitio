@@ -219,6 +219,28 @@ const COURSE_SPECIFIC_BIBLIOGRAPHY: Record<string, CourseBibliographyItem[]> = {
       note: "Enfoque de diseño y arquitectura para escribir sistemas Clojure mantenibles.",
     },
   ],
+  "clojure-spec-testing-y-tooling": [
+    {
+      title: "spec Guide",
+      url: "https://clojure.org/guides/spec",
+      note: "Introduccion oficial a validacion de datos, conformado y generacion basada en contratos.",
+    },
+    {
+      title: "Spec Reference",
+      url: "https://clojure.org/about/spec",
+      note: "Marco conceptual para entender el rol de spec dentro del ecosistema Clojure.",
+    },
+    {
+      title: "clojure.test API",
+      url: "https://clojuredocs.org/clojure.test",
+      note: "Referencia practica de deftest, is, testing y fixtures para pruebas idiomaticas.",
+    },
+    {
+      title: "REPL-Driven Development for Clojure",
+      url: "https://practical.li/clojure/clojure-cli/repl-driven-development/",
+      note: "Workflow para iterar, depurar y endurecer el desarrollo guiado por REPL.",
+    },
+  ],
   "python-basico": [
     {
       title: "Python Tutorial (Official)",

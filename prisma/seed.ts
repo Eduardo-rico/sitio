@@ -2426,6 +2426,277 @@ Como ayuda un reducer puro a entender la evolucion del estado de una aplicacion?
       },
     ],
   },
+  {
+    slug: "clojure-spec-testing-y-tooling",
+    title: "Clojure: Spec, Testing y Tooling",
+    description:
+      "Validacion de datos, pruebas de funciones puras y workflow disciplinado para subir el rigor de tus sistemas Clojure.",
+    order: 10,
+    language: "clojure",
+    runtimeType: "browser_clojure",
+    lessons: [
+      {
+        slug: "clojure-contratos-con-predicados",
+        title: "Contratos de datos con predicados",
+        order: 1,
+        estimatedMinutes: 26,
+        content: `
+# Contratos de datos
+
+Antes de llegar a un sistema grande, puedes expresar reglas claras sobre tus datos:
+- tipos esperados
+- campos obligatorios
+- restricciones de negocio
+
+En esta leccion practicaras contratos simples al estilo \`spec\`, usando predicados y mapas.
+
+## Reflexion
+Que regla de datos merece volverse contrato explicito para evitar errores aguas abajo?
+        `,
+        exercises: [
+          {
+            id: "cljst-l1-e1",
+            order: 1,
+            title: "Validar un cliente",
+            instructions:
+              "Define `customer-valid?` para verificar que `:customer/id` sea positivo, `:customer/email` sea string y `:customer/active` sea `true`. Luego imprime el resultado para `cliente`.",
+            starterCode:
+              '(def cliente {:customer/id 42 :customer/email "ada@example.com" :customer/active true})\n;; Define customer-valid? e imprime el resultado final\n',
+            solutionCode:
+              '(def cliente {:customer/id 42 :customer/email "ada@example.com" :customer/active true})\n\n(defn customer-valid? [{:customer/keys [id email active]}]\n  (and (pos-int? id)\n       (string? email)\n       (true? active)))\n\n(println (customer-valid? cliente))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Contrato valido",
+                expected: "true",
+              },
+            ],
+            hints: [
+              "Puedes usar destructuring con :customer/keys",
+              "Combina las condiciones con and",
+            ],
+          },
+          {
+            id: "cljst-l1-e2",
+            order: 2,
+            title: "Validar lineas de pedido",
+            instructions:
+              "Verifica que cada linea tenga `:sku` string y `:qty` positivo, e imprime el resultado booleano final.",
+            starterCode:
+              '(def lineas [{:sku "A-1" :qty 2} {:sku "B-1" :qty 1}])\n;; Define lines-valid? e imprime el resultado final\n',
+            solutionCode:
+              '(def lineas [{:sku "A-1" :qty 2} {:sku "B-1" :qty 1}])\n\n(defn lines-valid? [items]\n  (every? (fn [{:keys [sku qty]}]\n            (and (string? sku)\n                 (pos-int? qty)))\n          items))\n\n(println (lines-valid? lineas))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Todas las lineas cumplen",
+                expected: "true",
+              },
+            ],
+            hints: [
+              "Usa every? para validar toda la coleccion",
+              "Cada item debe cumplir sku string y qty positiva",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-validacion-explicable",
+        title: "Validacion explicable y conformado",
+        order: 2,
+        estimatedMinutes: 28,
+        content: `
+# Validacion explicable
+
+Validar no solo es devolver true/false.
+Tambien necesitas explicar que fallo y normalizar entradas cuando sea posible.
+
+## Aprenderas
+- detectar campos faltantes
+- devolver feedback accionable
+- conformar valores a una forma estable
+
+## Reflexion
+Que feedback ayudaria mas a otra persona a corregir datos invalidos?
+        `,
+        exercises: [
+          {
+            id: "cljst-l2-e1",
+            order: 1,
+            title: "Reportar campos faltantes",
+            instructions:
+              "Define `missing-required-fields` para devolver un vector con las keys faltantes o vacias en `solicitud` e imprime el resultado.",
+            starterCode:
+              '(def solicitud {:email "" :plan nil :country "mx"})\n;; Define missing-required-fields e imprime el vector final\n',
+            solutionCode:
+              '(def solicitud {:email "" :plan nil :country "mx"})\n\n(defn missing-required-fields [data]\n  (->> [[:email (not (seq (:email data)))]\n        [:plan (nil? (:plan data))]\n        [:country (not (seq (:country data)))]]\n       (filter second)\n       (map first)\n       vec))\n\n(println (missing-required-fields solicitud))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Campos faltantes detectados",
+                expected: "[:email :plan]",
+              },
+            ],
+            hints: [
+              "Modela cada regla como [campo error?]",
+              "Filtra los que tengan error y extrae solo la key",
+            ],
+          },
+          {
+            id: "cljst-l2-e2",
+            order: 2,
+            title: "Conformar un estado crudo",
+            instructions:
+              "Convierte `raw-status` a un keyword estable con `conform-status` e imprime el resultado final.",
+            starterCode:
+              '(def raw-status "approved")\n;; Define conform-status e imprime el keyword final\n',
+            solutionCode:
+              '(def raw-status "approved")\n\n(defn conform-status [value]\n  ({"draft" :draft\n    "approved" :approved\n    "rejected" :rejected}\n   value\n   :unknown))\n\n(println (conform-status raw-status))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Estado conformado",
+                expected: ":approved",
+              },
+            ],
+            hints: [
+              "Puedes usar un mapa como lookup table",
+              "Devuelve :unknown cuando no exista una coincidencia",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-testing-funciones-puras",
+        title: "Testing de funciones puras",
+        order: 3,
+        estimatedMinutes: 30,
+        content: `
+# Testing de funciones puras
+
+Las funciones puras son faciles de probar porque:
+- sus entradas son explicitas
+- sus salidas son deterministas
+- los casos borde se pueden enumerar con claridad
+
+## Objetivo
+Diseñar checks pequenos, legibles y utiles para detectar regresiones.
+        `,
+        exercises: [
+          {
+            id: "cljst-l3-e1",
+            order: 1,
+            title: "Bateria minima de descuento",
+            instructions:
+              "Define `apply-discount`, crea un vector de checks y luego imprime si todos pasaron.",
+            starterCode:
+              ";; Define apply-discount, arma checks y luego imprime si todos pasaron\n",
+            solutionCode:
+              '(defn apply-discount [price discount]\n  (* price (- 1 discount)))\n\n(def checks\n  [(= 85.0 (apply-discount 100 0.15))\n   (= 50.0 (apply-discount 50 0))\n   (= 40.0 (apply-discount 80 0.5))])\n\n(println (every? true? checks))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Todos los checks pasan",
+                expected: "true",
+              },
+            ],
+            hints: [
+              "Cada check puede ser una comparacion con =",
+              "Usa every? true? para consolidar el resultado",
+            ],
+          },
+          {
+            id: "cljst-l3-e2",
+            order: 2,
+            title: "Contar checks aprobados",
+            instructions:
+              "Define `safe-div`, prueba tres casos y luego imprime cuántos checks pasaron.",
+            starterCode:
+              ";; Define safe-div, arma checks y luego imprime la cantidad aprobada\n",
+            solutionCode:
+              '(defn safe-div [a b]\n  (if (zero? b)\n    :division-by-zero\n    (/ a b)))\n\n(def checks\n  [(= 5 (safe-div 10 2))\n   (= :division-by-zero (safe-div 3 0))\n   (= 4 (safe-div 20 5))])\n\n(println (count (filter true? checks)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Tres checks correctos",
+                expected: "3",
+              },
+            ],
+            hints: [
+              "Haz que safe-div devuelva un sentinel al dividir entre cero",
+              "Cuenta solo los valores true del vector checks",
+            ],
+          },
+        ],
+      },
+      {
+        slug: "clojure-repl-tooling-y-entrega",
+        title: "Workflow de REPL, tooling y entrega",
+        order: 4,
+        estimatedMinutes: 28,
+        content: `
+# Workflow disciplinado
+
+El valor del tooling no es decorar el proyecto.
+Sirve para iterar rapido, detectar errores antes y entregar cambios reproducibles.
+
+## Practicaras
+- mini suites de checks
+- estado de entrega
+- checklist final para publicar con confianza
+
+## Reflexion
+Que parte de tu workflow reduce mas retrabajo: validar, probar o documentar?
+        `,
+        exercises: [
+          {
+            id: "cljst-l4-e1",
+            order: 1,
+            title: "Resumen de suite",
+            instructions:
+              "Define `run-suite` para resumir checks y luego imprime exactamente `ready:0` para la suite dada.",
+            starterCode:
+              "(def suite [true true true])\n;; Define run-suite e imprime status:failed\n",
+            solutionCode:
+              '(def suite [true true true])\n\n(defn run-suite [checks]\n  {:status (if (every? true? checks) :ready :blocked)\n   :failed (count (remove true? checks))})\n\n(def result (run-suite suite))\n(println (str (name (:status result)) ":" (:failed result)))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Suite lista",
+                expected: "ready:0",
+              },
+            ],
+            hints: [
+              "Cuenta fallos con remove true?",
+              "Usa name para imprimir el keyword sin dos puntos",
+            ],
+          },
+          {
+            id: "cljst-l4-e2",
+            order: 2,
+            title: "Checklist de release",
+            instructions:
+              "Define `release-ready?` para validar que todo el checklist este completo e imprime el resultado final.",
+            starterCode:
+              '(def checklist {:validated true :tested true :documented true})\n;; Define release-ready? e imprime el resultado final\n',
+            solutionCode:
+              '(def checklist {:validated true :tested true :documented true})\n\n(defn release-ready? [state]\n  (every? true? (vals state)))\n\n(println (release-ready? checklist))\n',
+            validationType: "exact",
+            testCases: [
+              {
+                description: "Checklist completo",
+                expected: "true",
+              },
+            ],
+            hints: [
+              "Toma solo los valores del mapa",
+              "every? true? te ayuda a consolidar el checklist",
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
@@ -2434,7 +2705,7 @@ const LANGUAGE_FOUNDATION_COURSES: SeedCourse[] = [
     slug: "javascript-desde-cero",
     title: "JavaScript desde Cero",
     description: "Fundamentos de JavaScript moderno con práctica interactiva.",
-    order: 10,
+    order: 11,
     language: "javascript",
     runtimeType: "browser_javascript",
     lessons: [
@@ -2477,7 +2748,7 @@ Curso base creado. Puedes agregar retos de variables, funciones y objetos.
     slug: "typescript-desde-cero",
     title: "TypeScript desde Cero",
     description: "TypeScript con tipado estático para apps frontend/backend.",
-    order: 11,
+    order: 12,
     language: "typescript",
     runtimeType: "browser_typescript",
     lessons: [
@@ -2522,7 +2793,7 @@ Curso base creado. Recomendado: tipos primitivos, funciones y interfaces.
     slug: "sql-desde-cero",
     title: "SQL desde Cero",
     description: "Consultas SQL prácticas para análisis y producto.",
-    order: 12,
+    order: 13,
     language: "sql",
     runtimeType: "browser_sql",
     lessons: [
@@ -2565,7 +2836,7 @@ Curso base creado. Recomendado: SELECT, WHERE, ORDER BY y agregaciones.
     slug: "go-desde-cero",
     title: "Go desde Cero",
     description: "Fundamentos de Go para backend y herramientas CLI.",
-    order: 13,
+    order: 14,
     language: "go",
     runtimeType: "browser_go",
     lessons: [
@@ -2610,7 +2881,7 @@ Curso base creado. Agrega ejercicios de funciones, slices y structs.
     slug: "rust-desde-cero",
     title: "Rust desde Cero",
     description: "Rust para programación segura y de alto rendimiento.",
-    order: 14,
+    order: 15,
     language: "rust",
     runtimeType: "browser_rust",
     lessons: [
@@ -2653,7 +2924,7 @@ Curso base creado. Recomendado: ownership, borrowing y pattern matching.
     slug: "bash-desde-cero",
     title: "Bash desde Cero",
     description: "Automatización y scripting en Bash desde fundamentos.",
-    order: 15,
+    order: 16,
     language: "bash",
     runtimeType: "browser_bash",
     lessons: [

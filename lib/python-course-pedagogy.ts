@@ -1,3 +1,12 @@
+import { z } from "zod";
+import {
+  cloneCoursePedagogy,
+  coursePedagogyInputSchema,
+  getLessonStageFromPedagogy,
+  type CourseLessonStage,
+  type CoursePedagogy,
+} from "@/lib/course-pedagogy";
+
 export const PYTHON_COURSE_SLUGS = [
   "python-basico",
   "python-intermedio",
@@ -8,31 +17,13 @@ export const PYTHON_COURSE_SLUGS = [
 
 export type PythonCourseSlug = (typeof PYTHON_COURSE_SLUGS)[number];
 
-export interface CourseLessonStage {
-  fromOrder: number;
-  toOrder: number;
-  label: string;
-  objective: string;
-  feedbackFocus: string;
-  reflectionPrompt: string;
+export interface PythonCoursePedagogy extends CoursePedagogy {
+  slug: PythonCourseSlug;
 }
 
-export interface PythonCoursePedagogy {
-  slug: PythonCourseSlug;
-  learnerProfile: string;
-  timeCommitment: string;
-  prerequisites: string[];
-  learningOutcomes: string[];
-  assessmentPlan: {
-    diagnostic: string;
-    formative: string[];
-    summative: string;
-  };
-  rubricDimensions: string[];
-  masteryCriteria: string[];
-  bibliographyGuidance: string;
-  lessonStages: CourseLessonStage[];
-}
+export const pythonCoursePedagogyInputSchema = coursePedagogyInputSchema;
+
+export type PythonCoursePedagogyInput = z.infer<typeof pythonCoursePedagogyInputSchema>;
 
 const PYTHON_COURSE_PEDAGOGY: Record<PythonCourseSlug, PythonCoursePedagogy> = {
   "python-basico": {
@@ -317,21 +308,43 @@ export function isPythonCourseSlug(slug: string): slug is PythonCourseSlug {
   return PYTHON_COURSE_SLUGS.includes(slug as PythonCourseSlug);
 }
 
+function clonePedagogy(pedagogy: PythonCoursePedagogy): PythonCoursePedagogy {
+  return cloneCoursePedagogy(pedagogy);
+}
+
 export function getPythonCoursePedagogy(slug: string): PythonCoursePedagogy | null {
   if (!isPythonCourseSlug(slug)) return null;
-  return PYTHON_COURSE_PEDAGOGY[slug];
+  return clonePedagogy(PYTHON_COURSE_PEDAGOGY[slug]);
+}
+
+export function getPythonLessonStageFromPedagogy(
+  pedagogy: Pick<PythonCoursePedagogy, "lessonStages"> | null,
+  lessonOrder: number
+): CourseLessonStage | null {
+  return getLessonStageFromPedagogy(pedagogy, lessonOrder);
+}
+
+export function resolvePythonCoursePedagogy(
+  slug: string,
+  rawPedagogy?: unknown
+): PythonCoursePedagogy | null {
+  const fallback = getPythonCoursePedagogy(slug);
+  if (!fallback) return null;
+
+  const parsed = pythonCoursePedagogyInputSchema.safeParse(rawPedagogy);
+  if (!parsed.success) {
+    return fallback;
+  }
+
+  return {
+    ...parsed.data,
+    slug: fallback.slug,
+  };
 }
 
 export function getPythonLessonStage(
   slug: string,
   lessonOrder: number
 ): CourseLessonStage | null {
-  const pedagogy = getPythonCoursePedagogy(slug);
-  if (!pedagogy) return null;
-
-  return (
-    pedagogy.lessonStages.find(
-      (stage) => lessonOrder >= stage.fromOrder && lessonOrder <= stage.toOrder
-    ) ?? null
-  );
+  return getPythonLessonStageFromPedagogy(getPythonCoursePedagogy(slug), lessonOrder);
 }

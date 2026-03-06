@@ -15,6 +15,18 @@ const validateSchema = z.object({
   output: z.string().optional(),
   runtimeError: z.string().optional(),
   isCorrect: z.boolean().optional(),
+  rubricEvaluations: z
+    .array(
+      z.object({
+        title: z.string(),
+        description: z.string(),
+        weight: z.number(),
+        score: z.number(),
+        verdict: z.enum(["Excelente", "Bien", "Mejora"]),
+        feedback: z.string(),
+      })
+    )
+    .optional(),
 })
 
 function normalizeTestCases(raw: unknown): Array<{ expected?: string; pattern?: string }> {
@@ -43,7 +55,13 @@ export async function POST(
         { status: 400 }
       )
     }
-    const { code, output: rawOutput, runtimeError, isCorrect: clientIsCorrect } =
+    const {
+      code,
+      output: rawOutput,
+      runtimeError,
+      isCorrect: clientIsCorrect,
+      rubricEvaluations,
+    } =
       validateSchema.parse(body)
 
     // Get exercise with solution
@@ -150,6 +168,7 @@ export async function POST(
       const serializedOutput = serializeSubmissionOutput({
         stdout: output,
         feedback: previousPayload.feedback,
+        rubricEvaluations: rubricEvaluations ?? previousPayload.rubricEvaluations,
       })
 
       await prisma.codeSubmission.upsert({
@@ -218,6 +237,7 @@ export async function POST(
         outputLength: output.length,
         codeLength: code.length,
         validationType: exercise.validationType,
+        rubricCriteriaEvaluated: rubricEvaluations?.length ?? 0,
       },
     })
 

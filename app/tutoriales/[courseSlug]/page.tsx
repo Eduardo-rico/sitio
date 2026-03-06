@@ -17,7 +17,7 @@ import {
   isRuntimeType,
 } from '@/lib/course-runtime';
 import { getCourseBibliography } from '@/lib/course-bibliography';
-import { getPythonCoursePedagogy } from '@/lib/python-course-pedagogy';
+import { resolveCoursePedagogy } from '@/lib/course-pedagogy-registry';
 import { CourseStartButton } from '@/components/lessons/CourseStartButton';
 import {
   Circle,
@@ -101,7 +101,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
   const language = isCourseLanguage(course.language) ? course.language : "python";
   const runtime = isRuntimeType(course.runtimeType) ? course.runtimeType : "browser_pyodide";
-  const pythonPedagogy = language === "python" ? getPythonCoursePedagogy(course.slug) : null;
+  const coursePedagogy = resolveCoursePedagogy(language, course.slug, course.pedagogy);
   const fallbackBibliography = getCourseBibliography(course.slug, language);
   const bibliography =
     course.bibliographyItems.length > 0
@@ -200,13 +200,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
         </div>
       </div>
 
-      {pythonPedagogy && (
+      {coursePedagogy && (
         <section className="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Ruta pedagogica
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Perfil objetivo: {pythonPedagogy.learnerProfile}
+            Perfil objetivo: {coursePedagogy.learnerProfile}
           </p>
           <div className="grid lg:grid-cols-3 gap-4">
             <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -215,7 +215,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                 <span className="text-sm font-semibold">Learning Outcomes</span>
               </div>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                {pythonPedagogy.learningOutcomes.map((outcome) => (
+                {coursePedagogy.learningOutcomes.map((outcome) => (
                   <li key={outcome}>• {outcome}</li>
                 ))}
               </ul>
@@ -226,15 +226,15 @@ export default async function CoursePage({ params }: CoursePageProps) {
                 <span className="text-sm font-semibold">Plan de evaluacion</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                Diagnostica: {pythonPedagogy.assessmentPlan.diagnostic}
+                Diagnostica: {coursePedagogy.assessmentPlan.diagnostic}
               </p>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                {pythonPedagogy.assessmentPlan.formative.map((check) => (
+                {coursePedagogy.assessmentPlan.formative.map((check) => (
                   <li key={check}>• {check}</li>
                 ))}
               </ul>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Sumativa: {pythonPedagogy.assessmentPlan.summative}
+                Sumativa: {coursePedagogy.assessmentPlan.summative}
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -243,10 +243,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
                 <span className="text-sm font-semibold">Criterios de dominio</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                Dedicacion sugerida: {pythonPedagogy.timeCommitment}
+                Dedicacion sugerida: {coursePedagogy.timeCommitment}
               </p>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                {pythonPedagogy.masteryCriteria.map((criterion) => (
+                {coursePedagogy.masteryCriteria.map((criterion) => (
                   <li key={criterion}>• {criterion}</li>
                 ))}
               </ul>

@@ -37,7 +37,18 @@ function normalizeMetadata(raw: Record<string, unknown> | undefined) {
 // POST /api/learning-events/track - Registra evento de aprendizaje
 export async function POST(request: NextRequest) {
   try {
-    const payload = trackEventSchema.parse(await request.json());
+    let body: unknown;
+
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json(
+        { success: false, error: "Payload JSON invalido." } satisfies ApiResponse,
+        { status: 400 }
+      );
+    }
+
+    const payload = trackEventSchema.parse(body);
     const session = await auth();
 
     await trackLearningEvent({

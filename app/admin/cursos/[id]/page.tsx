@@ -20,6 +20,7 @@ import {
 import { CourseForm, CourseFormData } from "@/components/admin/course-form";
 import { DraggableList } from "@/components/admin/draggable-list";
 import { CourseBibliographyEditor } from "@/components/admin/course-bibliography-editor";
+import { CoursePedagogyEditor } from "@/components/admin/course-pedagogy-editor";
 
 interface Lesson {
   id: string;
@@ -43,6 +44,7 @@ interface Course {
   order: number;
   isPublished: boolean;
   imageUrl: string | null;
+  pedagogy?: unknown;
   bibliographyItems: Array<{
     id: string;
     title: string;
@@ -261,6 +263,13 @@ export default function EditCoursePage() {
       <CourseBibliographyEditor
         courseId={courseId}
         initialItems={course.bibliographyItems}
+      />
+
+      <CoursePedagogyEditor
+        courseId={courseId}
+        courseSlug={course.slug}
+        language={course.language}
+        initialPedagogy={course.pedagogy}
       />
 
       {/* Lessons Section */}

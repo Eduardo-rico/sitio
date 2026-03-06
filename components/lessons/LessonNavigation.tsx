@@ -241,7 +241,12 @@ export function LessonNavigation({
   const persistValidation = useCallback(
     async (
       exerciseId: string,
-      payload: { output: string; runtimeError?: string; isCorrect: boolean }
+      payload: {
+        output: string;
+        runtimeError?: string;
+        isCorrect: boolean;
+        rubricEvaluations?: RubricEvaluation[];
+      }
     ) => {
       try {
         await fetch(`/api/exercises/${exerciseId}/validate`, {
@@ -255,6 +260,7 @@ export function LessonNavigation({
             output: payload.output,
             runtimeError: payload.runtimeError,
             isCorrect: payload.isCorrect,
+            rubricEvaluations: payload.rubricEvaluations,
           }),
         });
       } catch (error) {
@@ -365,6 +371,14 @@ export function LessonNavigation({
       const rubricCriteria = normalizeRubric(activeExercise.rubric);
 
       if (executionResult.error) {
+        const evaluationPayload = rubricCriteria.map((criterion) =>
+          evaluateRubricCriterion(criterion, {
+            passedAllTests: false,
+            code,
+            output: stdout,
+            hasError: true,
+          })
+        );
         setTestResults([
           {
             description: 'El código debe ejecutarse sin errores',
@@ -373,21 +387,13 @@ export function LessonNavigation({
             actual: executionResult.error,
           },
         ]);
-        setRubricEvaluations(
-          rubricCriteria.map((criterion) =>
-            evaluateRubricCriterion(criterion, {
-              passedAllTests: false,
-              code,
-              output: stdout,
-              hasError: true,
-            })
-          )
-        );
+        setRubricEvaluations(evaluationPayload);
         setIsCorrect(false);
         await persistValidation(activeExercise.id, {
           output: stdout,
           runtimeError: executionResult.error,
           isCorrect: false,
+          rubricEvaluations: evaluationPayload,
         });
         return;
       }
@@ -403,21 +409,21 @@ export function LessonNavigation({
 
       if (normalized.length === 0) {
         const passedAllTests = true;
-        setTestResults(fallbackResults);
-        setRubricEvaluations(
-          rubricCriteria.map((criterion) =>
-            evaluateRubricCriterion(criterion, {
-              passedAllTests,
-              code,
-              output: stdout,
-              hasError: false,
-            })
-          )
+        const evaluationPayload = rubricCriteria.map((criterion) =>
+          evaluateRubricCriterion(criterion, {
+            passedAllTests,
+            code,
+            output: stdout,
+            hasError: false,
+          })
         );
+        setTestResults(fallbackResults);
+        setRubricEvaluations(evaluationPayload);
         setIsCorrect(passedAllTests);
         await persistValidation(activeExercise.id, {
           output: stdout,
           isCorrect: passedAllTests,
+          rubricEvaluations: evaluationPayload,
         });
         maybeShowFeedbackModal(activeExercise.id, passedAllTests);
         return;
@@ -456,22 +462,22 @@ export function LessonNavigation({
       });
 
       const passedAllTests = results.every((testResult) => testResult.passed);
+      const evaluationPayload = rubricCriteria.map((criterion) =>
+        evaluateRubricCriterion(criterion, {
+          passedAllTests,
+          code,
+          output: stdout,
+          hasError: false,
+        })
+      );
 
       setTestResults(results);
-      setRubricEvaluations(
-        rubricCriteria.map((criterion) =>
-          evaluateRubricCriterion(criterion, {
-            passedAllTests,
-            code,
-            output: stdout,
-            hasError: false,
-          })
-        )
-      );
+      setRubricEvaluations(evaluationPayload);
       setIsCorrect(passedAllTests);
       await persistValidation(activeExercise.id, {
         output: stdout,
         isCorrect: passedAllTests,
+        rubricEvaluations: evaluationPayload,
       });
       maybeShowFeedbackModal(activeExercise.id, passedAllTests);
     }

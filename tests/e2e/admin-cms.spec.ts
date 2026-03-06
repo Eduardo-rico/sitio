@@ -73,4 +73,32 @@ test.describe('Admin CMS', () => {
     await createdCard.locator('button[data-testid^="bibliography-item-delete-"]').first().click();
     await expect(page.locator(`input[value="${title}"]`)).toHaveCount(0);
   });
+
+  test('updates python pedagogy from admin and reflects it on the public course page', async ({ page }) => {
+    const learnerProfile = `Perfil E2E ${Date.now()}`;
+
+    await page.goto('/admin/cursos', { waitUntil: 'domcontentloaded', timeout: 45000 });
+    const pythonCourseRow = page.locator('tbody tr').filter({
+      has: page.getByText('Python Basico: fundamentos y practica'),
+    }).first();
+    await expect(pythonCourseRow).toBeVisible({ timeout: 30000 });
+
+    await pythonCourseRow.locator('a[href^="/admin/cursos/"]').last().click();
+    await expect(page).toHaveURL(/\/admin\/cursos\/[^/]+$/, { timeout: 30000 });
+    await expect(page.getByTestId('course-pedagogy-editor')).toBeVisible({ timeout: 30000 });
+
+    await page.getByTestId('pedagogy-learner-profile').fill(learnerProfile);
+    const saveResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes('/pedagogy') &&
+        response.request().method() === 'PUT' &&
+        response.status() === 200
+    );
+    await page.getByTestId('pedagogy-save-button').click();
+    await saveResponse;
+    await expect(page.getByTestId('course-pedagogy-success')).toContainText(/actualizada/i);
+
+    await page.goto('/tutoriales/python-basico', { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await expect(page.getByText(learnerProfile)).toBeVisible({ timeout: 30000 });
+  });
 });

@@ -185,6 +185,19 @@ describe('useLocalStorage', () => {
     expect(result.current[0]).toBe(newValue);
   });
 
+  it('should ignore storage events with null newValue', () => {
+    const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'test-key',
+        newValue: null,
+      }));
+    });
+
+    expect(result.current[0]).toBe('initial');
+  });
+
   it('should not update when storage event is for different key', () => {
     // Arrange
     const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
@@ -214,6 +227,53 @@ describe('useLocalStorage', () => {
     // Assert
     expect(result1.current[0]).toBe('new-value1');
     expect(result2.current[0]).toBe('value2');
+  });
+
+  it('should warn when localStorage.setItem throws', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(() => {
+          throw new Error('quota');
+        }),
+        removeItem: vi.fn(),
+      },
+      writable: true,
+    });
+
+    const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
+
+    act(() => {
+      result.current[1]('updated');
+    });
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Error setting localStorage key "test-key":'),
+      expect.any(Error)
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it('should warn when storage event payload is invalid JSON', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'test-key',
+        newValue: '{broken-json}',
+      }));
+    });
+
+    expect(result.current[0]).toBe('initial');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Error parsing localStorage change for key "test-key":'),
+      expect.any(SyntaxError)
+    );
+
+    warnSpy.mockRestore();
   });
 });
 
@@ -265,5 +325,30 @@ describe('useRemoveLocalStorage', () => {
         result.current();
       });
     }).not.toThrow();
+  });
+
+  it('should warn when removeItem throws', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        removeItem: vi.fn(() => {
+          throw new Error('remove failed');
+        }),
+      },
+      writable: true,
+    });
+
+    const { result } = renderHook(() => useRemoveLocalStorage('test-key'));
+
+    act(() => {
+      result.current();
+    });
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Error removing localStorage key "test-key":'),
+      expect.any(Error)
+    );
+
+    warnSpy.mockRestore();
   });
 });

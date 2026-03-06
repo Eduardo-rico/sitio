@@ -39,12 +39,14 @@ describe("course-bibliography", () => {
       "clojure-macros-estado-y-arquitectura",
       "clojure"
     );
+    const specRefs = getCourseBibliography("clojure-spec-testing-y-tooling", "clojure");
 
     expect(intermediateRefs.some((ref) => /joy of clojure|sequences/i.test(ref.title))).toBe(true);
     expect(dataRefs.some((ref) => /threading macros|data structures/i.test(ref.title))).toBe(true);
     expect(
       architectureRefs.some((ref) => /atoms|macros|elements of clojure/i.test(ref.title))
     ).toBe(true);
+    expect(specRefs.some((ref) => /spec|clojure\.test|repl/i.test(ref.title))).toBe(true);
   });
 
   it("retorna arreglo vacio cuando no existe slug ni lenguaje soportado", () => {

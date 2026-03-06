@@ -25,4 +25,29 @@ test.describe('Admin Analytics', () => {
     await page.getByRole('button', { name: '7 Days' }).click();
     await expect(page.getByRole('button', { name: /7 Days/ })).toBeVisible();
   });
+
+  test('filters analytics by language/course and exports CSV', async ({ page }) => {
+    const languageResponse = page.waitForResponse((response) =>
+      response.url().includes('/api/admin/analytics?') && response.status() === 200
+    );
+    await page.selectOption('[data-testid="analytics-language-filter"]', 'python');
+    await languageResponse;
+
+    const courseResponse = page.waitForResponse((response) =>
+      response.url().includes('/api/admin/analytics?') && response.status() === 200
+    );
+    await page.selectOption('[data-testid="analytics-course-filter"]', {
+      label: 'Python Basico: fundamentos y practica',
+    });
+    await courseResponse;
+
+    await expect(page.getByTestId('analytics-scope-notice')).toBeVisible();
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByTestId('analytics-export-button').click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toContain('analytics-export-');
+    expect(download.suggestedFilename()).toContain('.csv');
+  });
 });

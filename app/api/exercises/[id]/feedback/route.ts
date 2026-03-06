@@ -88,6 +88,7 @@ export async function POST(
         comment,
         createdAt: new Date().toISOString(),
       },
+      rubricEvaluations: existingPayload.rubricEvaluations,
     })
 
     await prisma.codeSubmission.upsert({
