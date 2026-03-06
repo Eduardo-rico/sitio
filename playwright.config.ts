@@ -4,6 +4,11 @@ import { defineConfig, devices } from '@playwright/test';
  * Playwright Configuration
  * Comprehensive E2E test configuration with mobile support
  */
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
+const parsedBaseUrl = new URL(baseURL);
+const isLocalBaseUrl = ['localhost', '127.0.0.1'].includes(parsedBaseUrl.hostname);
+const devServerPort = Number(parsedBaseUrl.port || '3000');
+
 export default defineConfig({
   testDir: './tests/e2e',
   
@@ -36,7 +41,7 @@ export default defineConfig({
   
   use: {
     // Base URL for all tests
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    baseURL,
     
     // Collect trace on failure for debugging
     trace: 'on-first-retry',
@@ -74,14 +79,16 @@ export default defineConfig({
   ],
 
   // Web server configuration for local development testing
-  webServer: {
-    command: 'pnpm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  webServer: isLocalBaseUrl
+    ? {
+        command: `pnpm exec next dev -p ${devServerPort}`,
+        url: baseURL,
+        reuseExistingServer: false,
+        timeout: 120000,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      }
+    : undefined,
 
   // Output directory for test artifacts
   outputDir: './test-results/',
