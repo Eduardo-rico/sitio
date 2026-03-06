@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 export const LEARNING_EVENT_TYPES = [
   "course_enrolled",
   "lesson_viewed",
+  "lesson_active_time",
   "exercise_code_run",
   "exercise_validated",
   "exercise_feedback_submitted",

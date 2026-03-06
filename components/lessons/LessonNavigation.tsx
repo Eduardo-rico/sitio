@@ -22,11 +22,13 @@ import {
   XCircle,
   ListChecks,
   Star,
+  Award,
 } from 'lucide-react';
 
 interface LessonNavigationProps {
   exercises: Exercise[];
   courseSlug: string;
+  lessonId: string;
   lessonSlug: string;
   language: CourseLanguage;
   runtimeType: string;
@@ -47,6 +49,18 @@ interface TestResult {
   actual: string;
 }
 
+interface RubricCriterion {
+  title: string;
+  description: string;
+  weight: number;
+}
+
+interface RubricEvaluation extends RubricCriterion {
+  score: number;
+  verdict: "Excelente" | "Bien" | "Mejora";
+  feedback: string;
+}
+
 interface ApiResult {
   success: boolean;
   error?: string;
@@ -63,9 +77,79 @@ function normalizeTestCases(rawTestCases: unknown): TestCaseDefinition[] {
   return [];
 }
 
+function normalizeRubric(rawRubric: unknown): RubricCriterion[] {
+  if (!Array.isArray(rawRubric)) return [];
+
+  return rawRubric
+    .filter((criterion): criterion is Record<string, unknown> => !!criterion && typeof criterion === "object")
+    .map((criterion) => ({
+      title: typeof criterion.title === "string" ? criterion.title : "Criterio",
+      description:
+        typeof criterion.description === "string"
+          ? criterion.description
+          : "No hay descripción para este criterio.",
+      weight: typeof criterion.weight === "number" ? criterion.weight : 0,
+    }));
+}
+
+function evaluateRubricCriterion(
+  criterion: RubricCriterion,
+  context: { passedAllTests: boolean; code: string; output: string; hasError: boolean }
+): RubricEvaluation {
+  const normalizedTitle = criterion.title.toLowerCase();
+  const trimmedCode = context.code.trim();
+  const lines = trimmedCode.split("\n").filter((line) => line.trim().length > 0).length;
+  const hasBasicGuards = /(try|except|if |elif |catch|assert)/i.test(trimmedCode);
+  const hasMeaningfulNames = /[a-zA-Z_]{4,}/.test(trimmedCode);
+
+  let score = 70;
+  let feedback = "Buen avance en este criterio.";
+
+  if (context.hasError) {
+    score = 35;
+    feedback = "Primero corrige errores de ejecución para evaluar este criterio con precisión.";
+  } else if (/correct|exact|resultado|output|test/.test(normalizedTitle)) {
+    score = context.passedAllTests ? 100 : 45;
+    feedback = context.passedAllTests
+      ? "Los resultados cumplen con las pruebas definidas."
+      : "Revisa salida esperada y casos límite para mejorar exactitud.";
+  } else if (/clarity|claridad|legib/.test(normalizedTitle)) {
+    score = hasMeaningfulNames && lines <= 40 ? 90 : 65;
+    feedback =
+      score >= 85
+        ? "El código es legible y mantiene una estructura clara."
+        : "Mejora nombres y simplifica bloques largos para subir claridad.";
+  } else if (/robust|robustez|error|edge|borde/.test(normalizedTitle)) {
+    score = hasBasicGuards ? 85 : 60;
+    feedback =
+      hasBasicGuards
+        ? "La solución muestra señales de manejo defensivo."
+        : "Añade validaciones básicas para escenarios inesperados.";
+  } else if (/method|metodo|approach|estrateg/.test(normalizedTitle)) {
+    score = context.passedAllTests ? 88 : 68;
+    feedback = context.passedAllTests
+      ? "La estrategia elegida resuelve el problema de forma adecuada."
+      : "Ajusta el enfoque para alinear mejor lógica y requisitos.";
+  } else if (context.output.length === 0) {
+    score = 60;
+    feedback = "Hay poca evidencia en salida; valida que tu solución comunique resultados.";
+  }
+
+  const verdict: RubricEvaluation["verdict"] =
+    score >= 85 ? "Excelente" : score >= 70 ? "Bien" : "Mejora";
+
+  return {
+    ...criterion,
+    score,
+    verdict,
+    feedback,
+  };
+}
+
 export function LessonNavigation({
   exercises,
   courseSlug,
+  lessonId,
   lessonSlug,
   language,
 }: LessonNavigationProps) {
@@ -75,6 +159,7 @@ export function LessonNavigation({
   const [code, setCode] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [rubricEvaluations, setRubricEvaluations] = useState<RubricEvaluation[]>([]);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState('');
@@ -83,6 +168,8 @@ export function LessonNavigation({
   const shownFeedbackForExercise = useRef<Set<string>>(new Set());
   const shownHintsEventForExercise = useRef<Set<string>>(new Set());
   const shownSolutionEventForExercise = useRef<Set<string>>(new Set());
+  const lessonActiveStartRef = useRef<number | null>(null);
+  const lessonAccumulatedActiveMsRef = useRef(0);
 
   const { executeCode, result, isExecuting } = useCodeExecution({
     language,
@@ -110,6 +197,7 @@ export function LessonNavigation({
           body: JSON.stringify({
             eventType,
             courseSlug,
+            lessonId,
             lessonSlug,
             exerciseId: activeExercise.id,
             exerciseTitle: activeExercise.title,
@@ -122,7 +210,32 @@ export function LessonNavigation({
         // Silencioso para no afectar UX.
       }
     },
-    [activeExercise, courseSlug, lessonSlug]
+    [activeExercise, courseSlug, lessonId, lessonSlug]
+  );
+
+  const trackLessonEvent = useCallback(
+    async (eventType: "lesson_active_time", metadata?: Record<string, unknown>) => {
+      try {
+        await fetch("/api/learning-events/track", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventType,
+            courseSlug,
+            lessonId,
+            lessonSlug,
+            source: "client",
+            metadata,
+          }),
+          keepalive: true,
+        });
+      } catch {
+        // Silencioso para no afectar UX.
+      }
+    },
+    [courseSlug, lessonId, lessonSlug]
   );
 
   const persistValidation = useCallback(
@@ -157,12 +270,71 @@ export function LessonNavigation({
       setCode(activeExercise.starterCode || getDefaultStarterCode(language));
       setIsCorrect(null);
       setTestResults([]);
+      setRubricEvaluations([]);
       setShowSolution(false);
       setShowFeedbackModal(false);
       setFeedbackRating(0);
       setFeedbackComment('');
     }
   }, [activeExercise, language]);
+
+  useEffect(() => {
+    const markVisibleStart = () => {
+      if (lessonActiveStartRef.current === null) {
+        lessonActiveStartRef.current = Date.now();
+      }
+    };
+
+    const addActiveDelta = () => {
+      if (lessonActiveStartRef.current === null) return;
+      lessonAccumulatedActiveMsRef.current += Date.now() - lessonActiveStartRef.current;
+      lessonActiveStartRef.current = null;
+    };
+
+    const flushActiveTime = async (reason: string, minSeconds = 10) => {
+      const activeSeconds = Math.round(lessonAccumulatedActiveMsRef.current / 1000);
+      if (activeSeconds < minSeconds) return;
+
+      lessonAccumulatedActiveMsRef.current = 0;
+      await trackLessonEvent("lesson_active_time", {
+        activeSeconds,
+        reason,
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        markVisibleStart();
+      } else {
+        addActiveDelta();
+        void flushActiveTime("tab_hidden");
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      addActiveDelta();
+      void flushActiveTime("before_unload", 1);
+    };
+
+    markVisibleStart();
+    const heartbeat = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      addActiveDelta();
+      lessonActiveStartRef.current = Date.now();
+      void flushActiveTime("heartbeat", 30);
+    }, 30000);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.clearInterval(heartbeat);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      addActiveDelta();
+      void flushActiveTime("component_unmount", 1);
+    };
+  }, [trackLessonEvent]);
 
   const handleExecute = useCallback(async () => {
     setIsCorrect(null);
@@ -190,6 +362,7 @@ export function LessonNavigation({
       const stdout = executionResult.stdout || '';
       const validationType = (activeExercise.validationType || 'custom') as ValidationType;
       const normalized = normalizeTestCases(activeExercise.testCases);
+      const rubricCriteria = normalizeRubric(activeExercise.rubric);
 
       if (executionResult.error) {
         setTestResults([
@@ -200,6 +373,16 @@ export function LessonNavigation({
             actual: executionResult.error,
           },
         ]);
+        setRubricEvaluations(
+          rubricCriteria.map((criterion) =>
+            evaluateRubricCriterion(criterion, {
+              passedAllTests: false,
+              code,
+              output: stdout,
+              hasError: true,
+            })
+          )
+        );
         setIsCorrect(false);
         await persistValidation(activeExercise.id, {
           output: stdout,
@@ -219,13 +402,24 @@ export function LessonNavigation({
       ];
 
       if (normalized.length === 0) {
+        const passedAllTests = true;
         setTestResults(fallbackResults);
-        setIsCorrect(true);
+        setRubricEvaluations(
+          rubricCriteria.map((criterion) =>
+            evaluateRubricCriterion(criterion, {
+              passedAllTests,
+              code,
+              output: stdout,
+              hasError: false,
+            })
+          )
+        );
+        setIsCorrect(passedAllTests);
         await persistValidation(activeExercise.id, {
           output: stdout,
-          isCorrect: true,
+          isCorrect: passedAllTests,
         });
-        maybeShowFeedbackModal(activeExercise.id, true);
+        maybeShowFeedbackModal(activeExercise.id, passedAllTests);
         return;
       }
 
@@ -264,6 +458,16 @@ export function LessonNavigation({
       const passedAllTests = results.every((testResult) => testResult.passed);
 
       setTestResults(results);
+      setRubricEvaluations(
+        rubricCriteria.map((criterion) =>
+          evaluateRubricCriterion(criterion, {
+            passedAllTests,
+            code,
+            output: stdout,
+            hasError: false,
+          })
+        )
+      );
       setIsCorrect(passedAllTests);
       await persistValidation(activeExercise.id, {
         output: stdout,
@@ -323,6 +527,7 @@ export function LessonNavigation({
       setCode(activeExercise.starterCode || getDefaultStarterCode(language));
       setIsCorrect(null);
       setTestResults([]);
+      setRubricEvaluations([]);
     }
   };
 
@@ -536,6 +741,33 @@ export function LessonNavigation({
                           )}
                         </div>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {rubricEvaluations.length > 0 && (
+              <div className="mb-4 rounded-lg border border-indigo-200 dark:border-indigo-800 overflow-hidden">
+                <div className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
+                  <span className="text-sm font-medium text-indigo-700 dark:text-indigo-200">
+                    Feedback por rúbrica
+                  </span>
+                </div>
+                <div className="divide-y divide-indigo-100 dark:divide-indigo-900/40">
+                  {rubricEvaluations.map((criterion) => (
+                    <div key={`${criterion.title}-${criterion.weight}`} className="p-3 text-sm space-y-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-medium text-gray-800 dark:text-gray-200">
+                          {criterion.title} ({criterion.weight}%)
+                        </p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
+                          {criterion.verdict} · {criterion.score}/100
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{criterion.description}</p>
+                      <p className="text-gray-700 dark:text-gray-300">{criterion.feedback}</p>
                     </div>
                   ))}
                 </div>

@@ -44,6 +44,9 @@ async function getCourseWithLessons(courseSlug: string) {
         isPublished: true 
       },
       include: {
+        bibliographyItems: {
+          orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+        },
         lessons: {
           where: { isPublished: true },
           orderBy: { order: 'asc' },
@@ -99,7 +102,15 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const language = isCourseLanguage(course.language) ? course.language : "python";
   const runtime = isRuntimeType(course.runtimeType) ? course.runtimeType : "browser_pyodide";
   const pythonPedagogy = language === "python" ? getPythonCoursePedagogy(course.slug) : null;
-  const bibliography = getCourseBibliography(course.slug, language);
+  const fallbackBibliography = getCourseBibliography(course.slug, language);
+  const bibliography =
+    course.bibliographyItems.length > 0
+      ? course.bibliographyItems.map((item) => ({
+          title: item.title,
+          url: item.url,
+          note: item.note,
+        }))
+      : fallbackBibliography;
   const totalLessons = course.lessons.length;
   const totalExercises = course.lessons.reduce(
     (acc, lesson) => acc + lesson.exercises.length, 

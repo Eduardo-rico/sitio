@@ -3,6 +3,7 @@
  */
 
 import { useState, useCallback, useRef } from "react";
+import type { PyodideInterface } from "pyodide";
 import type { CourseLanguage } from "@/lib/course-runtime";
 import { usePyodide, PyodideStatus } from "./usePyodide";
 import { executeWasmLanguage } from "./wasm-language-runtime";
@@ -48,6 +49,23 @@ export interface UseCodeExecutionOptions {
 
 // Timeout por defecto: 5 segundos
 const DEFAULT_EXECUTION_TIMEOUT = 5000;
+
+type PythonOptionalPackage = "pandas" | "matplotlib";
+
+interface PythonRuntimeNeeds {
+  needsPandas: boolean;
+  needsMatplotlib: boolean;
+}
+
+const PANDAS_IMPORT_PATTERN = /\b(?:import\s+pandas|from\s+pandas)\b/i;
+const MATPLOTLIB_IMPORT_PATTERN =
+  /\b(?:import\s+matplotlib|from\s+matplotlib|import\s+matplotlib\.pyplot|from\s+matplotlib\.pyplot)\b/i;
+const MATPLOTLIB_USAGE_PATTERN = /\bplt\./i;
+
+const pythonRuntimeAvailabilityCache = new WeakMap<
+  PyodideInterface,
+  Partial<Record<PythonOptionalPackage, boolean>>
+>();
 
 /**
  * Hook para ejecutar código en browser, enroutando por lenguaje.
@@ -185,6 +203,113 @@ export function useCodeExecution(
   };
 }
 
+function inferPythonRuntimeNeeds(code: string, capturePlots: boolean): PythonRuntimeNeeds {
+  return {
+    needsPandas: PANDAS_IMPORT_PATTERN.test(code),
+    needsMatplotlib:
+      capturePlots &&
+      (MATPLOTLIB_IMPORT_PATTERN.test(code) || MATPLOTLIB_USAGE_PATTERN.test(code)),
+  };
+}
+
+function readCachedPackageAvailability(
+  pyodide: PyodideInterface,
+  moduleName: PythonOptionalPackage
+): boolean | undefined {
+  return pythonRuntimeAvailabilityCache.get(pyodide)?.[moduleName];
+}
+
+function writeCachedPackageAvailability(
+  pyodide: PyodideInterface,
+  moduleName: PythonOptionalPackage,
+  isAvailable: boolean
+) {
+  const cached = pythonRuntimeAvailabilityCache.get(pyodide) ?? {};
+  cached[moduleName] = isAvailable;
+  pythonRuntimeAvailabilityCache.set(pyodide, cached);
+}
+
+function detectPythonModuleAvailability(
+  pyodide: PyodideInterface,
+  moduleName: PythonOptionalPackage
+): boolean {
+  try {
+    const imported = pyodide.pyimport(moduleName);
+    if (
+      imported &&
+      typeof imported === "object" &&
+      "destroy" in imported &&
+      typeof (imported as { destroy?: () => void }).destroy === "function"
+    ) {
+      (imported as { destroy: () => void }).destroy();
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function ensurePythonModuleAvailability(
+  pyodide: PyodideInterface,
+  moduleName: PythonOptionalPackage
+): Promise<boolean> {
+  const cached = readCachedPackageAvailability(pyodide, moduleName);
+  if (typeof cached === "boolean") {
+    return cached;
+  }
+
+  let isAvailable = detectPythonModuleAvailability(pyodide, moduleName);
+  if (!isAvailable) {
+    try {
+      await pyodide.loadPackage(moduleName);
+    } catch {
+      // Si falla la carga, dejamos que el guardrail muestre fallback claro.
+    }
+    isAvailable = detectPythonModuleAvailability(pyodide, moduleName);
+  }
+
+  writeCachedPackageAvailability(pyodide, moduleName, isAvailable);
+  return isAvailable;
+}
+
+async function resolvePythonRuntimeGuardrail({
+  pyodide,
+  code,
+  capturePlots,
+}: {
+  pyodide: PyodideInterface;
+  code: string;
+  capturePlots: boolean;
+}) {
+  const warnings: string[] = [];
+  const needs = inferPythonRuntimeNeeds(code, capturePlots);
+
+  if (needs.needsPandas) {
+    const pandasAvailable = await ensurePythonModuleAvailability(pyodide, "pandas");
+    if (!pandasAvailable) {
+      warnings.push(
+        "Pandas no esta disponible en este runtime browser. Fallback: usa listas/diccionarios nativos o un entorno Python completo para DataFrames."
+      );
+    }
+  }
+
+  let matplotlibAvailable = true;
+  if (needs.needsMatplotlib) {
+    matplotlibAvailable = await ensurePythonModuleAvailability(pyodide, "matplotlib");
+    if (!matplotlibAvailable) {
+      warnings.push(
+        "Matplotlib no esta disponible en este runtime browser. Fallback: imprime resultados tabulares o usa un entorno con soporte grafico completo."
+      );
+    }
+  }
+
+  return {
+    canRun: warnings.length === 0,
+    warnings,
+    shouldCapturePlots: needs.needsMatplotlib && matplotlibAvailable,
+  };
+}
+
 async function executePython({
   pyodide,
   loadPyodide,
@@ -210,11 +335,26 @@ async function executePython({
     throw new Error("Pyodide no pudo cargarse");
   }
 
+  const guardrail = await resolvePythonRuntimeGuardrail({
+    pyodide: pyodideInstance,
+    code,
+    capturePlots,
+  });
+  if (!guardrail.canRun) {
+    return {
+      stdout: "",
+      stderr: guardrail.warnings.join("\n"),
+      error: "Dependencias de Python no disponibles en este navegador.",
+      plots: [],
+      executionTime: Math.round(performance.now() - startTime),
+    };
+  }
+
   pyodideInstance.setStdout({ batched: (text: string) => stdout.push(text) });
   pyodideInstance.setStderr({ batched: (text: string) => stderr.push(text) });
 
   let codeWithPlotCapture = code;
-  if (capturePlots) {
+  if (guardrail.shouldCapturePlots) {
     codeWithPlotCapture = `
 import matplotlib.pyplot as plt
 

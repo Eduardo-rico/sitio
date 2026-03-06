@@ -15,6 +15,9 @@ test.describe('Admin Analytics', () => {
     await expect(page.getByText('User Growth')).toBeVisible();
     await expect(page.getByText('Course Popularity')).toBeVisible();
     await expect(page.getByText('Completion Rates')).toBeVisible();
+    await expect(page.getByText('Tiempo activo total')).toBeVisible();
+    await expect(page.getByText('Completion Rate por Curso')).toBeVisible();
+    await expect(page.getByText('Avance por Leccion')).toBeVisible();
   });
 
   test('supports changing analytics date range', async ({ page }) => {

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { CourseForm, CourseFormData } from "@/components/admin/course-form";
 import { DraggableList } from "@/components/admin/draggable-list";
+import { CourseBibliographyEditor } from "@/components/admin/course-bibliography-editor";
 
 interface Lesson {
   id: string;
@@ -42,6 +43,13 @@ interface Course {
   order: number;
   isPublished: boolean;
   imageUrl: string | null;
+  bibliographyItems: Array<{
+    id: string;
+    title: string;
+    url: string;
+    note: string;
+    order: number;
+  }>;
   lessons: Lesson[];
 }
 
@@ -249,6 +257,11 @@ export default function EditCoursePage() {
           mode="edit"
         />
       </section>
+
+      <CourseBibliographyEditor
+        courseId={courseId}
+        initialItems={course.bibliographyItems}
+      />
 
       {/* Lessons Section */}
       <section className="border-t border-gray-200 dark:border-gray-700 pt-8">

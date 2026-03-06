@@ -56,5 +56,37 @@ describe('useCodeExecution', () => {
     expect(executionResult?.error).toBeUndefined()
     expect(executionResult?.stdout).toContain('hola desde pyodide')
   })
-})
 
+  it('muestra fallback claro cuando pandas no esta disponible', async () => {
+    const mockPyodide = {
+      pyimport: vi.fn(() => {
+        throw new Error('ModuleNotFoundError: pandas')
+      }),
+      loadPackage: vi.fn(async () => {
+        throw new Error('No package pandas')
+      }),
+      setStdout: vi.fn(),
+      setStderr: vi.fn(),
+      runPythonAsync: vi.fn(),
+    }
+
+    mockUsePyodide.mockReturnValue({
+      status: 'ready',
+      pyodide: mockPyodide,
+      error: null,
+      load: mockLoadPyodide,
+    })
+
+    const { result } = renderHook(() => useCodeExecution())
+
+    let executionResult: Awaited<ReturnType<typeof result.current.executeCode>> | undefined
+    await act(async () => {
+      executionResult = await result.current.executeCode('import pandas as pd\nprint(1)')
+    })
+
+    expect(mockPyodide.loadPackage).toHaveBeenCalledWith('pandas')
+    expect(mockPyodide.runPythonAsync).not.toHaveBeenCalled()
+    expect(executionResult?.error).toContain('Dependencias de Python')
+    expect(executionResult?.stderr).toContain('Pandas no esta disponible')
+  })
+})

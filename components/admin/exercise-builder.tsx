@@ -30,7 +30,8 @@ import {
   ChevronDown,
   ChevronUp,
   FileCode,
-  FlaskConical
+  FlaskConical,
+  Award
 } from "lucide-react";
 
 // Validation types
@@ -48,6 +49,12 @@ const testCaseSchema = z.object({
   isPublic: z.boolean().default(true),
 });
 
+const rubricCriterionSchema = z.object({
+  title: z.string().min(1, "El criterio es requerido"),
+  description: z.string().min(1, "La descripcion es requerida"),
+  weight: z.number().min(0).max(100),
+});
+
 // Exercise schema
 const exerciseSchema = z.object({
   title: z.string().min(1, "El título es requerido").max(150, "Máximo 150 caracteres"),
@@ -59,6 +66,7 @@ const exerciseSchema = z.object({
   expectedOutput: z.string().optional(),
   isPublished: z.boolean().default(false),
   testCases: z.array(testCaseSchema).min(0),
+  rubric: z.array(rubricCriterionSchema).min(1, "Debe existir al menos un criterio"),
   hints: z.array(z.object({
     value: z.string().min(1, "La pista no puede estar vacía"),
   })),
@@ -127,7 +135,7 @@ export function ExerciseBuilder({
   isSubmitting = false,
   mode = "create" 
 }: ExerciseBuilderProps) {
-  const [activeSection, setActiveSection] = useState<"basic" | "code" | "validation" | "hints">("basic");
+  const [activeSection, setActiveSection] = useState<"basic" | "code" | "validation" | "rubric" | "hints">("basic");
   const [testCaseExpanded, setTestCaseExpanded] = useState<number | null>(0);
 
   const preset = getExercisePreset(language);
@@ -152,6 +160,7 @@ export function ExerciseBuilder({
       expectedOutput: "",
       isPublished: false,
       testCases: [],
+      rubric: preset.rubricCriteria,
       hints: preset.hints.map((value) => ({ value })),
       ...defaultValues,
     },
@@ -164,6 +173,15 @@ export function ExerciseBuilder({
   } = useFieldArray({
     control,
     name: "testCases",
+  });
+
+  const {
+    fields: rubricFields,
+    append: appendRubric,
+    remove: removeRubric,
+  } = useFieldArray({
+    control,
+    name: "rubric",
   });
 
   const { 
@@ -187,6 +205,7 @@ export function ExerciseBuilder({
     { id: "basic", label: "Información básica", icon: Type },
     { id: "code", label: "Código", icon: FileCode },
     { id: "validation", label: "Validación", icon: FlaskConical },
+    { id: "rubric", label: "Rúbrica", icon: Award },
     { id: "hints", label: "Pistas", icon: Lightbulb },
   ] as const;
 
@@ -529,6 +548,102 @@ export function ExerciseBuilder({
                 </div>
               )}
             </AnimatePresence>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Rubric Section */}
+      {activeSection === "rubric" && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <Award className="w-5 h-5" />
+              Rúbrica de evaluación
+            </h3>
+            <button
+              type="button"
+              onClick={() =>
+                appendRubric({
+                  title: "Nuevo criterio",
+                  description: "Describe cómo se evalúa este punto",
+                  weight: 10,
+                })
+              }
+              className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              Añadir criterio
+            </button>
+          </div>
+
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Define criterios para entregar feedback pedagógico más allá de solo pass/fail.
+          </p>
+
+          {errors.rubric && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {errors.rubric.message as string}
+            </p>
+          )}
+
+          <div className="space-y-3">
+            {rubricFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3"
+              >
+                <div className="grid md:grid-cols-[1fr_120px] gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Criterio
+                    </label>
+                    <input
+                      {...register(`rubric.${index}.title`)}
+                      placeholder="Correctness"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Peso (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      {...register(`rubric.${index}.weight`, { valueAsNumber: true })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Descripción de evaluación
+                  </label>
+                  <textarea
+                    rows={2}
+                    {...register(`rubric.${index}.description`)}
+                    placeholder="Qué se espera para considerar este criterio cumplido"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => removeRubric(index)}
+                    disabled={rubricFields.length <= 1}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-40"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar criterio
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </motion.div>
       )}

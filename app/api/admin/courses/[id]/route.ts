@@ -48,6 +48,9 @@ export async function GET(
     const course = await prisma.course.findUnique({
       where: { id },
       include: {
+        bibliographyItems: {
+          orderBy: { order: "asc" },
+        },
         lessons: {
           orderBy: { order: "asc" },
           select: {

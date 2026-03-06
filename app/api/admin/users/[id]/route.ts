@@ -137,6 +137,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const labelByEventType: Record<string, string> = {
       course_enrolled: "Inició un curso",
       lesson_viewed: "Vio una lección",
+      lesson_active_time: "Tiempo activo en lección",
       exercise_code_run: "Ejecutó código",
       exercise_validated: "Verificó un ejercicio",
       exercise_feedback_submitted: "Envió feedback",
@@ -223,7 +224,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         exercisesCorrect: correctSubmissions,
         averageScore,
         streakDays: 0, // Would need additional tracking
-        totalTimeSpentMinutes: 0, // Would need additional tracking
+        totalTimeSpentMinutes: Math.round(
+          learningEvents
+            .filter((event) => event.eventType === "lesson_active_time")
+            .reduce((acc, event) => {
+              const metadata =
+                event.metadata && typeof event.metadata === "object" && !Array.isArray(event.metadata)
+                  ? (event.metadata as Record<string, unknown>)
+                  : {};
+              const activeSeconds =
+                typeof metadata.activeSeconds === "number" ? metadata.activeSeconds : 0;
+              return acc + activeSeconds;
+            }, 0) / 60
+        ),
       },
     }
 

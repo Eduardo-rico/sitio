@@ -34,7 +34,15 @@ export async function POST(
     const session = await auth()
     const userId = session?.user?.id
 
-    const body = await request.json()
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return Response.json(
+        { success: false, error: "Payload JSON invalido." } satisfies ApiResponse,
+        { status: 400 }
+      )
+    }
     const { code, output: rawOutput, runtimeError, isCorrect: clientIsCorrect } =
       validateSchema.parse(body)
 

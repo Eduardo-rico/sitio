@@ -28,6 +28,11 @@ interface SeedExercise {
   solutionCode: string;
   validationType: ValidationType;
   testCases: SeedTestCase[];
+  rubric?: Array<{
+    title: string;
+    description: string;
+    weight: number;
+  }>;
   hints: string[];
 }
 
@@ -49,6 +54,29 @@ interface SeedCourse {
   runtimeType?: string;
   lessons: SeedLesson[];
 }
+
+const DEFAULT_EXERCISE_RUBRIC = [
+  {
+    title: "Correctness",
+    description: "El resultado cumple con los casos esperados del ejercicio.",
+    weight: 50,
+  },
+  {
+    title: "Method",
+    description: "La estrategia seleccionada es adecuada para el problema.",
+    weight: 20,
+  },
+  {
+    title: "Clarity",
+    description: "El codigo es legible, consistente y facil de mantener.",
+    weight: 15,
+  },
+  {
+    title: "Robustness",
+    description: "La solucion contempla casos borde razonables.",
+    weight: 15,
+  },
+] as const;
 
 const PYTHON_COURSES: SeedCourse[] = [
   {
@@ -1723,6 +1751,7 @@ async function upsertCourse(courseData: SeedCourse) {
           testCases: exerciseData.testCases as unknown as Prisma.InputJsonValue,
           validationType: exerciseData.validationType,
           hints: exerciseData.hints,
+          rubric: (exerciseData.rubric ?? DEFAULT_EXERCISE_RUBRIC) as unknown as Prisma.InputJsonValue,
           isPublished: true,
         },
         create: {
@@ -1736,6 +1765,7 @@ async function upsertCourse(courseData: SeedCourse) {
           testCases: exerciseData.testCases as unknown as Prisma.InputJsonValue,
           validationType: exerciseData.validationType,
           hints: exerciseData.hints,
+          rubric: (exerciseData.rubric ?? DEFAULT_EXERCISE_RUBRIC) as unknown as Prisma.InputJsonValue,
           isPublished: true,
         },
       });

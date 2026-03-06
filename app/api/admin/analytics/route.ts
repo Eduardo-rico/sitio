@@ -26,6 +26,16 @@ function toDisplayDate(dateKey: string) {
   });
 }
 
+function readActiveSeconds(metadata: unknown): number {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return 0;
+  }
+  const activeSeconds = (metadata as Record<string, unknown>).activeSeconds;
+  return typeof activeSeconds === "number" && Number.isFinite(activeSeconds)
+    ? Math.max(0, Math.round(activeSeconds))
+    : 0;
+}
+
 // GET /api/admin/analytics - Get detailed analytics data (admin only)
 export async function GET(request: NextRequest) {
   try {
@@ -76,6 +86,8 @@ export async function GET(request: NextRequest) {
       completedProgressInRange,
       activityEventsInRange,
       completionStatsRaw,
+      lessonActiveTimeEvents,
+      publishedCoursesWithLessonProgress,
     ] = await Promise.all([
       prisma.user.count({
         where: { createdAt: { lte: endDate } },
@@ -194,6 +206,37 @@ export async function GET(request: NextRequest) {
           status: true,
         },
       }),
+      prisma.learningEvent.findMany({
+        where: {
+          eventType: "lesson_active_time",
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        select: {
+          userId: true,
+          lessonId: true,
+          metadata: true,
+        },
+      }),
+      prisma.course.findMany({
+        where: { isPublished: true },
+        select: {
+          id: true,
+          title: true,
+          lessons: {
+            where: { isPublished: true },
+            select: {
+              id: true,
+              title: true,
+              progress: {
+                select: {
+                  userId: true,
+                  status: true,
+                },
+              },
+            },
+          },
+        },
+      }),
     ]);
 
     const activeUsersToday = activeUsersTodayRaw.length;
@@ -288,6 +331,111 @@ export async function GET(request: NextRequest) {
       notStarted: completionStatsRaw.find((item) => item.status === "not_started")?._count.status || 0,
     };
 
+    const lessonActiveSecondsByLessonId = new Map<string, number>();
+    const activeUsersSet = new Set<string>();
+    let totalActiveSeconds = 0;
+
+    for (const event of lessonActiveTimeEvents) {
+      const activeSeconds = readActiveSeconds(event.metadata);
+      if (activeSeconds <= 0) continue;
+
+      totalActiveSeconds += activeSeconds;
+      if (event.userId) {
+        activeUsersSet.add(event.userId);
+      }
+      if (event.lessonId) {
+        lessonActiveSecondsByLessonId.set(
+          event.lessonId,
+          (lessonActiveSecondsByLessonId.get(event.lessonId) || 0) + activeSeconds
+        );
+      }
+    }
+
+    const courseCompletionRates = publishedCoursesWithLessonProgress
+      .map((course) => {
+        const totalLessons = course.lessons.length;
+        const startedUsers = new Set<string>();
+        const completedLessonsByUser = new Map<string, number>();
+
+        for (const lesson of course.lessons) {
+          for (const progress of lesson.progress) {
+            startedUsers.add(progress.userId);
+            if (progress.status === "completed") {
+              completedLessonsByUser.set(
+                progress.userId,
+                (completedLessonsByUser.get(progress.userId) || 0) + 1
+              );
+            }
+          }
+        }
+
+        const enrolledUsers = startedUsers.size;
+        const completedUsers =
+          totalLessons > 0
+            ? Array.from(startedUsers).filter(
+                (userId) => (completedLessonsByUser.get(userId) || 0) >= totalLessons
+              ).length
+            : 0;
+
+        const completionRate =
+          enrolledUsers > 0 && totalLessons > 0
+            ? Math.round((completedUsers / enrolledUsers) * 100)
+            : 0;
+
+        return {
+          courseId: course.id,
+          courseName: course.title,
+          enrolledUsers,
+          completedUsers,
+          completionRate,
+        };
+      })
+      .sort((a, b) => b.completionRate - a.completionRate);
+
+    const lessonProgress = publishedCoursesWithLessonProgress
+      .flatMap((course) =>
+        course.lessons.map((lesson) => {
+          const startedUsers = new Set<string>();
+          let completedUsers = 0;
+
+          for (const progress of lesson.progress) {
+            startedUsers.add(progress.userId);
+            if (progress.status === "completed") {
+              completedUsers += 1;
+            }
+          }
+
+          const startedUsersCount = startedUsers.size;
+          const completionRate =
+            startedUsersCount > 0
+              ? Math.round((completedUsers / startedUsersCount) * 100)
+              : 0;
+
+          return {
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            courseName: course.title,
+            startedUsers: startedUsersCount,
+            completedUsers,
+            completionRate,
+            activeMinutes: Math.round(
+              (lessonActiveSecondsByLessonId.get(lesson.id) || 0) / 60
+            ),
+          };
+        })
+      )
+      .sort((a, b) => {
+        if (b.startedUsers !== a.startedUsers) return b.startedUsers - a.startedUsers;
+        return b.activeMinutes - a.activeMinutes;
+      })
+      .slice(0, 24);
+
+    const totalActiveMinutes = Math.round(totalActiveSeconds / 60);
+    const avgActiveMinutesPerActiveUser =
+      activeUsersSet.size > 0
+        ? Math.round(totalActiveMinutes / activeUsersSet.size)
+        : 0;
+
     return Response.json({
       success: true,
       data: {
@@ -305,6 +453,12 @@ export async function GET(request: NextRequest) {
         coursePopularity,
         activityHeatmap,
         completionStats,
+        learningMetrics: {
+          totalActiveMinutes,
+          avgActiveMinutesPerActiveUser,
+          courseCompletionRates,
+          lessonProgress,
+        },
       },
     } satisfies ApiResponse<{
       stats: {
@@ -321,6 +475,26 @@ export async function GET(request: NextRequest) {
       coursePopularity: { courseId: string; courseName: string; enrollments: number; completions: number }[];
       activityHeatmap: { day: string; hour: number; value: number }[];
       completionStats: { completed: number; inProgress: number; notStarted: number };
+      learningMetrics: {
+        totalActiveMinutes: number;
+        avgActiveMinutesPerActiveUser: number;
+        courseCompletionRates: Array<{
+          courseId: string;
+          courseName: string;
+          enrolledUsers: number;
+          completedUsers: number;
+          completionRate: number;
+        }>;
+        lessonProgress: Array<{
+          lessonId: string;
+          lessonTitle: string;
+          courseName: string;
+          startedUsers: number;
+          completedUsers: number;
+          completionRate: number;
+          activeMinutes: number;
+        }>;
+      };
     }>);
   } catch (error) {
     console.error("Error fetching analytics:", error);

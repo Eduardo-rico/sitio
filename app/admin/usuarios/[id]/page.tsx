@@ -227,6 +227,7 @@ export default function UserDetailPage() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'lesson_viewed': return BookOpen;
+      case 'lesson_active_time': return Clock;
       case 'exercise_completed': return Code2;
       case 'login': return Activity;
       case 'course_enrolled': return GraduationCap;
@@ -237,6 +238,7 @@ export default function UserDetailPage() {
   const getActivityColor = (type: string) => {
     switch (type) {
       case 'lesson_viewed': return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'lesson_active_time': return 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300';
       case 'exercise_completed': return 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400';
       case 'login': return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
       case 'course_enrolled': return 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400';

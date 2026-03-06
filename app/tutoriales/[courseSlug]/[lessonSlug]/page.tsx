@@ -314,6 +314,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
             <LessonNavigation 
               exercises={lesson.exercises}
               courseSlug={course.slug}
+              lessonId={lesson.id}
               lessonSlug={lesson.slug}
               language={courseLanguage}
               runtimeType={runtimeType}

@@ -45,6 +45,11 @@ interface Exercise {
     expected: string;
     isPublic: boolean;
   }>;
+  rubric?: Array<{
+    title: string;
+    description: string;
+    weight: number;
+  }>;
   hints: string[];
   isPublished: boolean;
   lesson: Lesson;
@@ -208,6 +213,16 @@ export default function EditExercisePage() {
           validationType: exercise.validationType,
           isPublished: exercise.isPublished,
           testCases: exercise.testCases || [],
+          rubric:
+            exercise.rubric && exercise.rubric.length > 0
+              ? exercise.rubric
+              : [
+                  {
+                    title: "Correctness",
+                    description: "Cumple los casos de prueba del ejercicio.",
+                    weight: 50,
+                  },
+                ],
           hints: exercise.hints.map(h => ({ value: h })),
         }}
         onSubmit={handleSubmit}

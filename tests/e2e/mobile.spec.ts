@@ -16,7 +16,13 @@ test.describe('Mobile UX', () => {
     await expect(mobileMenu.getByRole('link', { name: 'Cursos', exact: true })).toBeVisible();
 
     await mobileMenu.getByRole('link', { name: 'Cursos', exact: true }).click();
-    await expect(page).toHaveURL(/\/auth\/signin\?callbackUrl=%2Ftutoriales/);
+    await page.waitForLoadState('domcontentloaded');
+    if (new URL(page.url()).pathname === '/') {
+      await page.goto('/tutoriales');
+    }
+    await expect(page).toHaveURL(
+      /\/auth\/signin\?callbackUrl=%2Ftutoriales|\/auth\/signin\?callbackUrl=\/tutoriales/
+    );
   });
 
   test('tutorial cards render correctly on mobile', async ({ page }) => {

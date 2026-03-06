@@ -6,6 +6,7 @@ import {
   UserCheck,
   BookOpen,
   Code2,
+  Clock3,
   Download,
   Calendar,
   ChevronDown,
@@ -67,6 +68,26 @@ interface AnalyticsData {
     completed: number;
     inProgress: number;
     notStarted: number;
+  };
+  learningMetrics: {
+    totalActiveMinutes: number;
+    avgActiveMinutesPerActiveUser: number;
+    courseCompletionRates: Array<{
+      courseId: string;
+      courseName: string;
+      enrolledUsers: number;
+      completedUsers: number;
+      completionRate: number;
+    }>;
+    lessonProgress: Array<{
+      lessonId: string;
+      lessonTitle: string;
+      courseName: string;
+      startedUsers: number;
+      completedUsers: number;
+      completionRate: number;
+      activeMinutes: number;
+    }>;
   };
 }
 
@@ -153,6 +174,16 @@ export function AnalyticsDashboard() {
   }
 
   if (!data) return null;
+
+  const averageCourseCompletionRate =
+    data.learningMetrics.courseCompletionRates.length > 0
+      ? Math.round(
+          data.learningMetrics.courseCompletionRates.reduce(
+            (acc, course) => acc + course.completionRate,
+            0
+          ) / data.learningMetrics.courseCompletionRates.length
+        )
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -294,6 +325,104 @@ export function AnalyticsDashboard() {
           }
           description="Correct submissions today"
         />
+      </div>
+
+      {/* Learning metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-2">
+            <Clock3 className="w-4 h-4" />
+            <span className="text-xs font-medium uppercase tracking-wide">
+              Tiempo activo total
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {data.learningMetrics.totalActiveMinutes} min
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-2">
+            <UserCheck className="w-4 h-4" />
+            <span className="text-xs font-medium uppercase tracking-wide">
+              Tiempo promedio por usuario
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {data.learningMetrics.avgActiveMinutesPerActiveUser} min
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 mb-2">
+            <BookOpen className="w-4 h-4" />
+            <span className="text-xs font-medium uppercase tracking-wide">
+              Completion promedio por curso
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {averageCourseCompletionRate}%
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Completion Rate por Curso
+          </h3>
+          <div className="space-y-3">
+            {data.learningMetrics.courseCompletionRates.slice(0, 8).map((course) => (
+              <div key={course.courseId} className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-700 dark:text-gray-300">{course.courseName}</span>
+                  <span className="text-gray-500 dark:text-gray-400">
+                    {course.completedUsers}/{course.enrolledUsers} usuarios
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600"
+                    style={{ width: `${course.completionRate}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+            {data.learningMetrics.courseCompletionRates.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Sin datos de avance por curso.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Avance por Leccion
+          </h3>
+          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+            {data.learningMetrics.lessonProgress.slice(0, 12).map((lesson) => (
+              <div
+                key={lesson.lessonId}
+                className="rounded-lg border border-gray-200 dark:border-gray-700 p-3"
+              >
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {lesson.lessonTitle}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  {lesson.courseName}
+                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>Completado: {lesson.completionRate}%</span>
+                  <span>Tiempo activo: {lesson.activeMinutes} min</span>
+                </div>
+              </div>
+            ))}
+            {data.learningMetrics.lessonProgress.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Sin datos de avance por leccion.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Charts Grid */}

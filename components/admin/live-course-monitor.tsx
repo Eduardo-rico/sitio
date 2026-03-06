@@ -32,6 +32,7 @@ const EMPTY_EVENTS: LiveEvent[] = [];
 const EVENT_LABELS: Record<string, string> = {
   course_enrolled: "Curso iniciado",
   lesson_viewed: "Lección vista",
+  lesson_active_time: "Tiempo activo en lección",
   exercise_code_run: "Código ejecutado",
   exercise_validated: "Ejercicio verificado",
   exercise_feedback_submitted: "Feedback enviado",

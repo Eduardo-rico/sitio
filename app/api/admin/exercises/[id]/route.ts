@@ -16,6 +16,12 @@ const testCaseSchema = z.object({
   isPublic: z.boolean().default(true),
 });
 
+const rubricCriterionSchema = z.object({
+  title: z.string().min(1).max(80),
+  description: z.string().min(1).max(300),
+  weight: z.number().min(0).max(100),
+});
+
 // Exercise schema
 const exerciseSchema = z.object({
   title: z.string().min(1).max(150),
@@ -27,6 +33,7 @@ const exerciseSchema = z.object({
   expectedOutput: z.string().optional(),
   isPublished: z.boolean(),
   testCases: z.array(testCaseSchema).default([]),
+  rubric: z.array(rubricCriterionSchema).default([]),
   hints: z.array(z.string()).default([]),
 });
 
@@ -151,6 +158,7 @@ export async function PUT(
         solutionCode: data.solutionCode,
         validationType: data.validationType,
         testCases: data.testCases as any,
+        rubric: data.rubric as any,
         hints: data.hints,
         isPublished: data.isPublished,
       },

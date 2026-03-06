@@ -23,6 +23,28 @@ const RUNTIME_EXECUTION_MATRIX: Array<{
   },
 ];
 
+const PYTHON_NEW_COURSE_CASES: Array<{
+  slug: string;
+  code: string;
+  expectedOutput: RegExp;
+}> = [
+  {
+    slug: 'python-analisis-datos',
+    code: 'print(355)',
+    expectedOutput: /355/,
+  },
+  {
+    slug: 'python-analisis-negocio',
+    code: 'print(35.0)',
+    expectedOutput: /35\.0/,
+  },
+  {
+    slug: 'python-forecasting-ab-testing',
+    code: 'print(149.7)',
+    expectedOutput: /149\.7/,
+  },
+];
+
 async function openFirstLessonForCourse(page: import('@playwright/test').Page, courseSlug: string) {
   await page.goto(`/tutoriales/${courseSlug}`);
   await expect(page).toHaveURL(new RegExp(`/tutoriales/${courseSlug}$`), {
@@ -57,6 +79,21 @@ async function executeLessonCode(
   });
 
   return outputPanel;
+}
+
+async function replaceEditorCode(
+  page: import('@playwright/test').Page,
+  code: string
+) {
+  await expect(page.locator('.monaco-editor').first()).toBeVisible({ timeout: 45000 });
+  await page.evaluate((nextCode) => {
+    const monacoApi = (window as typeof window & { monaco?: any }).monaco;
+    const model = monacoApi?.editor?.getModels?.()?.[0];
+    if (!model) {
+      throw new Error('Monaco editor model no disponible');
+    }
+    model.setValue(nextCode);
+  }, code);
 }
 
 test.describe('Course Flow', () => {
@@ -217,5 +254,28 @@ test.describe('Course Flow', () => {
       /(Hola Rust|Runtime WASM de Rust no configurado)/i
     );
     await expect(outputPanel).not.toContainText(/Unable to find .* in the registry/i);
+  });
+
+  test('executes and validates python data/business/forecast courses', async ({ page }) => {
+    test.setTimeout(8 * 60 * 1000);
+
+    for (const pythonCase of PYTHON_NEW_COURSE_CASES) {
+      await test.step(`python course ${pythonCase.slug}`, async () => {
+        await openFirstLessonForCourse(page, pythonCase.slug);
+        await replaceEditorCode(page, pythonCase.code);
+
+        await page.getByRole('button', { name: 'Verificar' }).click();
+
+        const outputPanel = page.locator('.output-panel');
+        await expect(outputPanel).toContainText(pythonCase.expectedOutput, {
+          timeout: 90000,
+        });
+        await expect(page.getByText(/Resultado de tests \(1\/1\)/i)).toBeVisible({
+          timeout: 45000,
+        });
+        await expect(page.getByText(/¡Correcto!/i)).toBeVisible({ timeout: 45000 });
+        await expect(outputPanel).not.toContainText(/Dependencias de Python no disponibles/i);
+      });
+    }
   });
 });
